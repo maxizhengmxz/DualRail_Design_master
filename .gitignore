@@ -1,0 +1,26 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.codegraph/
+.ruff_cache/
+docs/
+
+# Virtual environments
+.venv
+__marimo__/
+
+# Isolated feature worktrees
+.worktrees/
+
+# Generated datasets and figures
+data/
+figs/
+data/
+tmp/
+*.png
+*.pdf
+*.nc

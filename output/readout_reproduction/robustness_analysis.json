@@ -1,0 +1,140 @@
+{
+  "1": {
+    "total": 300,
+    "cumulative": [
+      30,
+      30,
+      151,
+      178,
+      300,
+      300
+    ],
+    "by_kind": {
+      "interior": {
+        "total": 224,
+        "cumulative": [
+          23,
+          23,
+          116,
+          135,
+          224,
+          224
+        ]
+      },
+      "corner": {
+        "total": 64,
+        "cumulative": [
+          4,
+          4,
+          28,
+          36,
+          64,
+          64
+        ]
+      },
+      "one_at_a_time": {
+        "total": 12,
+        "cumulative": [
+          3,
+          3,
+          7,
+          7,
+          12,
+          12
+        ]
+      }
+    }
+  },
+  "2": {
+    "total": 300,
+    "cumulative": [
+      235,
+      235,
+      266,
+      266,
+      300,
+      300
+    ],
+    "by_kind": {
+      "interior": {
+        "total": 224,
+        "cumulative": [
+          182,
+          182,
+          208,
+          208,
+          224,
+          224
+        ]
+      },
+      "corner": {
+        "total": 64,
+        "cumulative": [
+          43,
+          43,
+          46,
+          46,
+          64,
+          64
+        ]
+      },
+      "one_at_a_time": {
+        "total": 12,
+        "cumulative": [
+          10,
+          10,
+          12,
+          12,
+          12,
+          12
+        ]
+      }
+    }
+  },
+  "3": {
+    "total": 300,
+    "cumulative": [
+      211,
+      300,
+      300,
+      300,
+      300,
+      300
+    ],
+    "by_kind": {
+      "interior": {
+        "total": 224,
+        "cumulative": [
+          168,
+          224,
+          224,
+          224,
+          224,
+          224
+        ]
+      },
+      "corner": {
+        "total": 64,
+        "cumulative": [
+          32,
+          64,
+          64,
+          64,
+          64,
+          64
+        ]
+      },
+      "one_at_a_time": {
+        "total": 12,
+        "cumulative": [
+          11,
+          12,
+          12,
+          12,
+          12,
+          12
+        ]
+      }
+    }
+  }
+}

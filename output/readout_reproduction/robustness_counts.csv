@@ -1,0 +1,13 @@
+design,sample_kind,total,baseline,EC120,flexible_operation_frequency,logical_frequency80_120_H95,H90,EJ_EC40
+1,all,300,30,30,151,178,300,300
+1,interior,224,23,23,116,135,224,224
+1,corner,64,4,4,28,36,64,64
+1,one_at_a_time,12,3,3,7,7,12,12
+2,all,300,235,235,266,266,300,300
+2,interior,224,182,182,208,208,224,224
+2,corner,64,43,43,46,46,64,64
+2,one_at_a_time,12,10,10,12,12,12,12
+3,all,300,211,300,300,300,300,300
+3,interior,224,168,224,224,224,224,224
+3,corner,64,32,64,64,64,64,64
+3,one_at_a_time,12,11,12,12,12,12,12

@@ -1,0 +1,52 @@
+{
+  "nominal_design_checks": [
+    {
+      "design": "1",
+      "nominal": true,
+      "mirror_symmetry": true,
+      "larger_basis_failures": [],
+      "changes": {
+        "operating_frequency_ghz": -1.6511236822225328e-11,
+        "splitting_ghz": 3.7125857943465235e-12,
+        "hybridization": -4.5263015557850395e-11,
+        "ratio": 3.394637262260636e-10,
+        "lambda_max": -2.1984469800173656e-11,
+        "min_assignment_overlap": -1.0554890295111363e-12
+      }
+    },
+    {
+      "design": "2",
+      "nominal": true,
+      "mirror_symmetry": true,
+      "larger_basis_failures": [],
+      "changes": {
+        "operating_frequency_ghz": -1.3560708111981512e-11,
+        "splitting_ghz": 4.105160655853979e-12,
+        "hybridization": -1.624232970343087e-10,
+        "ratio": -9.731782359134744e-10,
+        "lambda_max": -1.588087994441878e-11,
+        "min_assignment_overlap": -3.895994638014599e-12
+      }
+    },
+    {
+      "design": "3",
+      "nominal": true,
+      "mirror_symmetry": true,
+      "larger_basis_failures": [],
+      "changes": {
+        "operating_frequency_ghz": -1.4365397760229826e-11,
+        "splitting_ghz": 3.929301328753354e-12,
+        "hybridization": -2.6050539503330583e-10,
+        "ratio": -1.257301353307927e-09,
+        "lambda_max": -1.5543788478566967e-11,
+        "min_assignment_overlap": -7.6225692424714e-12
+      }
+    }
+  ],
+  "saved_map_witnesses": 1608,
+  "saved_robustness_witnesses": 900,
+  "perturbation_vectors_exact": true,
+  "rescue_counts_exact": true,
+  "conditional_CDF_exact": true,
+  "note": "Saved constraints audited for every witness; independent numerical recomputation covers the three nominal circuits and their mirrors/larger bases."
+}

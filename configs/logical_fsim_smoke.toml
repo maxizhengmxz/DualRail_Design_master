@@ -1,0 +1,167 @@
+schema = "logical-fsim-workflow-v3"
+
+[execution]
+data_directory = "tmp/logical_fsim_smoke"
+cpus_static = 1
+cpus_dynamics = 1
+recompute_reference = false
+recompute_static = false
+recompute_dynamics = false
+
+[thresholds]
+fidelity = 0.0
+leakage = 1.0
+sigma_min = 0.0
+leakage_gap_mhz = 0.0
+
+[pair_a]
+Ej1 = 10.0
+Cj1 = 1.0
+Ej1_2 = 8.0
+Cj1_2 = 1.0
+C1 = 300.0
+Ej2 = 10.0
+Cj2 = 1.0
+Ej2_2 = 8.0
+Cj2_2 = 1.0
+C2 = 300.0
+C12 = 1.0
+C1r = 1.0
+C2r = 1.0
+Cr = 100.0
+Lr = 1.0
+
+[pair_b]
+Ej1 = 9.8
+Cj1 = 1.0
+Ej1_2 = 7.8
+Cj1_2 = 1.0
+C1 = 300.0
+Ej2 = 9.8
+Cj2 = 1.0
+Ej2_2 = 7.8
+Cj2_2 = 1.0
+C2 = 300.0
+C12 = 1.0
+C1r = 1.0
+C2r = 1.0
+Cr = 100.0
+Lr = 1.0
+
+[coupler]
+EJmax = 18.0
+EC = 0.5
+d = 0.15
+flux = 0.2
+ng = 0.0
+ncut = 4
+truncated_dim = 2
+
+[model]
+a2_c_ghz = 0.04
+c_b1_ghz = 0.04
+a2_c_ff = 1.0
+c_b1_ff = 1.0
+coupler_junction_capacitance_ff = [0.2, 0.2]
+a2_b1_ff = 0.0
+anchor_logical_frequency_mhz = 100.0
+rail_ncut = 4
+rail_truncated_dim = 2
+min_assignment_probability = 0.0
+min_leakage_gap_mhz = 0.0
+
+[phase1]
+ncut_values = [15, 20, 25, 30]
+rail_flux_linspace = [-0.01, 0.01, 3]
+coupler_flux_linspace = [0.19, 0.21, 3]
+ncut_tolerance_khz = 50.0
+calibration_tolerance_fraction = 0.1
+path_samples = 3
+minimum_continuity_overlap = 0.0
+fixed_basis_levels = 12
+fixed_basis_tolerance_fraction = 0.1
+pulse_coupler_truncated_dim = 2
+rate_tolerance_fraction = 0.05
+rate_durations_ns = [0.05, 0.1, 0.15]
+use_direct_reference_on_fit_failure = false
+enforce_exit_gate = false
+
+[phase2]
+coherent_ceiling_max_time_ns = 1.0
+coherent_ceiling_time_samples = 5
+minimum_coherent_ceiling = 0.995
+candidate_count = 1
+adaptive_seed_candidates = 0
+maximum_cz_offdiagonal_to_zz_ratio = 1000000.0
+enforce_exit_gate = false
+
+[model.logical_mapping]
+logical_zero = "lower"
+logical_one = "upper"
+
+[reference]
+mode = "configured"
+phi_1_linspace = [0.0, 0.02, 3]
+phi_2_linspace = [0.0, 0.02, 3]
+evals_count = 4
+
+[configured_contours.a]
+logical_frequency_mhz = [90.0, 100.0, 110.0]
+phi_1 = [-0.01, 0.0, 0.01]
+phi_2 = [-0.01, 0.0, 0.01]
+carrier_frequency_ghz = [4.51, 4.5, 4.49]
+hybridization = [0.99, 0.99, 0.99]
+polarization = [0.0, 0.0, 0.0]
+
+[configured_contours.b]
+logical_frequency_mhz = [90.0, 100.0, 110.0]
+phi_1 = [-0.01, 0.0, 0.01]
+phi_2 = [-0.01, 0.0, 0.01]
+carrier_frequency_ghz = [4.51, 4.5, 4.49]
+hybridization = [0.99, 0.99, 0.99]
+polarization = [0.0, 0.0, 0.0]
+
+[contours]
+segment_a = 0
+segment_b = 0
+min_hybridization = 0.95
+
+[static]
+frequency_a_mhz = [100.0]
+frequency_b_mhz = [100.0]
+coupler_flux_linspace = [0.2, 0.2, 1]
+
+[idle]
+frequency_a_mhz = 100.0
+frequency_b_mhz = 100.0
+coupler_flux = 0.2
+
+[gates.iswap]
+frequency_a_mhz = 100.0
+frequency_b_mhz = 100.0
+coupler_flux = 0.2
+
+[gates.cz]
+frequency_a_mhz = 100.0
+frequency_b_mhz = 100.0
+coupler_flux = 0.2
+
+[pulse]
+padding_ns = 0.1
+output_samples = 7
+
+[pulse.solver]
+atol = 1e-8
+rtol = 1e-6
+nsteps = 10000
+integrator = "adams"
+
+[pulse.sweeps]
+iswap_exact = [[0.0, 0.2]]
+cz_exact = [[0.0, 0.2]]
+iswap_smooth = [[0.1, 0.0]]
+cz_smooth = [[0.1, 0.0]]
+
+[trajectory]
+output_samples = 9
+initial_states = ["00", "01", "10", "11"]
