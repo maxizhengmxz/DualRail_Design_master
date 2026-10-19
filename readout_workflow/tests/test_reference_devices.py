@@ -1,6 +1,6 @@
 import unittest
-from model import Device, ReadoutModel
-from reference_devices import original_preset
+from readout_workflow.model import Device, ReadoutModel
+from readout_workflow.reference_devices import original_preset
 
 
 def reference_model(name):

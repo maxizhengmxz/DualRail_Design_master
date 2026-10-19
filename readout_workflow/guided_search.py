@@ -5,7 +5,11 @@ import numpy as np
 from scipy.optimize import brentq, minimize_scalar
 from threadpoolctl import threadpool_limits
 
-from model import ReadoutModel, _transmon
+if __package__:
+    from .model import ReadoutModel, _transmon
+else:
+    # Marimo opens readout.py as a standalone notebook in this directory.
+    from model import ReadoutModel, _transmon
 
 
 PARAMETERS = {

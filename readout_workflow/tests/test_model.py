@@ -1,7 +1,7 @@
 import unittest
 from dataclasses import replace
 import numpy as np
-from model import Basis, Device, ReadoutModel, find_readout_points
+from readout_workflow.model import Basis, Device, ReadoutModel, find_readout_points
 
 
 class ModelTests(unittest.TestCase):

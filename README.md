@@ -5,10 +5,12 @@ DTC dual-rail circuit simulations, Monte Carlo robustness studies, and resonator
 sweeps.
 
 For the single-junction readout capacitance-map and robustness study, start with
-[`readout_workflow/reproduce_readout.py`](readout_workflow/reproduce_readout.py).
-It consolidates the model, searches, diagnostics and figures into one annotated
-file. See the [readout workflow guide](readout_workflow/README.md) for cached
-reproduction, numerical verification and resumable reruns.
+[`Readout_ParamSpace_Robustness.py`](Readout_ParamSpace_Robustness.py).
+The calculation-only modules are described in the
+[readout guide](readout_workflow/README.md).
+Running the entry point without arguments shows saved status; it starts no search.
+Historical reports, report generators and superseded readout-study scripts
+have been removed.
 
 The reusable API now lives under `dtc_dualrail/`:
 

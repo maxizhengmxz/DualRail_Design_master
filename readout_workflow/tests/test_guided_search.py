@@ -6,8 +6,8 @@ from pathlib import Path
 
 import numpy as np
 
-from guided_search import PARAMETERS, guided_search, predict_resonances, trial_model
-from model import Basis, Device, ReadoutModel, _transmon, save_results
+from readout_workflow.guided_search import PARAMETERS, guided_search, predict_resonances, trial_model
+from readout_workflow.model import Basis, Device, ReadoutModel, _transmon, save_results
 
 
 class GuidedSearchTests(unittest.TestCase):
