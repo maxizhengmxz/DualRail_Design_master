@@ -83,12 +83,17 @@ global optimality. Neighboring pixels can have different optimized components.
 first-feasible EJ recalibration, with extra starts only for failed cases.
 There is no robustness command in this runner.
 
-## Retained data and safe resumption
+## Fresh runs and safe resumption
 
-See [data/README.md](data/README.md). Only the current map ledger, compact seed
-coordinates, exact perturbation vectors and approved first-GDS reference remain.
-The original 1,923 event IDs and payloads were preserved byte-for-byte during
-consolidation. The provenance file records equation/seed equivalence checks.
+No saved map, historical seed archive, perturbation samples or approved-device
+result is shipped or required. A fresh run starts from algorithmic seeds;
+newly calculated neighboring points supply additional starts. The workflow
+creates a new ledger in the selected output directory and can resume that
+ledger later. Changing equations or settings requires a fresh output directory.
+
+Readout optimization is separate from coupler-off analysis. Run it only when
+explicitly requested; otherwise supply an externally optimized pair directly
+to the coupler workflow.
 
 The default command is read-only:
 
@@ -121,5 +126,5 @@ From the main folder:
 .\.venv\Scripts\python.exe -m unittest discover -s readout_workflow/tests
 ~~~
 
-Tests cover the circuit, transmon-label symmetry, GDS reference, strict energy
+Tests cover the circuit, transmon-label symmetry, strict energy
 bounds, notebook helpers, checkpoint identity and real Windows file locks.

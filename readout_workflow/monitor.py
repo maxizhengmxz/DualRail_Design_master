@@ -23,7 +23,7 @@ from Readout_ParamSpace_Robustness import DEFAULT_OUTPUT, ROOT, process_alive
 from .storage import atomic_json
 
 CHINA = timezone(timedelta(hours=8))
-TERMINAL = {"map_complete", "paused_after_cleanup", "stopped_by_user"}
+TERMINAL = {"map_complete", "paused", "paused_after_cleanup", "stopped_by_user"}
 
 
 def inspect(output, previous=None, now=None):
@@ -47,6 +47,9 @@ def inspect(output, previous=None, now=None):
     supervisor = process_alive(launch.get("pid"))
     calculator = process_alive(snapshot.get("pid"))
     age = (now - datetime.fromisoformat(last[0])).total_seconds() if last else None
+    # A resumed job legitimately starts with old committed timestamps. Allow
+    # its first new point to finish before treating that history as a stall.
+    launch_age = (now - datetime.fromisoformat(launch["started_utc"])).total_seconds()
     phase = snapshot["phase"]
     total = sum(counts.values())
     delta = total - previous["total_events"] if previous else None
@@ -83,7 +86,7 @@ def inspect(output, previous=None, now=None):
             issues.append("Supervisor and calculator are no longer running")
         elif not calculator:
             issues.append("Calculator is not running; supervisor may be retrying")
-        if age is not None and age > 1800:
+        if age is not None and age > 1800 and launch_age > 1800:
             issues.append("No committed event in the last 30 minutes")
         if delta == 0:
             issues.append("No additional events since the previous check")

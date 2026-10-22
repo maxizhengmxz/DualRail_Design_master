@@ -154,7 +154,7 @@ def continue_row(task):
     return records
 
 
-def configuration(pairs, archive_path):
+def configuration(pairs, archive_path=None):
     """Fingerprint equations, physical rules and seeds independently of old IDs."""
     package = Path(__file__).resolve().parent
     sources = (
@@ -166,7 +166,7 @@ def configuration(pairs, archive_path):
         "storage.py",
     )
     return dict(
-        schema="readout-map-only-v2",
+        schema="readout-map-only-v3",
         conditions=asdict(study.CONDITIONS),
         grid=dict(min_ff=36, max_ff=128, step_ff=1, triangle="C1>C2"),
         pair_count=len(pairs),
@@ -175,7 +175,9 @@ def configuration(pairs, archive_path):
         objective="maximize abs(chi_minus+chi_plus)/2",
         retained_strength_fraction=0.995,
         scope="map_only",
-        seeds_sha256=sha256(archive_path.read_bytes()).hexdigest(),
+        seeds_sha256=sha256(
+            archive_path.read_bytes() if archive_path is not None else b"[]"
+        ).hexdigest(),
         numerical_source_sha256={
             name: sha256((package / name).read_bytes()).hexdigest() for name in sources
         },
@@ -186,8 +188,6 @@ def run(args):
     """Resume committed nominal events; never run fabrication perturbations."""
     output = Path(args.output).resolve()
     output.mkdir(parents=True, exist_ok=True)
-    package = Path(__file__).resolve().parent
-    archive_path = package / "data/inputs/seed_points.json"
     pairs = [(c1, c2) for c1 in range(36, 129) for c2 in range(36, c1)]
     pairs.sort(key=lambda p: (p[0] % 2 or p[1] % 2, p[1], p[0]))
     if args.pair:
@@ -196,10 +196,12 @@ def run(args):
             raise ValueError("Require 36 <= C2 < C1 <= 128 fF")
     if args.limit:
         pairs = pairs[: args.limit]
-    policy = configuration(pairs, archive_path)
+    policy = configuration(pairs)
     ledger = Ledger(output, policy)
     save_json(output / "settings.json", policy)
-    old = {key((r["c1"], r["c2"])): compact(r) for r in load_json(archive_path)}
+    # A fresh checkout starts from algorithmic seeds and newly found neighbors.
+    # Historical seed/result archives are not prerequisites for this workflow.
+    old = {}
     active = {}
     for phase in ("feasibility_normal", "feasibility_deep", "diagnostic"):
         for record in ledger.rows(phase):

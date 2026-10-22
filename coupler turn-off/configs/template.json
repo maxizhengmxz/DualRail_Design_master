@@ -1,0 +1,97 @@
+{
+  "schema": "coupler-off-v1",
+  "case_id": "new-case",
+  "pair": {
+    "ej1_ghz": null,
+    "ej2_ghz": null,
+    "loaded_ec1_mhz": null,
+    "loaded_ec2_mhz": null,
+    "splitting_ghz": null,
+    "chi_m_ghz": null,
+    "chi_p_ghz": null,
+    "device": {
+      "C1_shunt_fF": null,
+      "C2_shunt_fF": null,
+      "C12_fF": null,
+      "C1r_fF": null,
+      "C2r_fF": null,
+      "Cr_fF": null,
+      "Lr_nH": null
+    }
+  },
+  "direct_a2_b1": {
+    "capacitance_ff": null,
+    "bare_exchange_mhz": null
+  },
+  "coupler_candidates": [
+    {
+      "id": "geometry-1",
+      "ec_ghz": null,
+      "links_ff": [
+        null,
+        null
+      ]
+    }
+  ],
+  "screens": {
+    "chi_ratio_max": null,
+    "abs_mean_chi_min_mhz": null,
+    "hybridization_min": null,
+    "dispersive_max": null,
+    "logical_frequency_bounds_mhz": null,
+    "operation_frequency_bounds_ghz": null,
+    "tracking_min": null,
+    "logical_subspace_min": null,
+    "readout_subspace_min": null,
+    "coupler_frequency_bounds_ghz": null,
+    "rail_ec_bounds_mhz": null,
+    "rail_ej_max_ghz": null,
+    "rail_ej_over_ec_min": null,
+    "coupler_ec_max_mhz": null,
+    "coupler_ej_max_ghz": null
+  },
+  "resonator_inductances_nh": [
+    null,
+    null
+  ],
+  "ej_search_bounds_ghz": [
+    [
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ],
+    [
+      null,
+      null
+    ]
+  ],
+  "basis": [
+    6,
+    5,
+    24,
+    5
+  ],
+  "audit_basis": [
+    8,
+    6,
+    24,
+    6
+  ],
+  "readout_window_ghz": [
+    null,
+    null
+  ],
+  "spectral_ceiling_ghz": null,
+  "sweep": null
+}

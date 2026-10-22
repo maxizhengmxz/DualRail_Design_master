@@ -16,6 +16,8 @@ results/
 output/
 /data/
 /tmp/
+.uv-cache/
+.ruff_cache/
 *.h5
 *.hdf5
 
