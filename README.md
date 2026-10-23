@@ -8,6 +8,8 @@ The workflows are organized separately:
   independently, then supply its selected parameters to the coupler workflow.
 - [Logical-resonance gates](<logical-resonance gate/README.md>): five-transmon
   logical-transition iSWAP and controlled-phase/CZ searches and pulse studies.
+- [Transmon-based CZ](<transmon-based CZ/README.md>): approximate four-transmon
+  physical-collision CZ search with independent effective EC inputs.
 
 Coding agents should start with [AGENTS.md](AGENTS.md).
 

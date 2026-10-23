@@ -10,7 +10,7 @@ import sys
 import unittest
 
 ROOT = Path(__file__).resolve().parent
-for source in (ROOT, ROOT / "logical-resonance gate", ROOT / "coupler turn-off"):
+for source in (ROOT, ROOT / "logical-resonance gate", ROOT / "coupler turn-off", ROOT / "transmon-based CZ"):
     sys.path.insert(0, str(source))
 
 
@@ -19,7 +19,7 @@ def main():
     parser.add_argument("--legacy", action="store_true", help="also run archived tests")
     args = parser.parse_args()
     directories = [ROOT / "tests", ROOT / "readout_workflow" / "tests",
-                   ROOT / "coupler turn-off" / "tests"]
+                   ROOT / "coupler turn-off" / "tests", ROOT / "transmon-based CZ" / "tests"]
     if args.legacy:
         directories.append(ROOT / "legacy" / "tests")
     suite = unittest.TestSuite(

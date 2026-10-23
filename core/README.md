@@ -13,6 +13,12 @@ integrating it.
 | `transmon.py` | `Basis`, `transmon_spectrum`: full-cosine local energies and charge matrices | Readout and coupler-off |
 | `electrostatics.py` | Loaded EC, charge coefficient J, local exchange J01 | Readout and coupler-off |
 
+The approximate `transmon-based CZ` workflow also uses
+`projected_transmon_operators` and the explicitly named reduced two-node
+capacitance conversions. They preserve its effective-EC/reference-basis
+conventions; they do not reconstruct physical shunts or redefine loaded EC.
+The older local solver and existing workflow defaults are unchanged.
+
 The local Hamiltonian is `H/h = 4 EC n^2 - EJ cos(phi)` at zero offset charge.
 Energies are cyclic GHz, and n counts Cooper pairs. `Basis` preserves existing
 truncation fields; the local solver uses only ncut and transmon_levels.
