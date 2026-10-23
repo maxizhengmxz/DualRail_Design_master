@@ -10,6 +10,21 @@ from readout_workflow import calculation as calc
 
 
 class CalculationTests(unittest.TestCase):
+    def test_consolidation_preserves_notebook_and_batch_defaults(self):
+        from readout_workflow import model
+
+        notebook = model.ReadoutModel()
+        batch = calc.ReadoutModel()
+        self.assertEqual(notebook.device.C1_shunt_fF, 54.71839021084497)
+        self.assertEqual(notebook.device.C2_shunt_fF, 44.63297219962931)
+        self.assertEqual(batch.device.C1_shunt_fF, 87.0)
+        self.assertEqual(batch.device.C2_shunt_fF, 73.0)
+        device = calc.Device(C12_fF=1.25)
+        basis = calc.Basis(10, 4, 4, 16)
+        supplied = calc.ReadoutModel(device, basis)
+        self.assertIs(supplied.device, device)
+        self.assertIs(supplied.basis, basis)
+
     def test_capacitance_matrix_and_loaded_ec(self):
         d = calc.Device()
         c = d.capacitance_matrix() * 1e15

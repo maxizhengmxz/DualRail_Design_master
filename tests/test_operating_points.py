@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import xarray as xr
 
-from dtc_dualrail.operating_points import (
+from core.operating_points import (
     OPERATING_POINT_SCHEMA,
     evaluate_rail_hybridization,
     find_operating_points,

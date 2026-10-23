@@ -6,6 +6,12 @@ See [AGENTS.md](AGENTS.md) for the required user conversation.
 
 ## 1. Obtain the readout-optimized pair (separate workflow)
 
+Shared physics now comes directly from `../core/transmon.py` (Basis and the
+local full-cosine transmon) and `../core/electrostatics.py` (loaded EC, J, J01).
+Only readout-specific Device/ReadoutModel/annotate/failures diagnostics depend
+on `../readout_workflow/calculation.py`. Circuit topology, capacitance budget
+and cancellation searches remain here. See [the dependency map](../core/README.md).
+
 **Request this input. Do not automatically optimize readout.** The separate
 [readout workflow](../readout_workflow/README.md) can produce a pair design if
 the user explicitly requests that task. Copy the chosen pair's parameters and
@@ -21,7 +27,26 @@ differ. No previous pair design is silently loaded.
 
 ## 2. Obtain direct coupling and set the capacitance budget
 
-**Ask for direct bare A2-B1 coupling**, supplying exactly one of:
+Throughout the circuit model, `H_int/h = J_ij n_i n_j` and
+`J_ij = 4 e^2 (C^-1)_ij/h` in GHz, with Cooper-pair number operators.
+The physical local exchange is `J01_ij = |<10|H_int/h|01>|`, evaluated
+from J and numerical local charge matrix elements. J01 is a cyclic frequency;
+the isolated resonant two-state gap is 2*J01. Loaded EC and J use the same
+inverse capacitance matrix. After hardware is frozen, J is fixed while J01
+can vary with EJ. This notation does not rename effective Jport or logical J1.
+
+Preferred direct inputs are exactly one of `capacitance_ff`,
+`charge_coupling_ghz` (J), or `j01_mhz` (local exchange magnitude), under
+`direct_a2_b1`. J and J01 inputs are converted to a fixed capacitor in the
+disconnected-mediator reference circuit described below. The old
+`bare_exchange_mhz` input remains a J01 alias; never reinterpret it as J.
+Outputs expose `charge_coupling_J_ghz` with its node order (off-diagonals
+are J; diagonals are 8*EC, not added self-interactions), `J_a2_b1_ghz`,
+`J_a2_c_ghz`, `J_c_b1_ghz` and the corresponding `J01_*_mhz` values.
+Old `g_a2_c_mhz` and `g_c_b1_mhz` outputs remain J01 aliases.
+
+**Ask for direct bare A2-B1 coupling** using the preferred inputs above.
+The original supported inputs remain valid:
 
 - `direct_a2_b1.capacitance_ff`: physical direct mutual capacitor, fF.
 - `direct_a2_b1.bare_exchange_mhz`: nonnegative cyclic matrix-element magnitude
@@ -214,7 +239,7 @@ From the repository root:
 uv run python "coupler turn-off/run_tests.py"
 ```
 
-Commit this folder together with the shared `readout_workflow/` package and
+Commit this folder together with shared `core/`, the `readout_workflow/` package and
 root `pyproject.toml` / `uv.lock`. Coupler calculations import readout circuit
 primitives and diagnostics, but do not launch readout optimization. The script
 entry points work from any current directory; command examples above assume

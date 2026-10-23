@@ -13,7 +13,8 @@ from scipy.constants import h, hbar
 from scipy.linalg import eigh
 from scipy.optimize import brentq, linear_sum_assignment, root
 
-from readout_workflow.calculation import Basis, _transmon
+from core.transmon import Basis, transmon_spectrum
+from core.electrostatics import charge_coupling_ghz, exchange_j01_ghz, loaded_charging_energies_ghz
 
 
 def embed(operator, index, dims):
@@ -166,12 +167,12 @@ class BudgetModel:
         self.pair_keep, self.c_levels = pair_keep, c_levels
         local_basis = Basis(25, max(levels, 3), max(photons, 3), 20)
         n1 = abs(
-            _transmon(point["ej1_ghz"], point["loaded_ec1_mhz"] / 1000, local_basis)[1][
+            transmon_spectrum(point["ej1_ghz"], point["loaded_ec1_mhz"] / 1000, local_basis)[1][
                 0, 1
             ]
         )
         n2 = abs(
-            _transmon(point["ej2_ghz"], point["loaded_ec2_mhz"] / 1000, local_basis)[1][
+            transmon_spectrum(point["ej2_ghz"], point["loaded_ec2_mhz"] / 1000, local_basis)[1][
                 0, 1
             ]
         )
@@ -193,8 +194,9 @@ class BudgetModel:
         self.cap, self.c_shunt = capacitance_matrix(point, self.links, ec_c, direct_ff)
         self.rail_shunts = (self.cap.sum(axis=1)[[0, 1, 4, 5]]).tolist()
         self.cinv = np.linalg.inv(self.cap * 1e-15)
-        self.ec = e**2 * np.diag(self.cinv) / (2 * h * 1e9)
-        self.k = 4 * e**2 * self.cinv / (h * 1e9)
+        self.ec = loaded_charging_energies_ghz(self.cinv)
+        self.J_ghz = charge_coupling_ghz(self.cinv)
+        self.k = self.J_ghz  # Compatibility alias; off-diagonals are charge coefficients.
         self.basis = Basis(25, levels, photons, 20)
         self.pair_parities = []
         self.pairs = [self.pair((0, 1, 2)), self.pair((4, 5, 6))]
@@ -208,7 +210,7 @@ class BudgetModel:
         dims = (self.levels, self.levels, self.photons)
         energies, operators = [], []
         for i, node in enumerate(nodes[:2]):
-            en, charge = _transmon(
+            en, charge = transmon_spectrum(
                 self.rail_ej_ghz[[0, 1, 4, 5].index(node)], self.ec[node], self.basis
             )
             energies.append(en)
@@ -225,7 +227,7 @@ class BudgetModel:
         ham = sum(embed(np.diag(en), i, dims) for i, en in enumerate(energies))
         for i in range(3):
             for j in range(i + 1, 3):
-                ham += self.k[nodes[i], nodes[j]] * (operators[i] @ operators[j])
+                ham += self.J_ghz[nodes[i], nodes[j]] * (operators[i] @ operators[j])
         en, states = eigh(ham, subset_by_index=(0, self.pair_keep - 1))
         en -= en[0]
         parity = np.kron(
@@ -236,7 +238,7 @@ class BudgetModel:
         return en, [states.T @ op @ states for op in operators]
 
     def evaluate(self, ej_c, readout=False):
-        ec, nc = _transmon(ej_c, self.ec_c, Basis(25, self.c_levels, 3, 6))
+        ec, nc = transmon_spectrum(ej_c, self.ec_c, Basis(25, self.c_levels, 3, 6))
         ea, ops_a = self.pairs[0]
         eb, ops_b = self.pairs[1]
         energies = (ea[:, None, None] + ec[None, :, None] + eb[None, None, :]).ravel()
@@ -245,7 +247,7 @@ class BudgetModel:
         ham = None
         if self.eigenenergy_max_ghz is None:
             ham = restricted_hamiltonian(
-                energies, blocks, self.dims, self.k, np.arange(len(energies))
+                energies, blocks, self.dims, self.J_ghz, np.arange(len(energies))
             )
             en, states = eigh(ham)
         else:
@@ -262,7 +264,7 @@ class BudgetModel:
                     selected &= energies <= self.basis_energy_max_ghz
                 indices = np.flatnonzero(selected)
                 block_ham = restricted_hamiltonian(
-                    energies, blocks, self.dims, self.k, indices
+                    energies, blocks, self.dims, self.J_ghz, indices
                 )
                 eigenvalues, eigenvectors = eigh(
                     block_ham,
@@ -393,10 +395,19 @@ class BudgetModel:
                     )
                 )
             result["isolated_pair_energies_ghz"] = [ea.tolist(), eb.tolist()]
-        n1 = abs(_transmon(self.rail_ej_ghz[2], self.ec[4], self.basis)[1][0, 1])
-        n2 = abs(_transmon(self.rail_ej_ghz[1], self.ec[1], self.basis)[1][0, 1])
-        result["g_a2_c_mhz"] = float(1000 * self.k[1, 3] * n2 * abs(nc[0, 1]))
-        result["g_c_b1_mhz"] = float(1000 * self.k[3, 4] * n1 * abs(nc[0, 1]))
+        n1 = abs(transmon_spectrum(self.rail_ej_ghz[2], self.ec[4], self.basis)[1][0, 1])
+        n2 = abs(transmon_spectrum(self.rail_ej_ghz[1], self.ec[1], self.basis)[1][0, 1])
+        for name, i, j, ni, nj in (
+            ("a2_c", 1, 3, n2, nc[0, 1]),
+            ("c_b1", 3, 4, nc[0, 1], n1),
+            ("a2_b1", 1, 4, n2, n1),
+        ):
+            result[f"J_{name}_ghz"] = float(self.J_ghz[i, j])
+            result[f"J01_{name}_mhz"] = 1000 * exchange_j01_ghz(self.J_ghz[i, j], ni, nj)
+        result["charge_coupling_J_ghz"] = self.J_ghz.tolist()
+        result["charge_coupling_node_order"] = ["A1", "A2", "rA", "C", "B1", "B2", "rB"]
+        result["g_a2_c_mhz"] = result["J01_a2_c_mhz"]  # Legacy cyclic-rate alias.
+        result["g_c_b1_mhz"] = result["J01_c_b1_mhz"]
         if readout:
             photon_modes = []
             for energy, ops in self.pairs:
@@ -554,7 +565,7 @@ class BudgetModel:
             (3, ej_c),
             (4, self.rail_ej_ghz[2]),
         ):
-            energy, charge = _transmon(ej, self.ec[node], basis)
+            energy, charge = transmon_spectrum(ej, self.ec[node], basis)
             charge = charge * np.sign(charge[0, 1])
             energies.append(energy)
             charges.append(charge)
@@ -564,7 +575,7 @@ class BudgetModel:
             for j in range(i + 1, 3):
                 factors = [np.eye(levels) for _ in range(3)]
                 factors[i], factors[j] = charges[i], charges[j]
-                ham += self.k[nodes[i], nodes[j]] * np.kron(
+                ham += self.J_ghz[nodes[i], nodes[j]] * np.kron(
                     np.kron(factors[0], factors[1]), factors[2]
                 )
         en, states = eigh(ham)

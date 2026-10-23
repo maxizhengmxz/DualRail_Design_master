@@ -8,7 +8,8 @@ arguments only shows saved status. Calculations are performed on request.
 
 | File | Purpose |
 | --- | --- |
-| [calculation.py](calculation.py) | Physical inputs, capacitance matrix, Hamiltonian, state diagnostics, conditions and initial feasibility search |
+| [model.py](model.py) | Single pair/resonator circuit implementation: capacitance matrix, Hamiltonian, dressed-state assignment, chi and hybridization; notebook search/export helpers |
+| [calculation.py](calculation.py) | Batch device defaults, acceptance conditions, multilevel diagnostics and initial feasibility search; reuses model.py's circuit evaluator |
 | [optimization.py](optimization.py) | Maximize readout strength at fixed C1/C2, then select nearby solutions along each row |
 | [diagnostics.py](diagnostics.py) | Explain unsuccessful pixels using the nearest found chi-matched candidate |
 | [validation.py](validation.py) | Larger-basis validation, chi quantities and inter-transmon coupling |
@@ -19,6 +20,28 @@ The batch calculation has no report/PDF dependencies. There are no dated runners
 source-generation scripts or automatic robustness jobs.
 
 ## Physical model and units
+
+Shared local-transmon diagonalization and Basis now live in `core/transmon.py`;
+loaded EC, charge coefficient J and J01 extraction live in
+`core/electrostatics.py`. This workflow owns its pair/resonator circuit,
+observables, conditions and searches. Coupler-off imports shared physics
+directly, and uses this workflow only for readout diagnostics. See
+[the dependency map](../core/README.md). There is one pair/resonator circuit
+implementation, in `model.py`. `calculation.py` inherits that evaluator and
+supplies its original batch Device defaults. The notebook's original defaults
+and its guided/minimum-splitting searches remain distinct from the batch
+feasibility/strength optimization. These search methods were not duplicates.
+Checkpoint identity includes model.py as well as the shared core physics.
+
+Charge coupling is defined by `H_int/h = J_ij n_i n_j`, with Cooper-pair
+number operators and `J_ij = 4 e^2 (C^-1)_ij/h` in GHz. Loaded EC and J
+come from the same full capacitance matrix. `J12_ghz` reports this coefficient;
+`J01_12_mhz` reports `1000*|<10|H_int/h|01>|`, extracted using the numerical
+local charge matrix elements. J01 is a cyclic frequency, not J, an angular
+rate, or the avoided-crossing gap (2*J01 at resonance in a two-state model).
+The older audit key `g12_over_2pi_mhz` remains an alias for J01 in MHz.
+Transmon-resonator `g*r_over_2pi_mhz` keys likewise remain cyclic matrix
+elements using the resonator zero-point charge, not bare charge coefficients.
 
 Two single-junction transmons, specified by Ci and EJi, couple through C12 and
 to a shared resonator through Cir. Junction parasitic capacitors are omitted.

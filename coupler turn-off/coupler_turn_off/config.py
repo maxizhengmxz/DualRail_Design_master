@@ -103,12 +103,12 @@ def validate(config):
     direct = config.get("direct_a2_b1", {})
     supplied = [
         key
-        for key in ("capacitance_ff", "bare_exchange_mhz")
+        for key in ("capacitance_ff", "charge_coupling_ghz", "j01_mhz", "bare_exchange_mhz")
         if direct.get(key) is not None
     ]
     if len(supplied) != 1:
         errors.append(
-            "Request exactly one direct_a2_b1.capacitance_ff or .bare_exchange_mhz (cyclic H/h rate)"
+            "Request exactly one direct_a2_b1.capacitance_ff, .charge_coupling_ghz (J), or .j01_mhz (local exchange); .bare_exchange_mhz is a legacy J01 alias"
         )
     elif not isinstance(direct[supplied[0]], (int, float)) or direct[supplied[0]] < 0:
         errors.append(

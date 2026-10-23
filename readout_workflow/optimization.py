@@ -18,8 +18,10 @@ from threadpoolctl import threadpool_limits
 from readout_workflow.validation import metrics
 
 from . import calculation as study
+from core.transmon import Basis, transmon_spectrum
+from core.electrostatics import exchange_j01_ghz
 
-AUDIT = study.Basis(25, 12, 10, 60)
+AUDIT = Basis(25, 12, 10, 60)
 SCALES = np.array([0.05, 1.0, 0.25, 1.0])
 RETAIN = 0.995
 
@@ -145,16 +147,13 @@ def solve(task):
             if not study.failures(q) and study.absolute_mean_chi_mhz(q) >= floor - 1e-7:
                 q = study.check_chi_sign_stability(q, model)
                 if not study.failures(q, require_sign_check=True):
-                    n1 = study._transmon(q["ej1_ghz"], model.ec_ghz[0], AUDIT)[1]
-                    n2 = study._transmon(q["ej2_ghz"], model.ec_ghz[1], AUDIT)[1]
-                    q["g12_over_2pi_mhz"] = float(
-                        4
-                        * study.e**2
-                        * model.cinv[0, 1]
-                        / study.h
-                        * abs(n1[0, 1] * n2[0, 1])
-                        / 1e6
+                    n1 = transmon_spectrum(q["ej1_ghz"], model.ec_ghz[0], AUDIT)[1]
+                    n2 = transmon_spectrum(q["ej2_ghz"], model.ec_ghz[1], AUDIT)[1]
+                    q["J12_ghz"] = float(model.J_ghz[0, 1])
+                    q["J01_12_mhz"] = 1000 * exchange_j01_ghz(
+                        model.J_ghz[0, 1], n1[0, 1], n2[0, 1]
                     )
+                    q["g12_over_2pi_mhz"] = q["J01_12_mhz"]  # Legacy alias.
                     audited.append((q, p))
                     break  # Candidates sorted by the objective, then audited.
             if len(seen) >= 5:

@@ -5,14 +5,14 @@ from pathlib import Path
 import numpy as np
 import xarray as xr
 
-from dtc_dualrail.constants import BRANCH_LABELS, TRACKING_SCHEMA
-from dtc_dualrail.operating_point_dispersive import (
+from core.constants import BRANCH_LABELS, TRACKING_SCHEMA
+from core.operating_point_dispersive import (
     OPERATING_POINT_DISPERSIVE_SCHEMA,
     evaluate_dispersive_shifts_at_flux_pair,
     load_or_compute_operating_point_dispersive_sweep,
     run_operating_point_dispersive_sweep,
 )
-from dtc_dualrail.operating_points import OPERATING_POINT_SCHEMA
+from core.operating_points import OPERATING_POINT_SCHEMA
 
 
 def _symmetric_operator(size, edges):

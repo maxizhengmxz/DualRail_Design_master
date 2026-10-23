@@ -2,13 +2,13 @@
 
 Status: Phases 0--2 implemented; Phases 3--4 not started
 Last assessed: 2026-09-15  
-Primary workflow: `logical_fsim.py`  
-Simulation backend: `dtc_dualrail/dualrail_fsim.py`
+Primary workflow: `logical-resonance gate/logical_fsim.py`
+Simulation backend: `logical-resonance gate/logical_resonance_gate/dualrail_fsim.py`
 
 ## 1. Purpose and source documents
 
 This document is the execution handoff for improving the logical iSWAP and CZ
-fidelities produced by `logical_fsim.py`. It does not replace the broader design
+fidelities produced by `logical-resonance gate/logical_fsim.py`. It does not replace the broader design
 and implementation documents:
 
 - `docs/specs/five_transmon_dual_rail_gate_implementation_plan.md`
@@ -20,6 +20,61 @@ baseline, the gaps found during review, and the order in which fidelity work
 should proceed.
 
 ## 2. Current conclusion
+
+### Initial gate-search scope (agreed 2026-10-22)
+
+Use a transmon-only model for the initial approximate search of gate operating
+points. Omit explicit readout resonators and their dynamical dressing at this
+stage; their omission is not an integration blocker for the colleague's CZ
+search. Use the colleague's reduced parameterization for this stage: four
+transmons specified by EC and EJ, with the coupler-mediated interaction
+approximated by an effective direct charge coupling J*n_A2*n_B1. An explicit
+coupler transmon is restored for full-model validation when the device has one.
+
+Isolated-pair logical references are acceptable for this initial search.
+Defer resonator-inclusive dressing, readout compatibility, and preparation/
+tuning-path validation to validation of shortlisted candidates. This staging
+does not change the resonator-inclusive readout or coupler-off workflows.
+
+### EC convention and transfer to the full model (agreed 2026-10-22)
+
+For the approximate search, use the colleague's definition: EC_GHz is the
+coefficient in the local Hamiltonian H/h = 4*EC_GHz*(n-ng)^2 - EJ_GHz*cos(phi).
+Treat EC and J as effective reduced-model parameters, with omitted-circuit
+loading already absorbed into EC. Do not add a second loading correction to
+that Hamiltonian coefficient during the toy search.
+
+If using the colleague's capacitor helper to parameterize J, its precise
+convention is Cnom_i = e^2/(2*h*ECtoy_i*1e9) in farads, followed by inversion
+of [[Cnom_1, -Cm], [-Cm, Cnom_2]]. This is a reduced-model prescription for J;
+its nominal capacitances are not physical full-model shunts. Inverting that
+matrix also implies diagonal charging energies different from ECtoy. Do not
+silently substitute those implied energies for the actual toy Hamiltonian's
+EC inputs or apply them as another loading correction.
+
+On transfer to the full model, target the actual EC coefficients used by the
+successful toy Hamiltonian:
+
+    e^2 * (Cfull^-1)_ii / (2*h*1e9) = ECtoy_i_GHz.
+
+Choose physical shunts within the full capacitance budget to meet these loaded
+EC targets after all physical links and resonator capacitors are included.
+Do not set the shunt-only charging energies to ECtoy and then add capacitors.
+For fixed existing hardware, use its actual loaded ECs instead and refine the
+candidate; exact matching is not guaranteed to be physically feasible.
+
+Loaded EC is an electrostatic Hamiltonian parameter, not a dressed transition
+frequency. Match/refine relevant dressed transitions and the effective
+interaction separately by tuning EJs and the coupler operating point. The toy
+effective inter-pair J includes the approximated mediated interaction; it is
+not automatically the full circuit's direct-capacitor coefficient. Restore the
+physical coupler and calibrate the combined effective interaction without
+double counting its mediation as an additional direct term.
+
+Add our charge-transition-balance H-score to the colleague's search diagnostics
+during integration. Near-zero bare rail detuning remains a useful initial-search
+proxy, not an exact H=1 guarantee. These search conventions do not change the
+full inverse-capacitance definitions used by readout and coupler-off workflows.
 
 The reusable simulation core contains much of the minimum viable machinery:
 fixed-basis dynamics, four-state propagation, logical projection, leakage
@@ -150,7 +205,7 @@ Exit gate:
 ### Phase 1 -- Establish model and state-label credibility
 
 Implementation note (2026-09-15): reusable Phase 1 reports now live in
-`dtc_dualrail/device.py` and `dtc_dualrail/dualrail_fsim.py`. The workflow saves
+`core/device.py` and `core/dualrail_fsim.py`. The workflow saves
 single-transmon/ncut sweeps, full-contour reduced-fit residuals, fixed-seed and
 overlap-continuous branch labels, overlap-matched fixed-basis path checks, and
 flat-top static/dynamic rate checks. A dedicated direct five-transmon circuit
@@ -322,14 +377,14 @@ Keep the notebook as orchestration and reporting. Put reusable work into the
 library:
 
 ```text
-dtc_dualrail/device.py
+logical-resonance gate/logical_resonance_gate/device.py
     multi-point reduced-model calibration and fit report
 
-dtc_dualrail/dualrail_fsim.py
+logical-resonance gate/logical_resonance_gate/dualrail_fsim.py
     branch tracking, static coherent ceilings, pulse objectives,
     optimization results, and complete persistence
 
-logical_fsim.py
+logical-resonance gate/logical_fsim.py
     configuration selection, staged execution gates, plots, and decisions
 
 tests/test_device.py
