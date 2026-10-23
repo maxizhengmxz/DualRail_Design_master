@@ -7,7 +7,7 @@ import scipy.linalg
 from pathos.pools import ProcessPool
 from threadpoolctl import threadpool_info, threadpool_limits
 
-from dtc_dualrail.runtime import configure_single_threaded_blas
+from core.runtime import configure_single_threaded_blas
 
 
 def _worker_blas_threads(_):

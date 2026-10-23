@@ -3,7 +3,7 @@ from dataclasses import replace
 import numpy as np
 import xarray as xr
 
-from dtc_dualrail.fsim import (
+from logical_resonance_gate.fsim import (
     CouplerPulse,
     CouplingConfig,
     SolverConfig,

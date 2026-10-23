@@ -9,13 +9,13 @@ import json
 from pathlib import Path
 
 import numpy as np
-from scipy.constants import e, h
 from scipy.optimize import brentq, minimize
 
 from coupler_turn_off.circuit import BudgetModel, capacitance_matrix
 from coupler_turn_off.logical import energy_exchange
 from coupler_turn_off.readout import block_checks
-from readout_workflow.calculation import Basis, _transmon
+from core.transmon import Basis, transmon_spectrum
+from core.electrostatics import charge_coupling_ghz, exchange_j01_ghz
 
 
 def save(path, value):
@@ -40,9 +40,10 @@ def objective_mhz(result, objective):
 
 
 def resolve_direct_capacitance(config):
-    """Convert a supplied bare rate using the disconnected-mediator circuit.
+    """Convert J or J01 using the disconnected-mediator circuit.
 
-    A rate means |<10|H/h|01>| at the supplied nominal rail EJs, with both
+    J is the coefficient of n_A2*n_B1 in H/h, in GHz. J01 (MHz) means
+    |<10|H/h|01>| at the supplied nominal rail EJs, with both
     coupler links removed. It is NOT Jport after virtual coupler exchange.
     The capacitance is solved with loaded rail EC preserved, not an assumed
     linear rate/capacitance proportionality. The resolved C stays fixed later.
@@ -51,23 +52,32 @@ def resolve_direct_capacitance(config):
     if direct.get("capacitance_ff") is not None:
         return float(direct["capacitance_ff"])
     point = config["pair"]
-    target = direct["bare_exchange_mhz"]
+    coefficient_target = direct.get("charge_coupling_ghz")
+    target = coefficient_target
+    if target is None:
+        target = direct.get("j01_mhz")
+    if target is None:
+        target = direct["bare_exchange_mhz"]
     if target == 0:
         return 0.0
     basis = Basis(25, 8, 3, 12)
     n2 = abs(
-        _transmon(point["ej2_ghz"], point["loaded_ec2_mhz"] / 1000, basis)[1][0, 1]
+        transmon_spectrum(point["ej2_ghz"], point["loaded_ec2_mhz"] / 1000, basis)[1][0, 1]
     )
     n1 = abs(
-        _transmon(point["ej1_ghz"], point["loaded_ec1_mhz"] / 1000, basis)[1][0, 1]
+        transmon_spectrum(point["ej1_ghz"], point["loaded_ec1_mhz"] / 1000, basis)[1][0, 1]
     )
 
     def residual(cap):
         matrix, _ = capacitance_matrix(
             point, 0, config["coupler_candidates"][0]["ec_ghz"], cap
         )
-        coefficient_ghz = 4 * e**2 * np.linalg.inv(matrix * 1e-15)[1, 4] / (h * 1e9)
-        return 1000 * abs(coefficient_ghz * n1 * n2) - target
+        j_ghz = charge_coupling_ghz(np.linalg.inv(matrix * 1e-15))[1, 4]
+        actual = (
+            abs(j_ghz) if coefficient_target is not None
+            else 1000 * exchange_j01_ghz(j_ghz, n1, n2)
+        )
+        return actual - target
 
     maximum = 0.99 * min(point["device"]["C1_shunt_fF"], point["device"]["C2_shunt_fF"])
     upper = min(0.001, maximum)

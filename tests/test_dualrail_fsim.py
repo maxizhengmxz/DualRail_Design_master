@@ -7,7 +7,7 @@ import numpy as np
 import xarray as xr
 from scipy.linalg import expm
 
-from dtc_dualrail.dualrail_fsim import (
+from logical_resonance_gate.dualrail_fsim import (
     DYNAMIC_DUALRAIL_FSIM_SCHEMA,
     LOGICAL_STATE_LABELS,
     POPULATION_TRAJECTORY_SCHEMA,
@@ -40,7 +40,7 @@ from dtc_dualrail.dualrail_fsim import (
     track_logical_branches,
     validate_fixed_basis_along_path,
 )
-from dtc_dualrail.fsim import SolverConfig, TunableTransmonConfig, ideal_fsim
+from logical_resonance_gate.fsim import SolverConfig, TunableTransmonConfig, ideal_fsim
 
 
 def contour_fixture(frequency=(90.0, 100.0, 110.0)):

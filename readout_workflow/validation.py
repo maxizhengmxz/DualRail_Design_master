@@ -1,8 +1,10 @@
 """Shared reported quantities; all chi inputs are frequency shifts in GHz."""
 
 from . import calculation as study
+from core.transmon import Basis, transmon_spectrum
+from core.electrostatics import exchange_j01_ghz
 
-AUDIT = study.Basis(25, 12, 10, 60)
+AUDIT = Basis(25, 12, 10, 60)
 
 
 def audit_point(point, sign=True):
@@ -10,11 +12,13 @@ def audit_point(point, sign=True):
     model = study.ReadoutModel(study.Device(**point["device"]), AUDIT)
     result = study.annotate(model, point["ej1_ghz"], point["ej2_ghz"])
     result["x"] = study.x_from_point(result)
-    n1 = study._transmon(result["ej1_ghz"], model.ec_ghz[0], AUDIT)[1]
-    n2 = study._transmon(result["ej2_ghz"], model.ec_ghz[1], AUDIT)[1]
-    result["g12_over_2pi_mhz"] = float(
-        4 * study.e**2 * model.cinv[0, 1] / study.h * abs(n1[0, 1] * n2[0, 1]) / 1e6
+    n1 = transmon_spectrum(result["ej1_ghz"], model.ec_ghz[0], AUDIT)[1]
+    n2 = transmon_spectrum(result["ej2_ghz"], model.ec_ghz[1], AUDIT)[1]
+    result["J12_ghz"] = float(model.J_ghz[0, 1])
+    result["J01_12_mhz"] = 1000 * exchange_j01_ghz(
+        model.J_ghz[0, 1], n1[0, 1], n2[0, 1]
     )
+    result["g12_over_2pi_mhz"] = result["J01_12_mhz"]  # Legacy alias.
     if sign:
         result = study.check_chi_sign_stability(result, model)
     return result

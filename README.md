@@ -1,13 +1,25 @@
 # DTC Dual-Rail Analysis
 
-The two workflows are organized separately:
+The workflows are organized separately:
 
 - [Coupler turn-off](<coupler turn-off/README.md>): static physical/logical
   cancellation, fixed-capacitance EJ optimization and optional frequency maps.
 - [Readout optimization](readout_workflow/README.md): optimize a dual-rail pair
   independently, then supply its selected parameters to the coupler workflow.
+- [Logical-resonance gates](<logical-resonance gate/README.md>): five-transmon
+  logical-transition iSWAP and controlled-phase/CZ searches and pulse studies.
+- [Transmon-based CZ](<transmon-based CZ/README.md>): approximate four-transmon
+  physical-collision CZ search with independent effective EC inputs.
 
 Coding agents should start with [AGENTS.md](AGENTS.md).
+
+Shared physics and the dependency map are documented in [core/README.md](core/README.md).
+The Python package formerly named `dtc_dualrail` is now `core`. Readout and
+coupler-off share its transmon and electrostatic primitives; their searches
+and physical circuit definitions remain in their own workflow folders.
+
+Older studies unused by these workflows are archived in [legacy/](legacy/README.md),
+including their analysis helpers and dedicated tests.
 
 ```sh
 uv sync
@@ -25,4 +37,10 @@ All coupler-related code, tests, documentation and templates are in
 `coupler turn-off/`. Generated results go in its ignored `output/` folder.
 No saved case results or ZIP packaging are required; the source is ready
 for normal Git staging and review. Existing general-purpose project modules
-remain available separately in `dtc_dualrail/`.
+remain available separately in `core/`.
+
+Run all active workflow regression tests with `uv run python run_tests.py`.
+Add `--legacy` to include archived tests. Gate code imports its workflow-local
+`logical_resonance_gate` package directly; core contains no gate or legacy
+forwarding modules. No additional package installation is required for these
+checkout entry points.

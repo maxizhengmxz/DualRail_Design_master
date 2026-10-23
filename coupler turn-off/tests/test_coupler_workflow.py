@@ -115,6 +115,11 @@ class WorkflowTests(unittest.TestCase):
         )
         config["direct_a2_b1"] = dict(capacitance_ff=None, bare_exchange_mhz=rate)
         self.assertAlmostEqual(resolve_direct_capacitance(config), 0.12, places=9)
+        config["direct_a2_b1"] = dict(j01_mhz=rate)
+        self.assertAlmostEqual(resolve_direct_capacitance(config), 0.12, places=9)
+        j_ghz = 4 * e**2 * np.linalg.inv(matrix * 1e-15)[1, 4] / (h * 1e9)
+        config["direct_a2_b1"] = dict(charge_coupling_ghz=j_ghz)
+        self.assertAlmostEqual(resolve_direct_capacitance(config), 0.12, places=9)
         with threadpool_limits(limits=1):
             case = Case(config, config["coupler_candidates"][0])
             first = case.model([14, 12, 14, 12, 27])

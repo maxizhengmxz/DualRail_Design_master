@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import numpy as np
 
-from dtc_dualrail import (
+from logical_resonance_gate import (
     LogicalContour,
     LogicalFSimDeviceConfig,
     LogicalModeMapping,
@@ -14,7 +14,7 @@ from dtc_dualrail import (
     calibrate_reduced_pair_multi_point,
     run_single_transmon_sweep,
 )
-from dtc_dualrail.runtime import configure_single_threaded_blas
+from core.runtime import configure_single_threaded_blas
 
 
 def reference_pair():
@@ -72,7 +72,7 @@ class DeviceDefinitionTests(unittest.TestCase):
 
     def test_reference_circuit_preserves_factory_units_and_junctions(self):
         pair = replace(self.pair, Ej1_2=6.0, Ej2=13.0, C12=3.1)
-        with patch("dtc_dualrail.circuits._configured_dual_rail_circuit") as build:
+        with patch("core.circuits._configured_dual_rail_circuit") as build:
             self.assertIs(pair.build_circuit(), build.return_value)
         yaml = build.call_args.args[0]
         self.assertIn("Ej1_2=6.0GHz", yaml)
@@ -150,7 +150,7 @@ class DeviceDefinitionTests(unittest.TestCase):
             self.device.requires_direct_reference(calibration_a, calibration_b),
             expected,
         )
-        with patch("dtc_dualrail.device.gen_five_transmon_dual_rail") as build:
+        with patch("logical_resonance_gate.device.gen_five_transmon_dual_rail") as build:
             self.assertIs(self.device.build_reference_circuit(), build.return_value)
         kwargs = build.call_args.kwargs
         self.assertEqual(kwargs["coupling_capacitance_ff"]["A1_A2"], self.pair.C12)

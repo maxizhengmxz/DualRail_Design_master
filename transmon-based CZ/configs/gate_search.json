@@ -1,0 +1,57 @@
+{
+  "transmons": {
+    "A1": {
+      "EJ_GHz": 20.0,
+      "ng": 0.0,
+      "EC_GHz": 0.2
+    },
+    "A2": {
+      "EJ_GHz": 20.0,
+      "ng": 0.0,
+      "EC_GHz": 0.35
+    },
+    "B1": {
+      "EJ_GHz": 20.0,
+      "ng": 0.0,
+      "EC_GHz": 0.2
+    },
+    "B2": {
+      "EJ_GHz": 20.0,
+      "ng": 0.0,
+      "EC_GHz": 0.35
+    }
+  },
+  "basis": {
+    "ncut": 30,
+    "levels_per_transmon": 4
+  },
+  "evolution": {
+    "duration_ns": 500.0,
+    "samples": 4001
+  },
+  "couplings_GHz": {
+    "A1_A2": 0.12591336038063017,
+    "B1_B2": 0.12591336038063017,
+    "A2_B1": 0.02
+  },
+  "ej_grid_GHz": {
+    "start": 2.0,
+    "stop": 30.0,
+    "count": 129
+  },
+  "gate_search": {
+    "collision_channel": "0110_to_0200",
+    "target_a_detuning_GHz": -0.001,
+    "target_b_detuning_GHz": 0.001,
+    "target_cz_detuning_GHz": 0.001,
+    "minimum_other_collision_detuning_GHz": 0.05,
+    "minimum_EJ_over_EC": 25.0,
+    "minimum_first_odd_pi_conditional_fidelity": 0.99,
+    "minimum_first_odd_pi_unconditional_fidelity": null,
+    "minimum_first_odd_pi_acceptance": null,
+    "maximum_first_odd_pi_time_ns": 490.0,
+    "conditional_phase_tolerance_rad": 0.01,
+    "root_xtol": 1e-10
+  },
+  "temporary_design_note": "Exploratory symmetric EC seeds. No readout or idle/off qualification; replace later from readout feasibility map."
+}

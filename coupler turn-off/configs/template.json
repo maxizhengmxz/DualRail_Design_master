@@ -21,7 +21,8 @@
   },
   "direct_a2_b1": {
     "capacitance_ff": null,
-    "bare_exchange_mhz": null
+    "charge_coupling_ghz": null,
+    "j01_mhz": null
   },
   "coupler_candidates": [
     {

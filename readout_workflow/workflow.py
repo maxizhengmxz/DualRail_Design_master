@@ -158,6 +158,7 @@ def configuration(pairs, archive_path=None):
     """Fingerprint equations, physical rules and seeds independently of old IDs."""
     package = Path(__file__).resolve().parent
     sources = (
+        "model.py",
         "calculation.py",
         "diagnostics.py",
         "optimization.py",
@@ -179,7 +180,11 @@ def configuration(pairs, archive_path=None):
             archive_path.read_bytes() if archive_path is not None else b"[]"
         ).hexdigest(),
         numerical_source_sha256={
-            name: sha256((package / name).read_bytes()).hexdigest() for name in sources
+            **{name: sha256((package / name).read_bytes()).hexdigest() for name in sources},
+            **{
+                f"core/{name}": sha256((package.parent / "core" / name).read_bytes()).hexdigest()
+                for name in ("transmon.py", "electrostatics.py")
+            },
         },
     )
 

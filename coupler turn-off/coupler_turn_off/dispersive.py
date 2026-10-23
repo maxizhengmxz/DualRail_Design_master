@@ -11,7 +11,7 @@ from scipy.linalg import eigh
 from scipy.optimize import linear_sum_assignment
 
 from coupler_turn_off.circuit import embed
-from readout_workflow.calculation import Basis, _transmon
+from core.transmon import Basis, transmon_spectrum
 
 
 def network_dispersive(model, ej_c, levels=6, pair_keep=10, c_levels=5):
@@ -23,14 +23,14 @@ def network_dispersive(model, ej_c, levels=6, pair_keep=10, c_levels=5):
     ):
         en, ops = [], []
         for pos, (node, ej) in enumerate(zip(nodes, ejs, strict=True)):
-            energy, charge = _transmon(ej, model.ec[node], basis)
+            energy, charge = transmon_spectrum(ej, model.ec[node], basis)
             en.append(energy)
             ops.append(embed(charge, pos, (levels, levels)))
         ham = np.diag((en[0][:, None] + en[1][None, :]).ravel())
         ham += model.k[nodes[0], nodes[1]] * ops[0] @ ops[1]
         vals, vecs = eigh(ham, subset_by_index=(0, pair_keep - 1))
         pair_data.append((vals - vals[0], [vecs.T @ op @ vecs for op in ops]))
-    ec, nc = _transmon(ej_c, model.ec_c, Basis(25, c_levels, 3, 10))
+    ec, nc = transmon_spectrum(ej_c, model.ec_c, Basis(25, c_levels, 3, 10))
     ea, oa = pair_data[0]
     eb, ob = pair_data[1]
     dims = (pair_keep, c_levels, pair_keep)

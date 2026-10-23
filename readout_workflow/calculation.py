@@ -1,12 +1,12 @@
-"""Single-junction circuit model and nominal acceptance/search equations.
+"""Batch device defaults and nominal readout acceptance/search equations.
 
 Units: physical capacitances fF; inductance nH; energies E/h and frequencies
 GHz. Matrices represent H/h. Both capacitive loading and interactions come
 from the SAME inverse capacitance matrix; no junction parasitic C is added.
 
-Reading order: Conditions -> Device/Basis -> Hamiltonian and state diagnostics
--> nominal search -> acceptance inequalities. The source order preserves
-function defaults and the equations used by the saved checkpoint.
+Circuit construction, diagonalization and basic observables live in model.py.
+Reading order here: Conditions -> batch Device defaults -> additional diagnostics
+-> nominal search -> acceptance inequalities. Existing defaults are preserved.
 
 Operation frequency is the mean DRESSED logical transition frequency. Search
 coordinates use local uncoupled frequencies only as numerical EJ coordinates.
@@ -21,10 +21,16 @@ from dataclasses import asdict, dataclass, replace
 
 import numpy as np
 from scipy.constants import elementary_charge as e
-from scipy.constants import h, hbar
+from scipy.constants import h
 from scipy.linalg import eigh
-from scipy.optimize import brentq, least_squares, linear_sum_assignment
+from scipy.optimize import brentq, least_squares
 from threadpoolctl import threadpool_limits
+
+from core.transmon import Basis, transmon_spectrum
+from .model import Device as PairDevice, ReadoutModel as PairReadoutModel
+
+# Existing callers may still import the historical private helper.
+_transmon = transmon_spectrum
 
 BARE_RESONATOR_GHZ = 6.0
 
@@ -88,10 +94,9 @@ SEARCH_EFFORT = {
 
 
 @dataclass(frozen=True)
-class Device:
-    """Physical circuit inputs; internal field names retain the archive schema."""
+class Device(PairDevice):
+    """Batch-search defaults for the shared pair circuit (not notebook defaults)."""
 
-    # Physical capacitances, all in fF. No EC values disguised as capacitances.
     C1_shunt_fF: float = 87.0
     C2_shunt_fF: float = 73.0
     C12_fF: float = 1.7691402536230083
@@ -100,169 +105,12 @@ class Device:
     Cr_fF: float = 530.5164769729845
     Lr_nH: float = 1.3262911924324612
 
-    def __post_init__(self):
-        for name, value in asdict(self).items():
-            if not np.isfinite(value) or value < 0:
-                raise ValueError(f"{name} must be finite and nonnegative")
-            if name in ("C1_shunt_fF", "C2_shunt_fF", "Cr_fF", "Lr_nH") and value == 0:
-                raise ValueError(f"{name} must be positive")
 
-    def capacitance_matrix(self):
-        # Node order: transmon 1, transmon 2, resonator.
-        # Diagonals sum attached capacitors; off-diagonals are negative mutual C.
-        # No junction parasitic capacitances are added.
-        c1, c2, c12, c1r, c2r, cr = (
-            self.C1_shunt_fF,
-            self.C2_shunt_fF,
-            self.C12_fF,
-            self.C1r_fF,
-            self.C2r_fF,
-            self.Cr_fF,
-        )
-        return 1e-15 * np.array(
-            [
-                [c1 + c12 + c1r, -c12, -c1r],
-                [-c12, c2 + c12 + c2r, -c2r],
-                [-c1r, -c2r, cr + c1r + c2r],
-            ]
-        )
-
-
-@dataclass(frozen=True)
-class Basis:
-    """Charge cutoff, retained local levels, photons and tracked eigenlevels."""
-
-    ncut: int = 15  # Charge states -ncut ... ncut, for each transmon.
-    transmon_levels: int = 6  # Local eigenstates kept per transmon.
-    resonator_levels: int = 5
-    eigenlevels: int = 20  # Full-circuit eigenstates used for branch assignment.
-
-    def __post_init__(self):
-        if any(not isinstance(v, int) for v in asdict(self).values()):
-            raise ValueError("Basis sizes must be integers")
-        if self.ncut < 2 or not 3 <= self.transmon_levels <= 2 * self.ncut + 1:
-            raise ValueError("Invalid transmon basis")
-        if self.resonator_levels < 3:
-            raise ValueError("Keep at least three resonator levels")
-        if not 6 <= self.eigenlevels <= self.transmon_levels**2 * self.resonator_levels:
-            raise ValueError("Invalid eigenlevel count")
-
-
-def _transmon(ej_ghz, ec_ghz, basis):
-    """Diagonalize 4 EC n^2 - EJ cos(phi), returning local energies and n."""
-    if not np.isfinite(ej_ghz) or ej_ghz <= 0:
-        raise ValueError("Josephson energies must be positive, in GHz")
-    n = np.arange(-basis.ncut, basis.ncut + 1)
-    # One ideal junction: -EJ*cos(phi); cos(phi) shifts charge by one Cooper pair.
-    ham = np.diag(4 * ec_ghz * n * n) - ej_ghz / 2 * (
-        np.diag(np.ones(len(n) - 1), 1) + np.diag(np.ones(len(n) - 1), -1)
-    )
-    energy, states = eigh(ham, subset_by_index=(0, basis.transmon_levels - 1))
-    charge = states.T @ (n[:, None] * states)
-    return energy - energy[0], charge
-
-
-class ReadoutModel:
-    """Exact diagonalization within a truncated transmon x transmon x Fock basis."""
+class ReadoutModel(PairReadoutModel):
+    """Shared circuit evaluator with the existing batch default Device."""
 
     def __init__(self, device=None, basis=None):
-        device = Device() if device is None else device
-        basis = Basis() if basis is None else basis
-        self.device, self.basis = device, basis
-        self.cinv = np.linalg.inv(device.capacitance_matrix())
-        # H_C = Q.T C^-1 Q / 2, Q_transmon = 2e*n.
-        self.ec_ghz = e**2 * np.diag(self.cinv) / (2 * h * 1e9)
-        self.cr_eff = 1 / self.cinv[2, 2]
-        self.omega_r = 1 / np.sqrt(device.Lr_nH * 1e-9 * self.cr_eff)
-        self.fr_ghz = self.omega_r / (2 * np.pi * 1e9)
-        self.qr_zpf = np.sqrt(hbar * self.cr_eff * self.omega_r / 2)
-
-    def evaluate(self, ej1_ghz, ej2_ghz):
-        """Assign six distinct branches; extract conditional chi and charge balance.
-
-        g,m,p are ground/lower/upper pair branches; r,mr,pr add one photon.
-        chi_s = (E_sr-E_s) - (E_r-E_g), in GHz. This convention is the full
-        conditional resonator-frequency difference, without an extra factor 2.
-        The independent reference-overlap screen tests branch-label reliability.
-        """
-        b = self.basis
-        en1, n1 = _transmon(ej1_ghz, self.ec_ghz[0], b)
-        en2, n2 = _transmon(ej2_ghz, self.ec_ghz[1], b)
-        it = np.eye(b.transmon_levels)
-        ir = np.eye(b.resonator_levels)
-        n1_pair, n2_pair = np.kron(n1, it), np.kron(it, n2)
-        pair = np.diag((en1[:, None] + en2[None, :]).ravel())
-        pair += 4 * e**2 * self.cinv[0, 1] / (h * 1e9) * (n1_pair @ n2_pair)
-        _, pair_states = eigh(pair)
-        a = np.diag(np.sqrt(np.arange(1, b.resonator_levels)), 1)
-        qr = 1j * self.qr_zpf * (a.T - a)
-        ham = np.kron(pair, ir).astype(complex)
-        ham += np.kron(
-            np.eye(pair.shape[0]), np.diag(np.arange(b.resonator_levels) * self.fr_ghz)
-        )
-        ham += (
-            2
-            * e
-            / (h * 1e9)
-            * np.kron(self.cinv[0, 2] * n1_pair + self.cinv[1, 2] * n2_pair, qr)
-        )
-        energy, states = eigh(ham, subset_by_index=(0, b.eigenlevels - 1))
-        energy -= energy[0]
-
-        # Match g,m,p,r,mr,pr to isolated-pair eigenstates x resonator Fock states.
-        # Hungarian assignment keeps the six dressed-state labels distinct.
-        labels = ("g", "m", "p", "r", "mr", "pr")
-        references = np.column_stack(
-            [
-                np.kron(pair_states[:, rail], ir[:, photon])
-                for rail, photon in ((0, 0), (1, 0), (2, 0), (0, 1), (1, 1), (2, 1))
-            ]
-        )
-        overlaps = np.abs(references.conj().T @ states) ** 2
-        rows, cols = linear_sum_assignment(-overlaps)
-        levels = dict(zip((labels[i] for i in rows), cols, strict=True))
-        tracked = {name: energy[levels[name]] for name in labels}
-        ground = states[:, levels["g"]]
-        rail_states = states[:, [levels["m"], levels["p"]]]
-        strengths = np.array(
-            [
-                np.abs(ground.conj() @ np.kron(op, ir) @ rail_states) ** 2
-                for op in (n1_pair, n2_pair)
-            ]
-        )
-        totals = strengths.sum(axis=1, keepdims=True)
-        participation = np.divide(
-            strengths, totals, out=np.zeros_like(strengths), where=totals > 0
-        )
-        hybridization = np.clip(1 - 2 * np.mean(np.abs(participation - 0.5)), 0, 1)
-        chi_p = tracked["pr"] - tracked["p"] - tracked["r"] + tracked["g"]
-        chi_m = tracked["mr"] - tracked["m"] - tracked["r"] + tracked["g"]
-        return {
-            "ej1_ghz": float(ej1_ghz),
-            "ej2_ghz": float(ej2_ghz),
-            "operating_frequency_ghz": (tracked["p"] + tracked["m"]) / 2 - tracked["g"],
-            "dressed_m_ghz": tracked["m"] - tracked["g"],
-            "dressed_p_ghz": tracked["p"] - tracked["g"],
-            "dressed_r_ghz": tracked["r"] - tracked["g"],
-            "splitting_ghz": abs(tracked["p"] - tracked["m"]),
-            "hybridization": float(hybridization),
-            "chi_p_ghz": chi_p,
-            "chi_m_ghz": chi_m,
-            "delta_chi_ghz": chi_p - chi_m,
-            "abs_delta_chi_over_chi_p": abs((chi_p - chi_m) / chi_p)
-            if chi_p != 0
-            else np.inf,
-            "min_assignment_overlap": float(overlaps[rows, cols].min()),
-            "bare_f1_ghz": en1[1],
-            "bare_f2_ghz": en2[1],
-            # Magnitudes of local |0> <-> |1> exchange matrix elements divided
-            # by h, in MHz. Use charge elements from the numerical transmons,
-            # not their harmonic approximation or half a dressed splitting.
-            "g1r_over_2pi_mhz": abs(2 * e * self.cinv[0, 2] * self.qr_zpf * n1[0, 1])
-            / (h * 1e6),
-            "g2r_over_2pi_mhz": abs(2 * e * self.cinv[1, 2] * self.qr_zpf * n2[0, 1])
-            / (h * 1e6),
-        }
+        super().__init__(Device() if device is None else device, basis)
 
 
 SCREENING_BASIS = Basis()
@@ -280,14 +128,14 @@ def diagnostics(model, point):
     Both g_ij and Delta_ij use GHz, so their ratio is dimensionless.
     """
     b = model.basis
-    en1, n1 = _transmon(point["ej1_ghz"], model.ec_ghz[0], b)
-    en2, n2 = _transmon(point["ej2_ghz"], model.ec_ghz[1], b)
+    en1, n1 = transmon_spectrum(point["ej1_ghz"], model.ec_ghz[0], b)
+    en2, n2 = transmon_spectrum(point["ej2_ghz"], model.ec_ghz[1], b)
     n1p, n2p = (
         np.kron(n1, np.eye(b.transmon_levels)),
         np.kron(np.eye(b.transmon_levels), n2),
     )
     hp = np.diag((en1[:, None] + en2[None, :]).ravel())
-    hp += 4 * e**2 * model.cinv[0, 1] / (h * 1e9) * (n1p @ n2p)
+    hp += model.J_ghz[0, 1] * (n1p @ n2p)
     energy, vectors = eigh(hp)
     coupling = (
         2
@@ -470,7 +318,7 @@ def chi_sign_certificate_valid(point):
 def inverse_frequency(frequency, ec, basis):
     """Invert the numerically diagonalized local f01, not sqrt(8 EJ EC)-EC."""
     return brentq(
-        lambda ej: _transmon(ej, ec, basis)[0][1] - frequency, 0.02, 100.0, xtol=2e-10
+        lambda ej: transmon_spectrum(ej, ec, basis)[0][1] - frequency, 0.02, 100.0, xtol=2e-10
     )
 
 
@@ -549,7 +397,7 @@ def seed_candidates(c1, c2, warm=()):
         lower = max(
             CONDITIONS.operation_frequency_ghz[0] + 0.02,
             *(
-                _transmon(
+                transmon_spectrum(
                     (CONDITIONS.ej_over_ec_min + 0.05) * value, value, SCREENING_BASIS
                 )[0][1]
                 for value in ec
@@ -558,7 +406,7 @@ def seed_candidates(c1, c2, warm=()):
         upper = min(
             CONDITIONS.operation_frequency_ghz[1] - 0.02,
             *(
-                _transmon(CONDITIONS.ej_upper_ghz - 0.01, value, SCREENING_BASIS)[0][1]
+                transmon_spectrum(CONDITIONS.ej_upper_ghz - 0.01, value, SCREENING_BASIS)[0][1]
                 for value in ec
             ),
         )

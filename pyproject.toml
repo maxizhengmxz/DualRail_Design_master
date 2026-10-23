@@ -23,10 +23,10 @@ line-length = 88
 target-version = "py313"
 extend-exclude = [
     "dtc.py",
-    "dtc_dt_comparison.py",
-    "dtc_dt_tunable_r.py",
-    "dtc_monte_carlo.py",
-    "dtc_tracking.py",
+    "legacy/notebooks/dtc_dt_comparison.py",
+    "legacy/notebooks/dtc_dt_tunable_r.py",
+    "legacy/notebooks/dtc_monte_carlo.py",
+    "legacy/notebooks/dtc_tracking.py",
 ]
 
 [tool.ruff.lint]

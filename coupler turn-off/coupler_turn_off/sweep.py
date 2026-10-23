@@ -11,12 +11,12 @@ import numpy as np
 from scipy.optimize import brentq, minimize_scalar
 
 from coupler_turn_off.engine import objective_mhz, save
-from readout_workflow.calculation import Basis, _transmon
+from core.transmon import Basis, transmon_spectrum
 
 
 def f01(ej, ec):
     """Exact local transmon transition in GHz, before mode hybridization."""
-    return float(_transmon(ej, ec, Basis(25, 8, 3, 12))[0][1])
+    return float(transmon_spectrum(ej, ec, Basis(25, 8, 3, 12))[0][1])
 
 
 def ej_for_frequency(frequency, ec, bounds):

@@ -1,0 +1,28 @@
+{
+  "transmons": {
+    "A1": {"EC_GHz": 0.304, "EJ_GHz": 16.772178681293113, "ng": 0.0},
+    "A2": {"EC_GHz": 0.334, "EJ_GHz": 15.81231144268179, "ng": 0.0},
+    "B1": {"EC_GHz": 0.280, "EJ_GHz": 16.367510684306623, "ng": 0.0},
+    "B2": {"EC_GHz": 0.360, "EJ_GHz": 14.146289314305227, "ng": 0.0}
+  },
+  "couplings_GHz": {
+    "A1_A2": 0.10080080398077906,
+    "B1_B2": 0.10006900074643581,
+    "A2_B1": 0.020
+  },
+  "basis": {
+    "ncut": 30,
+    "levels_per_transmon": 4
+  },
+  "evolution": {
+    "duration_ns": 200.0,
+    "samples": 1601
+  },
+  "odd_pi_analysis": {
+    "enabled": true,
+    "orders": [1, 2],
+    "tolerance_rad": 0.05
+  },
+  "noise": null,
+  "output_directory": "../output/current_gate_point_validation"
+}

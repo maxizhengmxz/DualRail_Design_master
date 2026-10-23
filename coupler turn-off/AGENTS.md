@@ -9,8 +9,9 @@ is `python "coupler turn-off/run.py"`; without arguments it only shows help.
 1. Request the **externally readout-optimized pair** and its readout baseline.
    Readout optimization is a separate workflow in the shared `../readout_workflow/`. Do not
    run it as part of coupler-off analysis unless separately instructed.
-2. Request the **direct bare A2-B1 coupling** as either a cyclic exchange rate
-   or a capacitor. Ask for units. A rate means `|<10|H/h|01>|`, not an angular
+2. Request the **direct bare A2-B1 coupling** as a charge coefficient J in
+   `H_int/h = J*n_A2*n_B1` (GHz), a local exchange J01 (MHz), or a capacitor.
+   Ask for units. J01 means `|<10|H/h|01>|`, not J, an angular
    rate, avoided-crossing splitting, or effective exchange after the coupler.
    If the user's convention differs, clarify/convert before using it.
 3. Ask the user to choose **physical**, **logical**, or **combined** minimization.
@@ -57,7 +58,8 @@ for code changes. Prefer concise progress updates and economical tool output.
 
 Keep unrelated project functionality and user edits intact. All coupler-off
 source, tests and input templates belong in this folder. Keep the shared
-readout calculation primitives in `../readout_workflow/`; do not duplicate them.
+transmon/Basis and EC/J/J01 primitives in `../core/`; import them directly.
+Readout-specific circuit diagnostics remain in `../readout_workflow/`.
 Run `python "coupler turn-off/run_tests.py"` from the repository root after
 changes. Do not create ZIP archives. The user will push source to Git; exclude
 saved outputs, environments, caches and credentials.

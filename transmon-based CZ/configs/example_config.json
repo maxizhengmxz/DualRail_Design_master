@@ -1,0 +1,28 @@
+{
+  "transmons": {
+    "A1": {"EC_GHz": 0.304, "EJ_GHz": 12.0, "ng": 0.0},
+    "A2": {"EC_GHz": 0.334, "EJ_GHz": 11.044, "ng": 0.0},
+    "B1": {"EC_GHz": 0.280, "EJ_GHz": 11.359, "ng": 0.0},
+    "B2": {"EC_GHz": 0.360, "EJ_GHz": 9.117, "ng": 0.0}
+  },
+  "couplings_GHz": {
+    "A1_A2": 0.126,
+    "B1_B2": 0.126,
+    "A2_B1": 0.020
+  },
+  "basis": {
+    "ncut": 30,
+    "levels_per_transmon": 4
+  },
+  "evolution": {
+    "duration_ns": 100.0,
+    "samples": 801
+  },
+  "odd_pi_analysis": {
+    "enabled": true,
+    "orders": [1, 2],
+    "tolerance_rad": 0.05
+  },
+  "noise": null,
+  "output_directory": "../output/simulation_output"
+}

@@ -6,7 +6,8 @@ The full-circuit conditional chi/hybridization checks come from BudgetModel.
 
 import numpy as np
 
-from readout_workflow.calculation import Basis, Device, ReadoutModel, annotate, failures
+from core.transmon import Basis
+from readout_workflow.calculation import Device, ReadoutModel, annotate, failures
 
 
 def block_checks(model):

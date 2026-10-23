@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from dtc_dualrail.circuits import (
+from core.circuits import (
     _circuit_factory_name,
     _configured_dual_rail_circuit,
     _validate_circuit_factory_params,
@@ -68,7 +68,7 @@ class CircuitFactoryTests(unittest.TestCase):
         self.assertEqual(_circuit_factory_name(custom_factory), "custom_factory")
 
     def test_shared_configurator_applies_dual_rail_defaults(self):
-        with patch("dtc_dualrail.circuits.scq.Circuit", FakeScqubitsCircuit):
+        with patch("core.circuits.scq.Circuit", FakeScqubitsCircuit):
             circuit = _configured_dual_rail_circuit("branches: []")
 
         self.assertEqual(circuit.yaml, "branches: []")
@@ -81,7 +81,7 @@ class CircuitFactoryTests(unittest.TestCase):
         self.assertEqual(circuit.configure_kwargs["subsystem_trunc_dims"], [40, 18])
 
     def test_direct_five_transmon_factory_has_stable_fluxes_and_links(self):
-        with patch("dtc_dualrail.circuits.scq.Circuit", FakeScqubitsCircuit):
+        with patch("core.circuits.scq.Circuit", FakeScqubitsCircuit):
             circuit = gen_five_transmon_dual_rail(
                 rail_ej_pairs_ghz=[(12.0, 8.0)] * 4,
                 rail_cj_pairs_ff=[(5.0, 5.0)] * 4,

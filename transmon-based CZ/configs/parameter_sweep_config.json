@@ -1,0 +1,126 @@
+{
+  "transmons": {
+    "A1": {"EC_GHz": 0.304, "EJ_GHz": 12.0, "ng": 0.0},
+    "A2": {"EC_GHz": 0.334, "EJ_GHz": 11.044, "ng": 0.0},
+    "B1": {"EC_GHz": 0.304, "EJ_GHz": 11.359, "ng": 0.0},
+    "B2": {"EC_GHz": 0.334, "EJ_GHz": 9.117, "ng": 0.0}
+  },
+  "couplings_GHz": {
+    "A1_A2": 0.126,
+    "B1_B2": 0.126,
+    "A2_B1": 0.020
+  },
+  "basis": {
+    "ncut": 30,
+    "levels_per_transmon": 4
+  },
+  "evolution": {
+    "duration_ns": 500.0,
+    "samples": 4001
+  },
+  "noise": null,
+  "uncoupled_spectrum": {
+    "collision_window_GHz": 0.150
+  },
+  "sweep": {
+    "EC_A1_B1_GHz": 0.2,
+    "delta_EC_GHz": {"start": 0.01, "stop": 0.15, "count": 28},
+    "EJ_A2_GHz": {"start": 12.0, "stop": 30.0, "count": 37},
+    "collision_channel": "0110_to_0200",
+    "target_bare_detuning_GHz": 0.001,
+    "target_A1_minus_A2_detuning_GHz": -0.001,
+    "target_B1_minus_B2_detuning_GHz": 0.001,
+    "EJ_B1_bracket_GHz": [8.0, 40.0],
+    "rail_EJ_bracket_GHz": [1.0, 40.0],
+    "minimum_EJ_over_EC": 25.0,
+    "conditional_phase_tolerance_rad": 0.05
+  },
+  "ec_a2_sweep": {
+    "delta_EC_GHz": {"start": 0.01, "stop": 0.15, "count": 28},
+    "EC_A2_GHz": {"start": 0.3, "stop": 0.4, "count": 21},
+    "EJ_A2_GHz": 17.0,
+    "collision_channel": "0110_to_0200",
+    "target_bare_detuning_GHz": 0.001,
+    "target_A1_minus_A2_detuning_GHz": -0.001,
+    "target_B1_minus_B2_detuning_GHz": 0.001,
+    "EJ_B1_bracket_GHz": [8.0, 40.0],
+    "rail_EJ_bracket_GHz": [1.0, 40.0],
+    "minimum_EJ_over_EC": 25.0,
+    "conditional_phase_tolerance_rad": 0.05,
+    "output_directory": "../output/ec_a2_sweep_output"
+  },
+  "dark_region_case_study": {
+    "points": [
+      {"label": "dark", "delta_EC_GHz": 0.0300, "EJ_A2_GHz": 12.5},
+      {"label": "dark", "delta_EC_GHz": 0.0600, "EJ_A2_GHz": 12.5},
+      {"label": "dark", "delta_EC_GHz": 0.0255, "EJ_A2_GHz": 26.5},
+      {"label": "dark", "delta_EC_GHz": 0.0359, "EJ_A2_GHz": 29.0},
+      {"label": "bright", "delta_EC_GHz": 0.0359, "EJ_A2_GHz": 19.0}
+    ],
+    "evolution": {"duration_ns": 400.0, "samples": 3201},
+    "output_directory": "../output/dark_region_case_study"
+  },
+  "gate_time_slice_diagnostics": {
+    "EJ_A2_GHz": [20.0, 12.5],
+    "conditional_phase_tolerance_rad": 0.05,
+    "output_directory": "../output/parameter_sweep_output/gate_time_slice_diagnostics"
+  },
+  "vertical_slice_diagnostics": {
+    "delta_EC_GHz": [0.04, 0.06],
+    "conditional_phase_tolerance_rad": 0.05,
+    "output_directory": "../output/parameter_sweep_output/vertical_slice_diagnostics"
+  },
+  "detuning_sweep": {
+    "delta_EC_GHz": 0.140,
+    "EJ_A2_GHz": 15.0,
+    "delta_rail_GHz": {"start": 0.0, "stop": 0.010, "count": 21},
+    "delta_CZ_GHz": {"start": 0.0, "stop": 0.010, "count": 21},
+    "collision_channel": "0110_to_0200",
+    "EJ_B1_bracket_GHz": [8.0, 40.0],
+    "rail_EJ_bracket_GHz": [1.0, 40.0],
+    "minimum_EJ_over_EC": 25.0,
+    "conditional_phase_tolerance_rad": 0.05,
+    "output_directory": "../output/detuning_sweep_output"
+  },
+  "ej_a2_detuning_sweep": {
+    "delta_EC_GHz": 0.140,
+    "delta_rail_GHz": 0.0,
+    "EJ_A2_GHz": {"start": 12.0, "stop": 30.0, "count": 37},
+    "delta_CZ_GHz": {"start": 0.0, "stop": 0.010, "count": 21},
+    "collision_channel": "0110_to_0200",
+    "EJ_B1_bracket_GHz": [8.0, 40.0],
+    "rail_EJ_bracket_GHz": [1.0, 40.0],
+    "minimum_EJ_over_EC": 25.0,
+    "conditional_phase_tolerance_rad": 0.05,
+    "output_directory": "../output/ej_a2_detuning_sweep_output"
+  },
+  "ej_a2_signed_detuning_sweep": {
+    "delta_EC_GHz": 0.140,
+    "delta_rail_GHz": 0.0,
+    "EJ_A2_GHz": {"start": 12.0, "stop": 30.0, "count": 37},
+    "delta_CZ_GHz": {"start": -0.010, "stop": 0.010, "count": 41},
+    "collision_channel": "0110_to_0200",
+    "EJ_B1_bracket_GHz": [8.0, 40.0],
+    "rail_EJ_bracket_GHz": [1.0, 40.0],
+    "minimum_EJ_over_EC": 25.0,
+    "conditional_phase_tolerance_rad": 0.05,
+    "output_directory": "../output/ej_a2_signed_detuning_sweep_output"
+  },
+  "coupling_sweep": {
+    "delta_EC_GHz": 0.140,
+    "EJ_A2_GHz": 15.0,
+    "delta_rail_GHz": 0.0,
+    "delta_CZ_GHz": 0.005,
+    "intra_rail_coupling_GHz": {"start": 0.050, "stop": 0.150, "count": 21},
+    "inter_rail_coupling_GHz": {"start": 0.005, "stop": 0.028, "count": 24},
+    "collision_channel": "0110_to_0200",
+    "EJ_B1_bracket_GHz": [8.0, 40.0],
+    "rail_EJ_bracket_GHz": [1.0, 40.0],
+    "minimum_EJ_over_EC": 25.0,
+    "maximum_intra_detuning_over_exchange": 0.1,
+    "minimum_inter_detuning_over_exchange": 10.0,
+    "conditional_phase_tolerance_rad": 0.05,
+    "output_directory": "../output/coupling_sweep_output"
+  },
+  "output_directory": "../output/parameter_sweep_output/1MHzdetuning"
+}

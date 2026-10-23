@@ -1,5 +1,5 @@
 import copy
-import importlib
+import importlib.util
 import os
 import tempfile
 import unittest
@@ -10,9 +10,9 @@ from unittest import mock
 import numpy as np
 import xarray as xr
 
-from dtc_dualrail.dualrail_fsim import DualRailPulse, build_dualrail_fsim_model
-from dtc_dualrail.logical_fsim_config import LogicalFSimWorkflowConfig
-from dtc_dualrail.logical_fsim_workflow import (
+from logical_resonance_gate.dualrail_fsim import DualRailPulse, build_dualrail_fsim_model
+from logical_resonance_gate.logical_fsim_config import LogicalFSimWorkflowConfig
+from logical_resonance_gate.logical_fsim_workflow import (
     LOGICAL_FSIM_PULSE_SWEEP_SCHEMA,
     load_compatible_pulse_sweep,
     load_or_create_configured_reference,
@@ -21,8 +21,9 @@ from dtc_dualrail.logical_fsim_workflow import (
 from tests.test_dualrail_fsim import pulse_contours, tiny_config
 
 ROOT = Path(__file__).parents[1]
-SMOKE_CONFIG = ROOT / "configs" / "logical_fsim_smoke.toml"
-PRODUCTION_CONFIG = ROOT / "configs" / "logical_fsim.toml"
+WORKFLOW_ROOT = ROOT / "logical-resonance gate"
+SMOKE_CONFIG = WORKFLOW_ROOT / "configs" / "logical_fsim_smoke.toml"
+PRODUCTION_CONFIG = WORKFLOW_ROOT / "configs" / "logical_fsim.toml"
 
 
 class WorkflowConfigurationTests(unittest.TestCase):
@@ -160,10 +161,21 @@ class HeadlessNotebookSmokeTests(unittest.TestCase):
                 "LOGICAL_FSIM_CONFIG": str(SMOKE_CONFIG),
                 "LOGICAL_FSIM_DATA": tmpdir,
                 "MPLCONFIGDIR": tmpdir,
+                "MPLBACKEND": "Agg",  # Headless smoke execution must not wait on a GUI.
             }
-            with mock.patch.dict(os.environ, environment), warnings.catch_warnings():
+            # Dependencies can import pyplot before MPLBACKEND is set. Suppress
+            # blocking display calls as well; the notebook's plot code still runs.
+            with (
+                mock.patch.dict(os.environ, environment),
+                mock.patch("matplotlib.pyplot.show"),
+                warnings.catch_warnings(),
+            ):
                 warnings.simplefilter("ignore")
-                notebook = importlib.import_module("logical_fsim")
+                spec = importlib.util.spec_from_file_location(
+                    "logical_resonance_notebook", WORKFLOW_ROOT / "logical_fsim.py"
+                )
+                notebook = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(notebook)
                 _, first = notebook.app.run()
                 first_fingerprint = first["iswap_smooth_sweep"].attrs["fingerprint"]
                 _, second = notebook.app.run()
