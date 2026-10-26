@@ -360,7 +360,7 @@ def run(args):
                 def accept_strength(task, result, phase=phase):
                     pair = (task["c1"], task["c2"])
                     if result["status"] != "validated_pass":
-                        q = audit_point(active[key(pair)]["point"])
+                        q = audit_point(active[key(pair)]["point"], force_full=True)
                         if study.failures(q, require_sign_check=True):
                             raise RuntimeError(f"No audited nominal witness at {pair}")
                         result.update(

@@ -63,14 +63,16 @@ the beginning of calculation.py.
 ## Accepted nominal points
 
 Let mean_chi = (chi_plus + chi_minus)/2 and delta_chi = chi_plus - chi_minus.
-The objective is **maximize abs(mean_chi)**, equivalently abs(chi_sum)/2.
+The legacy strength-optimization workflow maximizes **abs(mean_chi)**, equivalently
+abs(chi_sum)/2. The retained feasibility scans stop at the first validated
+solution and do not optimize readout strength.
 
 | Condition | Threshold |
 | --- | --- |
 | Matching | abs(delta_chi / mean_chi) <= 1% |
 | Readout strength | abs(mean_chi) >= 1 MHz |
 | Multilevel dispersive ratio | <= 0.1 |
-| Logical frequency | 90-110 MHz |
+| Logical frequency | 90-110 MHz model default; 140-160 MHz in the retained scans |
 | Hybridization H | >= 95% |
 | State-assignment overlaps | >= 95% |
 | Loaded EC/h, each transmon | >= 150 MHz and strictly < 400 MHz |
@@ -151,3 +153,79 @@ From the main folder:
 
 Tests cover the circuit, transmon-label symmetry, strict energy
 bounds, notebook helpers, checkpoint identity and real Windows file locks.
+
+## Retained results and feasibility workflows
+
+Only two scientific sweep datasets are retained:
+
+| Dataset | Contents | Driver |
+| --- | --- | --- |
+| `data/feasibility_150mhz_step1_diag2/` | 4,278 capacitance pairs at 1 fF spacing; 339 viable designs; all 998 requested 2 fF diagnostic targets complete, plus 341 earlier off-grid diagnoses | [fine_readout_feasibility.py](fine_readout_feasibility.py) |
+| `data/direct_ec_step5/` | 48 directly searched loaded-EC pairs at 5 MHz spacing, all validated; all 36 tested holes in the old occupancy plot filled | [direct_ec_feasibility.py](direct_ec_feasibility.py) |
+
+The two reusable calculation drivers/templates live inside this package;
+this README is their guide. Opening/importing them starts no calculation.
+From the project root, module entry points are
+`python -m readout_workflow.direct_ec_feasibility` and
+`python -m readout_workflow.fine_readout_feasibility`. Without `--run` these
+only show usage or saved status. Calculations are performed only when requested.
+The grid and window in each file reproduce its retained campaign; inspect/edit
+those settings before preparing a different campaign.
+
+Both datasets target logical frequency 140-160 MHz and use first-feasible
+selection, without readout-strength optimization or robustness. The direct-EC
+driver reads the fine map as a contour and seed library. It solves C1 and C2
+analytically at every trial so the loaded EC targets remain exact as C12 and
+equal readout coupling capacitances vary. The physical C1/C2 range is 36-128 fF.
+Neither a bounded-search miss nor an untested plotting cell proves infeasibility.
+
+The fine-map driver is self-contained: it no longer depends on the deleted
+coarse pilot, old quick-search driver, or diagnosis-resume script. It supports
+fresh 1 fF feasibility maps followed by 2 fF diagnosis. The default command only
+shows saved status. Running revised code requires a new output directory;
+existing datasets retain their original source/policy signatures and are not
+rewritten or relabeled. Historical provenance may name removed pilot files.
+
+The latest retained reports are in `output/pdf/`:
+
+- `readout_140_160mhz_fine_feasibility_diagnosis_ec_binary.pdf` (the original
+  report snapshot; final data in SQLite/results.json contain all 998 diagnoses).
+- `direct_loaded_ec_5mhz_feasibility.pdf`.
+
+Saved data and reports are ignored by Git; copy these folders when moving
+the project. Shared physics, adaptive validation, its tests, and compact
+speed-benchmark evidence remain available. No scientific scan is started by
+this cleanup.
+
+### Adaptive validation and equivalent real Hamiltonian
+
+Routine feasibility validation and EJ sign probes now use 6 transmon levels
+per rail and 5 resonator levels (180 states). Near numerical acceptance
+boundaries, nominal checks escalate to 8 levels/6 resonator levels, then the
+original 12 levels/10 resonator levels if needed. A deterministic 5% sample
+receives full nominal and probe checks. Guard widths are engineering settings,
+not rigorous global error bounds. `audit_point(..., force_full=True)` retains
+the original large-basis checks for final selected designs. Physical
+acceptance thresholds are unchanged. Nominal failures skip the probe grid;
+probe checks can stop at their first failure. Certificates record nominal
+and probe bases independently and invalidate when either changes.
+
+The same Hamiltonian is represented in a real Fock-state phase convention:
+U = I_pair tensor diag(i**n), H_real = U^dagger H_complex U. This is an exact
+basis change, not a rotating-wave or two-level approximation. Prior saved
+results remain unchanged. All 48 saved direct-EC designs pass the revised
+routine validation; compared with their old full-basis records, the largest
+nominal chi error is 0.00445 kHz and largest EJ-probe chi error is 0.11461 kHz.
+The evidence is in `data/adaptive_validation_regression.json`. These checks
+cover the existing 140-160 MHz examples, not the entire proposed 90-110 MHz
+search domain. New convergence checks are still needed when exploring it.
+
+`python -m readout_workflow.benchmark_validation` performs the bounded saved-design
+benchmark without launching a large parameter sweep. The measured four-worker
+comparison is retained in `data/validation_speed_test/`: 12 complex/full audits
+161.34 s; the same 12 real/full audits 58.32 s; adaptive audits of all 48 designs
+13.21 s including three representative full checks. Repeating the complete
+48-target feasibility search with the new setup took 15.04 s; all 48 passed.
+At identical saved inputs, maximum probe chi difference was 0.11461 kHz.
+Historical old search runtime was about 10.6 minutes; it was measured at a
+different time/system load. No broad 90-110 MHz sweep was started by this test.

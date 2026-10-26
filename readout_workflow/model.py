@@ -94,8 +94,12 @@ class ReadoutModel:
         pair += self.J_ghz[0, 1] * (n1_pair @ n2_pair)
         _, pair_states = eigh(pair)
         a = np.diag(np.sqrt(np.arange(1, b.resonator_levels)), 1)
-        qr = 1j * self.qr_zpf * (a.T - a)
-        ham = np.kron(pair, ir).astype(complex)
+        # U = I_pair tensor diag(i**n) makes the resonator charge real.
+        # H_real = U^dagger H_complex U. Fock-state references acquire only
+        # global phases, and transmon charge operators commute with U; energies,
+        # overlaps, hybridization and conditional shifts are unchanged.
+        qr = self.qr_zpf * (a.T + a)
+        ham = np.kron(pair, ir)
         ham += np.kron(
             np.eye(pair.shape[0]), np.diag(np.arange(b.resonator_levels) * self.fr_ghz)
         )
