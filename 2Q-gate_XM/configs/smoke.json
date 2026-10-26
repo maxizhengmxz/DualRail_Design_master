@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "handler": "xm_cz.evaluator:evaluate_ec",
+  "handler_revision": 1,
+  "workers": 2,
+  "task_timeout_seconds": 450,
+  "output_directory": "../output/smoke_v1",
+  "task_defaults": {
+    "frequency_GHz": [4.0, 4.1, 0.050],
+    "logical_splittings_GHz": [0.150, 0.090],
+    "bare_f01_bounds_GHz": {
+      "A1": [4.0, 5.0], "A2": [4.0, 5.0],
+      "B1": [4.0, 5.0], "B2": [4.0, 5.0]
+    },
+    "resonance_channel": "0020",
+    "g_GHz": 0.005,
+    "point_budget_seconds": 180
+  },
+  "tasks": [
+    {"ec_GHz": [0.16087962339131393, 0.29333085491231115, 0.2285344500027132, 0.133892466917573]},
+    {"ec_GHz": [0.180, 0.250, 0.150, 0.150]}
+  ]
+}
