@@ -4,12 +4,20 @@ Pair occupations are explicit: 0020 selects B bare20; 0200 selects A bare02.
 Numerical calibration re-solves dependent couplings; it is not a hardware pulse.
 """
 
+import hashlib
+import json
 import time
 from functools import lru_cache
 
 import numpy as np
 from scipy.optimize import brentq, minimize_scalar
 
+from .channel_policy import (
+    LOGICAL_ORDER,
+    S1Candidate,
+    off_target_definition,
+    select_channel,
+)
 from .config import validate_payload
 from .model import (
     collision_residual,
@@ -73,6 +81,10 @@ def evaluate_ec(payload: dict) -> dict:
     if not 0 < time_low < time_high:
         raise ValueError("Invalid gate duration window")
     split_a, split_b = payload.get("logical_splittings_GHz", [0.15, 0.09])
+    logical_sources = payload.get("logical_sources", list(LOGICAL_ORDER))
+    comparison_id = hashlib.sha256(
+        json.dumps(payload, sort_keys=True).encode()
+    ).hexdigest()
     records, valid = [], []
     failures = {}
     b_limits = [frequency_limits(value) for value in ec[2:]]
@@ -83,7 +95,48 @@ def evaluate_ec(payload: dict) -> dict:
     if b_low >= b_high:
         return {"status": "no_feasible_B_frequency_range", "resonance_channel": channel}
 
+    def rank(candidates):
+        if not candidates:
+            return None
+        selected = select_channel(
+            [
+                S1Candidate(
+                    row["logical_source"],
+                    "B20" if channel == "0020" else "A02",
+                    row["fB_GHz"],
+                    row["S1"],
+                    g * 1000,
+                    row["maximum_logical_ratio"],
+                    "xm-full-cosine-4^4",
+                    comparison_id,
+                    stationary_frequency_ghz=row["fA_GHz"],
+                    tracking_verified=True,
+                )
+                for row in candidates
+            ],
+            moved_pair="B",
+            auxiliary="B20" if channel == "0020" else "A02",
+            target_g_mhz=g * 1000,
+        )
+        best = next(
+            row
+            for row in candidates
+            if row["logical_source"] == selected.source_logical
+            and row["fB_GHz"] == selected.gate_frequency_ghz
+            and row["fA_GHz"] == selected.stationary_frequency_ghz
+        )
+        return dict(best, channel_selection=selected.to_dict())
+
     def screening(f_a):
+        return rank(
+            [
+                row
+                for source in logical_sources
+                if (row := screening_source(f_a, source)) is not None
+            ]
+        )
+
+    def screening_source(f_a, logical_source):
         guard()
         a = a_pair(float(f_a))
         candidates = []
@@ -92,7 +145,9 @@ def evaluate_ec(payload: dict) -> dict:
             guard()
             try:
                 b = b_pair(float(f_b))
-                residual = collision_residual(a, b, channel)
+                residual = collision_residual(
+                    a, b, channel, logical_source=logical_source
+                )
                 if (
                     previous
                     and previous[1] * residual <= 0
@@ -104,19 +159,28 @@ def evaluate_ec(payload: dict) -> dict:
                         model = b_pair(float(frequency))
                         if channel == "0020" and model["target"] != branch:
                             raise ValueError("collision_branch_change")
-                        return collision_residual(a, model, channel)
+                        return collision_residual(
+                            a, model, channel, logical_source=logical_source
+                        )
 
                     root = brentq(equation, previous[0], float(f_b), xtol=1e-9)
                     at_root = b_pair(root)
-                    *_, score = layout(a, at_root, g, channel)
+                    *_, score = layout(
+                        a, at_root, g, channel, logical_source=logical_source
+                    )
                     if score["maximum_logical_ratio"] < 0.2:
                         candidates.append(
-                            {"fA_GHz": float(f_a), "fB_GHz": root, **score}
+                            {
+                                "fA_GHz": float(f_a),
+                                "fB_GHz": root,
+                                "logical_source": logical_source,
+                                **score,
+                            }
                         )
                 previous = float(f_b), residual, b["target"]
             except ValueError:
                 previous = None
-        return min(candidates, key=lambda v: v["S1"]) if candidates else None
+        return rank(candidates)
 
     frequencies = np.linspace(lower, upper, round((upper - lower) / step) + 1)
     for frequency in frequencies:
@@ -135,7 +199,7 @@ def evaluate_ec(payload: dict) -> dict:
             "screening": records,
             "failures": failures,
         }
-    best = min(valid, key=lambda v: v["S1"])
+    best = rank(valid)
     boundary = abs(best["fA_GHz"] - lower) < 1e-7 or abs(best["fA_GHz"] - upper) < 1e-7
     if not boundary:
         center = best["fA_GHz"]
@@ -158,7 +222,9 @@ def evaluate_ec(payload: dict) -> dict:
             options={"xatol": 0.0005, "maxiter": 16},
         )
         if refinement:
-            best = min([best] + refinement, key=lambda v: v["S1"])
+            best = rank([best] + refinement)
+    logical_source = best["logical_source"]
+    selected_channel = best["channel_selection"]
     f_a, base_b = best["fA_GHz"], best["fB_GHz"]
     a = a_pair(f_a)
     reference_b = b_pair(base_b)
@@ -171,7 +237,9 @@ def evaluate_ec(payload: dict) -> dict:
             b["target"] != reference_b["target"] or target_overlap(reference_b, b) < 0.9
         ):
             raise ValueError("auxiliary_branch_change")
-        energies, unit, indices, target, coupling, scores = layout(a, b, g, channel)
+        energies, unit, indices, target, coupling, scores = layout(
+            a, b, g, channel, logical_source=logical_source
+        )
         eigenvalues, vectors = np.linalg.eigh(np.diag(energies) + coupling * unit)
         coefficients = vectors[indices].T
         return eigenvalues, coefficients, b, coupling, scores
@@ -221,6 +289,7 @@ def evaluate_ec(payload: dict) -> dict:
                 options.append(
                     {
                         "time_ns": float(duration),
+                        "channel_selection": selected_channel,
                         "B_frequency_offset_MHz": root,
                         "fB_GHz": base_b + 0.001 * root,
                         "raw_fidelity": fidelity,
@@ -285,8 +354,10 @@ def evaluate_ec(payload: dict) -> dict:
     final = max(calibrated, key=lambda v: v["raw_fidelity"])
     return {
         "status": "calibrated",
+        "coupler_handoff_off_target": off_target_definition("five"),
         "resonance_channel": channel,
-        "logical_source": "01" if channel == "0020" else "10",
+        "logical_source": logical_source,
+        "channel_selection": selected_channel,
         "duration_window_ns": [time_low, time_high],
         "ec_GHz": ec,
         "S1_position": best,

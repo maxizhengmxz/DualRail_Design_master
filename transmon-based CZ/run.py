@@ -13,6 +13,9 @@ sys.path.insert(0, str(HERE))
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command")
+    select = commands.add_parser("select-channel", help="select minimum S1 among verified common-g candidates; does not compute spectra")
+    select.add_argument("config")
+    select.add_argument("--output", required=True)
     single = commands.add_parser("simulate", help="detailed single-point calculation")
     single.add_argument("config", nargs="?", default=str(HERE / "configs/example_config.json"))
     search = commands.add_parser("search", help="constrained EJ candidate search")
@@ -24,6 +27,16 @@ def main():
     args = parser.parse_args()
     if args.command is None:
         parser.print_help()
+        return
+    if args.command == "select-channel":
+        from transmon_cz.channel_policy import select_channel, off_target_definition
+        raw = json.loads(Path(args.config).read_text(encoding="utf-8"))
+        chosen = select_channel(raw["candidates"], **raw["selection_conditions"])
+        output = Path(args.output)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps({"channel_selection": chosen.to_dict(),
+                          "coupler_handoff_off_target":off_target_definition('five')}, indent=2), encoding="utf-8")
+        print(json.dumps(chosen.to_dict(), indent=2))
         return
     from core.runtime import configure_single_threaded_blas
     configure_single_threaded_blas()

@@ -57,6 +57,16 @@ charging energies and interactions.
 - Optimizer coordinates use the two local bare frequencies to determine EJs;
   they are not the reported operation frequency.
 
+When embedding a designed pair/resonator in the coupler circuit, always
+recalibrate the individual rail EJs at coupler OFF. Compensate differential
+dressing so the dressed rail modes retain the near-resonant hybridization and
+chi matching required here; equal bare frequencies are not sufficient. Keep
+loaded ECs, all capacitors and resonator components fixed. The coupler workflow
+then rechecks its OFF root at the calibrated idle settings. Freeze each calibrated
+differential frequency setting for subsequent common-frequency sweeps. This
+integration calibration does not alter the readout thresholds or automatically
+launch the coupler workflow.
+
 The editable physical thresholds are together in the Conditions dataclass near
 the beginning of calculation.py.
 
@@ -229,3 +239,41 @@ comparison is retained in `data/validation_speed_test/`: 12 complex/full audits
 At identical saved inputs, maximum probe chi difference was 0.11461 kHz.
 Historical old search runtime was about 10.6 minutes; it was measured at a
 different time/system load. No broad 90-110 MHz sweep was started by this test.
+
+## Additional retained campaign: 90-110 MHz, feasibility only
+
+`data/feasibility_100mhz_step1/` is a separate 1 fF C1/C2 grid campaign with
+4,278 pairs (36-128 fF, C1 > C2). It uses the same physical constraints and
+adaptive validation, changes only the logical window to 90-110 MHz, and skips
+failure diagnosis, strength optimization and continuation. Original 140-160 MHz
+capacitance/EC datasets remain untouched; their file hashes are recorded in
+the new campaign folder. The fine-map entry point now accepts explicit
+`--logical-frequency-mhz 90 110 --feasibility-only` options. Seeds are scaled
+to the selected logical-frequency window. Each result commits immediately.
+
+## Direct EC campaign: 90-110 MHz, 2 MHz steps
+
+`data/direct_ec_100mhz_step2/` searches the full rectangle EC1/h=150-220 MHz,
+EC2/h=170-290 MHz, at 2 MHz spacing, retaining EC1 < EC2 (1,845 targets).
+It is a direct loaded-EC feasibility search, not occupancy rebinning or a
+convex-hull restriction. The 90-110 MHz capacitance map supplies warm starts;
+all physical thresholds, adaptive validation and the 36-128 fF reconstructed
+capacitance domain are retained. No readout optimization, failed-target retry
+or failure diagnosis is enabled. Existing 90-110 and 140-160 MHz datasets are
+preserved separately. The direct-EC module accepts explicit source, logical
+window, EC ranges, EC step, worker count, output and background options.
+
+## Attainable frequency limits at each feasible loaded-EC pair
+
+`frequency_limits.py` uses the 1,251 validated direct-EC pairs as fixed EC
+coordinates. Four independent constrained searches find best-found logical
+minimum/maximum and dressed operation-frequency minimum/maximum. Every search
+retains the 90-110 MHz logical window and all other physical constraints.
+C12, the common Cir, and both EJs may change; C1/C2 are reconstructed to retain
+the EC targets and the same 36-128 fF physical domain. No readout objective or
+fabrication-robustness calculation is introduced. Numerical frequency bounds
+have a 1 kHz inward guard. Each endpoint has its own audited physical witness.
+Bounds do not prove that the full intervening interval is connected/feasible,
+or certify a global optimum. Results and attempts are retained separately in
+`data/frequency_limits_100mhz_ec_step2/`, checkpointed after every endpoint.
+The six-pair pilot is reused in the full 5,004-endpoint run.

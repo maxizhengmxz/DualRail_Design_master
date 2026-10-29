@@ -1413,7 +1413,7 @@ def run_gate_time_slice_diagnostics(
                 system,
                 system.logical_basis(),
                 evolution,
-                odd_pi_tolerance_rad=tolerance,
+                odd_pi_tolerance_rad=phase_tolerance,
             )
             conditional_fidelity[index] = result["conditional_cz_fidelity_vs_time"]
             conditional_phase[index] = result["conditional_phase_vs_time_rad"]

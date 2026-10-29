@@ -1,0 +1,12 @@
+{
+  "five_config": null,
+  "time_ns": null,
+  "fb_bounds_ghz": [null, null],
+  "fc_bounds_ghz": [null, null],
+  "coupler_samples": 21,
+  "search_basis": {"local_levels": 5, "pair_states": 15, "coupler_levels": 5, "ncut": 35},
+  "audit_bases": [
+    {"local_levels": 6, "pair_states": 20, "coupler_levels": 6, "ncut": 40},
+    {"local_levels": 7, "pair_states": 22, "coupler_levels": 7, "ncut": 45}
+  ]
+}

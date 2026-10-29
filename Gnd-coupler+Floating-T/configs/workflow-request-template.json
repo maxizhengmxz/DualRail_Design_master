@@ -1,0 +1,326 @@
+{
+  "schema": "coupler-design-request-v5",
+  "case_id": null,
+  "rail_pairs": {
+    "A": {
+      "node_order": [
+        "A1",
+        "A2"
+      ],
+      "loaded_ec_mhz": [
+        null,
+        null
+      ],
+      "idle": {
+        "bare_f01_ghz": [
+          null,
+          null
+        ],
+        "position_policy": null,
+        "allowed_frequency_trim_mhz": [
+          null,
+          null
+        ],
+        "logical_splitting_mhz": null,
+        "logical_splitting_convention": null
+      },
+      "gate": {
+        "bare_f01_ghz": [
+          null,
+          null
+        ],
+        "position_policy": null,
+        "allowed_frequency_trim_mhz": [
+          null,
+          null
+        ],
+        "logical_splitting_mhz": null,
+        "logical_splitting_convention": null
+      },
+      "intra_pair_capacitor_policy": "fit_at_specified_splitting_reference",
+      "splitting_calibration_reference": null
+    },
+    "B": {
+      "node_order": [
+        "B1",
+        "B2"
+      ],
+      "loaded_ec_mhz": [
+        null,
+        null
+      ],
+      "idle": {
+        "bare_f01_ghz": [
+          null,
+          null
+        ],
+        "position_policy": null,
+        "allowed_frequency_trim_mhz": [
+          null,
+          null
+        ],
+        "logical_splitting_mhz": null,
+        "logical_splitting_convention": null
+      },
+      "gate": {
+        "bare_f01_ghz": [
+          null,
+          null
+        ],
+        "position_policy": null,
+        "allowed_frequency_trim_mhz": [
+          null,
+          null
+        ],
+        "logical_splitting_mhz": null,
+        "logical_splitting_convention": null
+      },
+      "intra_pair_capacitor_policy": "fit_at_specified_splitting_reference",
+      "splitting_calibration_reference": null
+    }
+  },
+  "gate_target": {
+    "gate": "CZ",
+    "physical_occupation_order": [
+      "A1",
+      "A2",
+      "B1",
+      "B2"
+    ],
+    "duration_ns": null,
+    "duration_policy": null,
+    "allowed_duration_ns_bounds": [
+      null,
+      null
+    ],
+    "duration_scope": null,
+    "conditional_phase": "pi_mod_2pi",
+    "auxiliary_occupation": "0020",
+    "channel_selection": null,
+    "selection_rule": "minimum_S1_at_common_intended_g",
+    "S1_selection": {
+      "target_g_mhz": null,
+      "logical_ratio_limit": 0.2,
+      "score_basis_id": null,
+      "comparison_id": null,
+      "candidates": [],
+      "S2_policy": "report_separately_not_rank",
+      "crossing_order_policy": "diagnostic_only",
+      "uniform_rescaling_policy": "screening_only_not_accepted_design"
+    }
+  },
+  "coupler_design": {
+    "topology": "floating_rails_grounded_C2_same_C1_links",
+    "coupler_ec_policy": null,
+    "loaded_coupler_ec_mhz": null,
+    "coupler_ec_mhz_bounds": [
+      150,
+      600
+    ],
+    "link_policies": {
+      "A2_C": null,
+      "C_B1": null,
+      "A2_B1": null
+    },
+    "fixed_capacitors": [],
+    "capacitor_bounds_ff": {
+      "A2_C": [
+        null,
+        null
+      ],
+      "C_B1": [
+        null,
+        null
+      ],
+      "A2_B1": [
+        null,
+        null
+      ]
+    },
+    "extra_intentional_island_capacitors": [],
+    "parasitic_capacitors": [],
+    "off_frequency_ghz_bounds": [
+      null,
+      10
+    ],
+    "on_frequency_ghz_bounds": [
+      7,
+      null
+    ],
+    "ej_ghz_bounds": [
+      null,
+      null
+    ],
+    "minimum_ej_over_ec": null,
+    "maximum_link_loading_fraction": {
+      "A2": 0.1,
+      "B1": 0.1
+    },
+    "loading_definition": "reconstruct loaded effective capacitance with/without specified physical links, holding self capacitors fixed; report denominator",
+    "maximum_physical_island_link_fraction": null,
+    "maximum_coupler_net_loading_fraction": null,
+    "minimum_coupler_self_capacitance_fraction": 0.55,
+    "minimum_coupler_self_capacitance_ff": null,
+    "additional_constraints": [],
+    "physical_link_endpoints": {
+      "A2_C": [
+        "A22",
+        "C1"
+      ],
+      "C_B1": [
+        "C1",
+        "B11"
+      ],
+      "A2_B1": [
+        "A22",
+        "B11"
+      ]
+    },
+    "on_frequency_lower_exclusive": true,
+    "on_frequency_default_policy": "1 GHz above relevant supplied resonator; otherwise 7 GHz; confirm with user",
+    "off_frequency_policy": "ON < OFF < 10 GHz",
+    "preferred_rail_loading_fraction_below": 0.07,
+    "four_coupler_loading_report_required": true,
+    "compensation_policy": "keep all supplied loaded rail ECs fixed by ground/pad-to-pad capacitance compensation"
+  },
+  "off_target": {
+    "definition": {
+      "version": "physical-single-excitation-off-v1",
+      "model": "five",
+      "target": "physical_0100_0010_exchange_zero",
+      "source": "0100",
+      "destination": "0010",
+      "status": "temporary_open_question",
+      "controls": "fixed_idle_rails_and_capacitors;vary_coupler_EJ",
+      "frame": "canonical_four_physical_single_excitation_states;C_ground;resonators_vacuum",
+      "auxiliary_policy": "virtual_paths_included;logical_exchange_CZ_channels_and_ZZ_are_residual_diagnostics"
+    },
+    "maximum_unintended_abs_g_over_delta": null,
+    "maximum_abs_logical_zz_hz": null,
+    "idle_time_ns_for_phase_report": null,
+    "three_body_seed_definition": {
+      "version": "physical-single-excitation-off-v1",
+      "model": "three",
+      "target": "physical_01_10_exchange_zero",
+      "source": "01",
+      "destination": "10",
+      "status": "established_seed",
+      "controls": "fixed_idle_rails_and_capacitors;vary_coupler_EJ",
+      "frame": "physical_A2_B1_with_C_in_ground",
+      "auxiliary_policy": "virtual_paths_included;logical_exchange_CZ_channels_and_ZZ_are_residual_diagnostics"
+    },
+    "numerical_root_residual_tolerance_mhz": 1e-06,
+    "CZ_auxiliary_policy": "ON resonance only; residual diagnostics at OFF",
+    "ZZ_policy": "Residual diagnostic, not OFF objective",
+    "seven_mode_definition": {
+      "version": "physical-single-excitation-off-v1",
+      "model": "seven",
+      "target": "physical_0100_0010_exchange_zero",
+      "source": "0100",
+      "destination": "0010",
+      "status": "temporary_open_question",
+      "controls": "fixed_idle_rails_and_capacitors;vary_coupler_EJ",
+      "frame": "canonical_four_physical_single_excitation_states;C_ground;resonators_vacuum",
+      "auxiliary_policy": "virtual_paths_included;logical_exchange_CZ_channels_and_ZZ_are_residual_diagnostics"
+    },
+    "logical_residual_definition": {
+      "version": "logical-exchange-diagnostic-v1",
+      "model": "five",
+      "target": "logical_01_10_exchange",
+      "role": "residual_diagnostic",
+      "frame": "canonical_four_logical_states_then_local_energy_axes"
+    },
+    "open_question": "Temporary physical versus logical exchange isolation criterion; revisit only on user instruction.",
+    "logical_residual_plot": {
+      "frequency_range_ghz": null,
+      "required_channels": [
+        "logical_01_10",
+        "logical_00_11"
+      ],
+      "show_nonmonotonicity": true,
+      "mark_allowed_off_bounds": true,
+      "out_of_bounds_scope": "diagnostic_only"
+    }
+  },
+  "acceptance_targets": {
+    "minimum_raw_cz_fidelity": null,
+    "minimum_survival_normalized_cz_score": null,
+    "minimum_mean_logical_survival": null,
+    "maximum_per_input_nonlogical_population": null
+  },
+  "numerical_search": {
+    "finite_ranges_policy": null,
+    "minimum_reference_subspace_overlap": null,
+    "phase_tolerance_rad": null,
+    "fidelity_convergence_tolerance": 0.0001,
+    "frequency_convergence_tolerance_ghz": null,
+    "residual_convergence_hz": 1.0,
+    "fidelity_tolerance_units": "absolute probability; 0.01 percentage point",
+    "workers": 4,
+    "blas_threads_per_worker": 1,
+    "search_basis": {
+      "local_levels": 4,
+      "pair_states": 10,
+      "coupler_levels": 4,
+      "ncut": 25
+    },
+    "adaptive_verification_bases": [
+      {
+        "local_levels": 5,
+        "pair_states": 12,
+        "coupler_levels": 5,
+        "ncut": 30
+      },
+      {
+        "local_levels": 6,
+        "pair_states": 15,
+        "coupler_levels": 6,
+        "ncut": 35
+      },
+      {
+        "local_levels": 7,
+        "pair_states": 18,
+        "coupler_levels": 7,
+        "ncut": 40
+      },
+      {
+        "local_levels": 8,
+        "pair_states": 20,
+        "coupler_levels": 8,
+        "ncut": 45
+      }
+    ],
+    "stop_on_first_converged_fixed_control_check": true,
+    "exhaustion_policy": "Report unconverged; do not silently allocate larger bases or relax physical constraints"
+  },
+  "integrated_idle_calibration": {
+    "required": true,
+    "controls": ["individual_rail_EJ", "coupler_OFF_EJ"],
+    "fixed": ["loaded_EC", "all_capacitances", "resonator_inductances"],
+    "rail_target": "near-resonant dressed rails under existing readout H/chi and other constraints",
+    "idle_frequency_convention": "supplied operating positions are guides; report bare settings and dressed operating means separately",
+    "sequence": "initial_OFF;individual_rail_calibration;re_null_OFF;recheck_both_rails;repeat_if_needed",
+    "sweep_policy": "freeze each calibrated differential setting and the common OFF EJ during common-frequency shifts",
+    "comparison_policy": "compare calibrated cases consistently; retain unretuned results as diagnostics"
+  },
+  "optional_pulse_validation": {
+    "requested": false,
+    "waveform_definition": null,
+    "ramp_duration_ns": null,
+    "noise_model": null
+  },
+  "notes": [
+    "Confirm defaults for a new case. A physical auxiliary alone does not fix its logical source.",
+    "Resolve channel_selection from the toy-model minimum-S1/common-g policy; reuse the identical record at ON and OFF.",
+    "Begin with A2-C-B1; then five-body refinement. Readout design and seven-mode validation occur only after a successful coupler design.",
+    "OFF temporarily nulls physical 0100-0010 in five/seven modes, after full-state four-physical-reference projection; logical exchanges remain residuals. Three-body seed nulls physical 01-10. ON S1 selection is separate. Historical capacitor sets remain geometry seeds, not OFF certificates."
+  ],
+  "definition_authority": "transmon_cz.channel_policy",
+  "tuning_path": {
+    "moved_pair": null,
+    "idle_frequency_ghz": null,
+    "gate_frequency_ghz": null,
+    "stationary_pair_controls": "fixed",
+    "verified_crossings": []
+  }
+}

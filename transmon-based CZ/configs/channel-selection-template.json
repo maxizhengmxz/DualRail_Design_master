@@ -1,0 +1,16 @@
+{
+  "definition_authority": "transmon_cz.channel_policy",
+  "selection_conditions": {
+    "moved_pair": "B",
+    "auxiliary": "B20",
+    "target_g_mhz": null,
+    "idle_frequency_ghz": null,
+    "logical_ratio_limit": 0.2
+  },
+  "candidates": [],
+  "notes": [
+    "Supply actual feasible resonance candidates with source_logical, auxiliary, moved_frequency_ghz, s1, intended_g_mhz, maximum_logical_ratio, score_basis_id, comparison_id and tracking_verified=true.",
+    "Evaluate all candidates at the same target g and in the same basis. Uniform-rescaling estimates do not certify a selection.",
+    "Choose one minimum-S1 feasible resonance. Crossing order and S2 do not rank candidates."
+  ]
+}

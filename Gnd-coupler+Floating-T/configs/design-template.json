@@ -1,0 +1,17 @@
+[
+  {
+    "name": "fill-in-design-name",
+    "rail_ec_ghz": [null, null],
+    "fa_ghz": null,
+    "off_fb_ghz": null,
+    "on_fb_ghz": null,
+    "off_fc_ghz": null,
+    "on_fc_ghz": null,
+    "link_loading_fractions": [null, null],
+    "coupler_ec_bounds_ghz": [null, null],
+    "direct_each_max_ff": null,
+    "target_exchange_mhz": null,
+    "search_levels": 4,
+    "search_ncut": 25
+  }
+]

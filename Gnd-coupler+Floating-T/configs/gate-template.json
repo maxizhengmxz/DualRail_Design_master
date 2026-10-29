@@ -1,0 +1,16 @@
+{
+  "five_config": null,
+  "search_basis": {"local_levels": 4, "pair_states": 10, "coupler_levels": 4, "ncut": 25},
+  "b_frequency_bounds_ghz": [null, null],
+  "coupler_bounds_ghz": [null, null],
+  "coupler_seeds_ghz": [],
+  "collision_seed": "dressed",
+  "collision_offsets_mhz": [-12, -6, 0, 6, 12],
+  "time_bounds_ns": [null, null],
+  "time_samples": 121,
+  "local_starts": 4,
+  "audit_bases": [
+    {"local_levels": 5, "pair_states": 15, "coupler_levels": 5, "ncut": 35},
+    {"local_levels": 6, "pair_states": 20, "coupler_levels": 6, "ncut": 40}
+  ]
+}

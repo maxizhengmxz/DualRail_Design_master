@@ -2,6 +2,8 @@
 
 import math
 
+from .channel_policy import LOGICAL_ORDER
+
 LABELS = ("A1", "A2", "B1", "B2")
 
 
@@ -18,6 +20,16 @@ def validate_payload(payload: dict) -> None:
         raise ValueError("g_GHz must be positive and finite")
     if payload.get("resonance_channel", "0020") not in ("0020", "0200"):
         raise ValueError("resonance_channel must be 0020 or 0200")
+    sources = payload.get("logical_sources", list(LOGICAL_ORDER))
+    if (
+        not isinstance(sources, list)
+        or not sources
+        or len(set(sources)) != len(sources)
+        or any(s not in LOGICAL_ORDER for s in sources)
+    ):
+        raise ValueError(
+            "logical_sources must be a nonempty unique list of logical labels in A,B order"
+        )
     bounds = payload.get("bare_f01_bounds_GHz", {k: [4.0, 5.0] for k in LABELS})
     if set(bounds) != set(LABELS):
         raise ValueError("bare_f01_bounds_GHz must specify all four transmons")

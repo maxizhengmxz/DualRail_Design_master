@@ -1,12 +1,16 @@
 # Scope and maintenance
 
-Keep this workflow independent of `transmon-based CZ/`; that folder is the
-preserved original version. Shared `core.runtime` is permitted. Do not import
+Keep the numerical model independent of the original exploratory simulation
+and search kernels. Shared `core.runtime` and the stable definitions/S1 policy
+in `transmon-based CZ/transmon_cz/channel_policy.py` are permitted; both the
+coupler and this active toy search import that single authority. Do not import
 original exploratory scripts or use dynamic source rewriting/monkeypatches.
 
 Read README.md for physics conventions and public input ports. Keep physical
 occupation order A1,A2,B1,B2 explicit: 0200 is A02-like, not A20-like. Preserve
-the single-minimum-S1 selection and phase-pi calibration contract. Keep S2 separate.
+the single-minimum-S1 selection at common intended g and phase-pi calibration
+contract. Compare all allowed logical sources; physical 0020/0200 do not fix
+a logical bit. Keep S2 and crossing-order diagnostics separate from ranking.
 
 Generated calculations, caches, report artifacts and machine-specific process
 IDs belong under ignored output/. Never migrate or overwrite old checkpoints:

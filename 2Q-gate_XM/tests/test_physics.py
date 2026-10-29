@@ -31,6 +31,7 @@ class PhysicsTests(unittest.TestCase):
             "frequency_GHz": [4.30, 4.35, 0.05],
             "logical_splittings_GHz": [0.09, 0.15],
             "resonance_channel": "0200",
+            "logical_sources": ["10"],
             "g_GHz": 0.0025,
         }
         result = evaluate_ec(payload)
@@ -49,8 +50,12 @@ class PhysicsTests(unittest.TestCase):
         fa, fb = 4.0588683965207455, 4.306565336876355
         a = pair_model(*ec[:2], fa, 0.15)
         b = pair_model(*ec[2:], fb, 0.09)
-        energies, unit, logical, target, coupling, score = layout(a, b, 0.005)
-        self.assertAlmostEqual(collision_residual(a, b, "0020"), 0, places=8)
+        energies, unit, logical, target, coupling, score = layout(
+            a, b, 0.005, logical_source="01"
+        )
+        self.assertAlmostEqual(
+            collision_residual(a, b, "0020", logical_source="01"), 0, places=8
+        )
         self.assertAlmostEqual(energies[logical[1]] - energies[target], 0, places=8)
         self.assertAlmostEqual(
             abs(coupling * unit[logical[1], target]), 0.005, places=12
@@ -60,8 +65,12 @@ class PhysicsTests(unittest.TestCase):
         # Reverse physical node order: A1,A2,B1,B2 -> B2,B1,A2,A1.
         ma = pair_model(ec[3], ec[2], fb, 0.09, 2)
         mb = pair_model(ec[1], ec[0], fa, 0.15)
-        es, v, indices, x, j, mirrored = layout(ma, mb, 0.005, "0200")
-        self.assertAlmostEqual(collision_residual(ma, mb, "0200"), 0, places=8)
+        es, v, indices, x, j, mirrored = layout(
+            ma, mb, 0.005, "0200", logical_source="10"
+        )
+        self.assertAlmostEqual(
+            collision_residual(ma, mb, "0200", logical_source="10"), 0, places=8
+        )
         self.assertEqual(x, ma["target"] * 16)
         self.assertAlmostEqual(abs(j * v[indices[2], x]), 0.005, places=12)
         self.assertAlmostEqual(score["S1"], mirrored["S1"], places=8)
@@ -94,6 +103,15 @@ class PhysicsTests(unittest.TestCase):
         result = evaluate_ec(payload)
         self.assertEqual(result["status"], "calibrated")
         final = result["final"]
+        self.assertEqual(
+            result["logical_source"], result["S1_position"]["logical_source"]
+        )
+        self.assertEqual(final["channel_selection"], result["channel_selection"])
+        self.assertEqual(
+            result["channel_selection"]["selection_rule"],
+            "minimum_S1_at_common_intended_g",
+        )
+        self.assertAlmostEqual(result["channel_selection"]["target_g_mhz"], 5.0)
         self.assertTrue(4.2 <= final["fB_GHz"] <= 4.8)
         self.assertLess(abs(final["phase_error_rad"]), 0.01)
         self.assertLess(final["maximum_logical_ratio"], 0.2)
@@ -103,6 +121,16 @@ class PhysicsTests(unittest.TestCase):
             final["postselected_fidelity"],
             places=12,
         )
+
+    def test_score_and_logical_definitions_have_one_authority(self):
+        from transmon_cz import channel_policy as shared
+        from xm_cz import channel_policy as xm
+
+        self.assertIs(xm.interaction_scores, shared.interaction_scores)
+        self.assertIs(xm.select_channel, shared.select_channel)
+        self.assertIs(xm.one_excitation_indices, shared.one_excitation_indices)
+        self.assertIs(xm.off_target_definition, shared.off_target_definition)
+        self.assertIs(xm.effective_logical_exchange, shared.effective_logical_exchange)
 
 
 if __name__ == "__main__":

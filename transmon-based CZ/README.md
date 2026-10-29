@@ -3,9 +3,20 @@
 Four full-cosine transmons A1,A2,B1,B2 encode two dual-rail qubits. The
 coupler-mediated interaction is approximated by an effective direct A2-B1
 charge coupling. There are no explicit resonators or coupler dynamics here.
-The intended seed is a physical collision, usually f12,A2 approximately
-f01,B1 (|0110> approximately |0200>), followed by full four-transmon logical
-dynamics. This is separate from the logical-transition iSWAP/CZ workflow.
+Physical collisions provide seeds for full four-transmon logical dynamics.
+The intended logical source is selected by minimum S1 at common intended g, not
+inferred from a physical collision label. This is separate from the
+logical-transition iSWAP/CZ workflow.
+
+[WORKFLOW.md](WORKFLOW.md) is the authoritative definition shared with the
+coupler workflow. `transmon_cz/channel_policy.py` implements the logical ordering
+and minimum-S1/common-g selection rule. Logical source and physical auxiliary must both
+be recorded for ON. Explicit-coupler OFF temporarily nulls physical 0100-0010
+exchange in five/seven modes using all four physical single-excitation references;
+its three-body seed nulls physical single-excitation 01-10 exchange.
+Logical exchanges, CZ-auxiliary couplings and secular ZZ remain residual
+diagnostics; see WORKFLOW.md for the open physical-versus-logical choice. Existing
+fixed-source sweeps are historical diagnostics, not minimum-S1 certification.
 
 ## Temporary design policy
 
@@ -75,11 +86,16 @@ From the repository root:
 
 ```powershell
 uv run python "transmon-based CZ/run.py" --help
+uv run python "transmon-based CZ/run.py" select-channel s1-candidates.json --output selected-channel.json
 uv run python "transmon-based CZ/run.py" simulate
 uv run python "transmon-based CZ/run.py" search
 uv run python "transmon-based CZ/run.py" sweep detuning
 uv run python run_tests.py --legacy
 ```
+
+`select-channel` ranks supplied verified S1 candidates evaluated at common g; it performs no
+spectral search. The blank `configs/channel-selection-template.json` documents
+the input. Missing state verification, unequal intended strengths, old first-crossing records or unresolved S1 ties fail explicitly.
 
 No arguments show help. Simulate/search/sweep commands deliberately launch
 calculations and write output; the configured production grids can be costly.

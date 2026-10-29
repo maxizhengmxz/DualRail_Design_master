@@ -1,0 +1,50 @@
+{
+  "five_config": null,
+  "fc_ghz": null,
+  "initial_fb_ghz": null,
+  "initial_time_ns": null,
+  "fb_bounds_ghz": [
+    null,
+    null
+  ],
+  "time_bounds_ns": [
+    null,
+    null
+  ],
+  "time_samples": 21,
+  "search_basis": {
+    "local_levels": 4,
+    "pair_states": 10,
+    "coupler_levels": 4,
+    "ncut": 25
+  },
+  "audit_bases": [
+    {
+      "local_levels": 5,
+      "pair_states": 12,
+      "coupler_levels": 5,
+      "ncut": 30
+    },
+    {
+      "local_levels": 6,
+      "pair_states": 15,
+      "coupler_levels": 6,
+      "ncut": 35
+    },
+    {
+      "local_levels": 7,
+      "pair_states": 18,
+      "coupler_levels": 7,
+      "ncut": 40
+    },
+    {
+      "local_levels": 8,
+      "pair_states": 20,
+      "coupler_levels": 8,
+      "ncut": 45
+    }
+  ],
+  "gate_error_convergence_absolute": 0.0001,
+  "residual_convergence_hz": 1.0,
+  "verification_policy": "Stop after first fixed-control agreement at the requested engineering accuracy; otherwise report unconverged at the configured budget."
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "name": null,
+    "rail_ec_ghz": {"A1": null, "A2": null, "B1": null, "B2": null},
+    "coupler_ec_ghz": null,
+    "idle_fa_ghz": null,
+    "idle_fb_ghz": null,
+    "pair_splittings_mhz": [null, null],
+    "off_fc_ghz": null,
+    "on_fc_ghz": null,
+    "on_g_target_mhz": null,
+    "maximum_loading_fraction": null,
+    "maximum_coupler_loading_fraction": null,
+    "loading_ratio_a_over_b": 1.0,
+    "gate_fb_bounds_ghz": [null, null],
+    "basis": {"local_levels": 4, "pair_states": 10, "coupler_levels": 4, "ncut": 25}
+  }
+]

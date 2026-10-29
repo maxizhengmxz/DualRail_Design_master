@@ -1,0 +1,27 @@
+{
+  "nodes": ["A1", "A2", "C", "B1", "B2"],
+  "transmons": {
+    "A1": {"ec_ghz": null, "ej_ghz": null},
+    "A2": {"ec_ghz": null, "ej_ghz": null},
+    "C": {"ec_ghz": null, "ej_ghz": null},
+    "B1": {"ec_ghz": null, "ej_ghz": null},
+    "B2": {"ec_ghz": null, "ej_ghz": null}
+  },
+  "electrostatics": {
+    "mode": "island_capacitors",
+    "capacitors": [
+      {"from": "A1+", "to": "A2+", "capacitance_ff": null},
+      {"from": "A1-", "to": "A2-", "capacitance_ff": null},
+      {"from": "A2+", "to": "C+", "capacitance_ff": null},
+      {"from": "A2-", "to": "C-", "capacitance_ff": null},
+      {"from": "C+", "to": "B1+", "capacitance_ff": null},
+      {"from": "C-", "to": "B1-", "capacitance_ff": null},
+      {"from": "B1+", "to": "B2+", "capacitance_ff": null},
+      {"from": "B1-", "to": "B2-", "capacitance_ff": null},
+      {"from": "A2+", "to": "B1+", "capacitance_ff": null},
+      {"from": "A2-", "to": "B1-", "capacitance_ff": null}
+    ]
+  },
+  "basis": {"ncut": 15, "levels": 3},
+  "scan": {"ej_start_ghz": null, "ej_stop_ghz": null, "points": 41, "minimum_overlap": 0.8}
+}

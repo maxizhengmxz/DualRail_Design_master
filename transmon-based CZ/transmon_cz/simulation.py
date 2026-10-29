@@ -11,6 +11,7 @@ from itertools import product
 import numpy as np
 import qutip as qt
 from core.transmon import projected_transmon_operators
+from .channel_policy import LOGICAL_ORDER,one_excitation_indices
 from core.electrostatics import (
     charging_energy_to_capacitance_fF,
     capacitance_to_charging_energy_GHz,
@@ -386,8 +387,7 @@ class FourTransmonSystem:
         weights = np.asarray(
             [abs(bare_10.overlap(state)) ** 2 + abs(bare_01.overlap(state)) ** 2 for state in states]
         )
-        candidates = np.argsort(weights)[-2:]
-        candidates = sorted(candidates, key=lambda index: evals[index])
+        candidates = one_excitation_indices(evals,weights)
         return [states[index] for index in candidates]
 
     def logical_basis(self) -> LogicalBasis:
@@ -403,7 +403,7 @@ class FourTransmonSystem:
         projector = sum(state * state.dag() for state in ideal_products)
         return LogicalBasis(
             states=ideal_products,
-            labels=("00L", "01L", "10L", "11L"),
+            labels=tuple(label+'L' for label in LOGICAL_ORDER),
             projector=projector,
             ideal_product_states=ideal_products,
         )

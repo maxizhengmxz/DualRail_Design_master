@@ -11,6 +11,8 @@ import numpy as np
 from scipy.linalg import eigh_tridiagonal
 from scipy.optimize import brentq
 
+from .channel_policy import LOGICAL_ORDER, interaction_scores, one_excitation_indices
+
 charges = np.arange(-30, 31, dtype=float)
 
 
@@ -53,9 +55,10 @@ def pair_model(
 
     def diagonalize(coupling):
         energies, vectors = np.linalg.eigh(diagonal + coupling * interaction)
-        modes = sorted(
-            np.argsort(abs(vectors[1]) ** 2 + abs(vectors[4]) ** 2)[-2:],
-            key=lambda k: energies[k],
+        modes = list(
+            one_excitation_indices(
+                energies, abs(vectors[1]) ** 2 + abs(vectors[4]) ** 2
+            )
         )
         return energies, vectors, modes
 
@@ -116,14 +119,16 @@ def frequency_limits(ec: float) -> tuple[float, float]:
     return transition(max(1.0, 25 * ec)), transition(29.999)
 
 
-def layout(a: dict, b: dict, g: float, channel: str = "0020") -> tuple:
+def layout(
+    a: dict, b: dict, g: float, channel: str = "0020", *, logical_source: str
+) -> tuple:
     """Transform n_A2*n_B1 and score every unintended logical-origin edge."""
     if channel not in ("0020", "0200"):
         raise ValueError("Unknown physical auxiliary channel")
     energies = (a["energies"][:, None] + b["energies"][None, :]).ravel()
     unit = np.kron(a["right_charge"], b["left_charge"])
     logical = [i * 16 + j for i in a["modes"] for j in b["modes"]]
-    intended_source = logical[1 if channel == "0020" else 2]
+    intended_source = logical[LOGICAL_ORDER.index(logical_source)]
     target = b["target"] if channel == "0020" else a["target"] * 16
     element = abs(unit[intended_source, target])
     if element < 1e-10:
@@ -131,66 +136,25 @@ def layout(a: dict, b: dict, g: float, channel: str = "0020") -> tuple:
     coupling = g / element
     if coupling > 0.020:
         raise ValueError("inter_pair_J_cap")
-    scores = []
-    split_scores = []
-    maxima = []
-    for source in logical + [target]:
-        mask = (np.arange(256) != source) & (abs(unit[source]) > 1e-10)
-        if source == intended_source:
-            mask[target] = False
-        if source == target:
-            mask[intended_source] = False
-        destinations = np.flatnonzero(mask)
-        delta = abs(energies[source] - energies[mask])
-        if np.any(delta <= 1e-12):
-            if source == target:
-                scores.append(None)
-                maxima.append(None)
-                split_scores.append(
-                    {"logical": None, "nonlogical": None, "auxiliary_degeneracy": True}
-                )
-                continue
-            raise ValueError("logical_unintended_degeneracy")
-        ratios = abs(coupling * unit[source, mask]) / delta
-        squared = ratios**2
-        logical_mask = np.isin(destinations, logical)
-        split_scores.append(
-            {
-                "logical": float(squared[logical_mask].sum()),
-                "nonlogical": float(squared[~logical_mask].sum()),
-            }
-        )
-        scores.append(float(squared.sum()))
-        maxima.append(float(max(ratios, default=0)))
-    return (
+    scores = interaction_scores(
         energies,
-        unit,
+        coupling * unit,
         logical,
+        intended_source,
         target,
-        coupling,
-        {
-            "S1": float(np.mean(scores[:4])),
-            "S2": scores[4],
-            "S1_by_input": scores[:4],
-            "score_parts": split_scores,
-            "maximum_logical_ratio": max(maxima[:4]),
-            "maximum_auxiliary_ratio": maxima[4],
-        },
+        active_mask=abs(unit) > 1e-10,
     )
+    return energies, unit, logical, target, coupling, scores
 
 
-def collision_residual(a, b, channel):
+def collision_residual(a, b, channel, *, logical_source):
     """Energy of the selected logical product minus its auxiliary energy."""
+    if logical_source not in LOGICAL_ORDER:
+        raise ValueError("Unknown logical source")
+    ia, ib = map(int, logical_source)
+    source_energy = a["energies"][a["modes"][ia]] + b["energies"][b["modes"][ib]]
     if channel == "0020":
-        return (
-            a["energies"][a["modes"][0]]
-            + b["energies"][b["modes"][1]]
-            - b["energies"][b["target"]]
-        )
+        return source_energy - b["energies"][b["target"]]
     if channel == "0200":
-        return (
-            a["energies"][a["modes"][1]]
-            + b["energies"][b["modes"][0]]
-            - a["energies"][a["target"]]
-        )
+        return source_energy - a["energies"][a["target"]]
     raise ValueError("Unknown physical auxiliary channel")

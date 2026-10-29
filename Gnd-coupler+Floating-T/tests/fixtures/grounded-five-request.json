@@ -1,0 +1,100 @@
+{
+  "seed_grounded_three_body": {
+    "parameters": [
+      9.442213840710831,
+      11.925166241771958,
+      0.8278062608469626,
+      0.44144275985221904,
+      9.999,
+      6.501
+    ],
+    "physical": {
+      "physical_links": [
+        {
+          "from": "A22",
+          "to": "C1",
+          "capacitance_ff": 9.442213840710831
+        },
+        {
+          "from": "C1",
+          "to": "B11",
+          "capacitance_ff": 11.925166241771958
+        },
+        {
+          "from": "A22",
+          "to": "B11",
+          "capacitance_ff": 0.8278062608469626
+        }
+      ]
+    }
+  },
+  "loaded_ec_ghz": {
+    "A1": 0.165,
+    "A2": 0.25,
+    "C": 0.44144275985221904,
+    "B1": 0.16,
+    "B2": 0.26
+  },
+  "idle_bare_frequencies_ghz": {
+    "A1": 4.61,
+    "A2": 4.61,
+    "C": 9.84145076608739,
+    "B1": 5.39,
+    "B2": 5.39
+  },
+  "idle_isolated_splittings_mhz": [
+    150,
+    90
+  ],
+  "rail_ground_series_fraction": 0.5,
+  "local_levels": 6,
+  "ncut": 35,
+  "pair_cap_bounds_ff": [
+    0.01,
+    40.0
+  ],
+  "off_bracket_ghz": [
+    6.5,
+    10.0
+  ],
+  "channel": "0020",
+  "on_lower_exclusive_ghz": 6.5,
+  "off_upper_exclusive_ghz": 10.0,
+  "target_static_hold_ns": 100,
+  "gate_B_numerical_bounds_ghz": [
+    4.74,
+    4.84
+  ],
+  "coupler_link_caps_frozen": true,
+  "coupler_loading_max": 0.45,
+  "rail_loading_per_coupler_max": 0.1,
+  "note": "Grounded C2; no readout. Both B EJs tune together in bare frequency; A remains at 4.61 GHz.",
+  "gate_search": {
+    "basis": {
+      "local_levels": 5,
+      "pair_states": 12,
+      "coupler_levels": 5,
+      "ncut": 35
+    },
+    "fb_bounds_ghz": [
+      4.74,
+      4.84
+    ],
+    "fc_bounds_ghz": [
+      6.501,
+      7.5
+    ],
+    "points": 11,
+    "local_starts": 2,
+    "phase_samples": 61,
+    "minimum_midpoint_b20": 0.05
+  },
+  "calibrated_gate_bare_frequencies_ghz": {
+    "A1": 4.61,
+    "A2": 4.61,
+    "C": 6.5897873293947695,
+    "B1": 4.780712523625913,
+    "B2": 4.780712523625913
+  },
+  "numerical_search_note": "Gate search intervals are numerical bounds, not new fabrication constraints. Midpoint B20 population threshold identifies the intended collision branch; it is not a fidelity specification."
+}

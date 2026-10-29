@@ -1,0 +1,130 @@
+{
+  "schema": "floating-transmon-explicit-pads-v1",
+  "scope": "Physical topology and design inputs; null capacitor values require design, not inherited old values.",
+  "pad_balance": "equal_total_physical_diagonal_capacitance_including_all_attached_links",
+  "ground_capacitance_policy": "fit_jointly_for_loaded_EC_and_pad_balance",
+  "common_charge_sector": "zero_total_conserved_charge_per_transmon",
+  "approved_coupler_topology": "A22-C1 and C1-B11 capacitive links; JC joins C1-C2; both C1 and C2 have positive fitted ground capacitance",
+  "transmons": {
+    "A1": {
+      "pads": [
+        "A11",
+        "A12"
+      ],
+      "loaded_ec_ghz": 0.165,
+      "junction_capacitance_ff": 0.0
+    },
+    "A2": {
+      "pads": [
+        "A21",
+        "A22"
+      ],
+      "loaded_ec_ghz": 0.25,
+      "junction_capacitance_ff": 0.0
+    },
+    "C": {
+      "pads": [
+        "C1",
+        "C2"
+      ],
+      "loaded_ec_ghz": null,
+      "junction_capacitance_ff": 0.0
+    },
+    "B1": {
+      "pads": [
+        "B11",
+        "B12"
+      ],
+      "loaded_ec_ghz": 0.16,
+      "junction_capacitance_ff": 0.0
+    },
+    "B2": {
+      "pads": [
+        "B21",
+        "B22"
+      ],
+      "loaded_ec_ghz": 0.26,
+      "junction_capacitance_ff": 0.0
+    }
+  },
+  "resonators": {
+    "r1": {
+      "self_capacitance_ff": null,
+      "inductance_nh": null,
+      "target_mean_logical_conditioned_idle_frequency_ghz": 5.99
+    },
+    "r2": {
+      "self_capacitance_ff": null,
+      "inductance_nh": null,
+      "target_mean_logical_conditioned_idle_frequency_ghz": 6.01
+    }
+  },
+  "physical_links": [
+    {
+      "name": "CA1r",
+      "from": "A12",
+      "to": "r1",
+      "capacitance_ff": null
+    },
+    {
+      "name": "CA2r",
+      "from": "A21",
+      "to": "r1",
+      "capacitance_ff": null
+    },
+    {
+      "name": "CA12",
+      "from": "A12",
+      "to": "A21",
+      "capacitance_ff": null
+    },
+    {
+      "name": "CA2C",
+      "from": "A22",
+      "to": "C1",
+      "capacitance_ff": null
+    },
+    {
+      "name": "CCB1",
+      "from": "C1",
+      "to": "B11",
+      "capacitance_ff": null
+    },
+    {
+      "name": "CA2B1",
+      "from": "A22",
+      "to": "B11",
+      "capacitance_ff": null
+    },
+    {
+      "name": "CB1r",
+      "from": "B12",
+      "to": "r2",
+      "capacitance_ff": null
+    },
+    {
+      "name": "CB2r",
+      "from": "B21",
+      "to": "r2",
+      "capacitance_ff": null
+    },
+    {
+      "name": "CB12",
+      "from": "B12",
+      "to": "B21",
+      "capacitance_ff": null
+    }
+  ],
+  "readout_design_constraint": "CA1r=CA2r and CB1r=CB2r unless user approves a change",
+  "idle_bare_transmon_frequency_ghz": {
+    "A": 4.61,
+    "B": 5.39
+  },
+  "idle_isolated_pair_splitting_target_mhz": {
+    "A": 150,
+    "B": 90
+  },
+  "unlisted_parasitic_capacitances": "none",
+  "snapshot_status": "SUPERSEDED physical-total-pad-balance model; current approved model uses equal bare ground caps plus fitted geometric pad mutuals.",
+  "current_request": "pad-symmetric-ground-request.json"
+}
