@@ -76,7 +76,6 @@ def make_tasks(config):
         payloads = [{**defaults, **item} for item in config["tasks"]]
     elif "grid" in config:
         grid = config["grid"]
-        a_values = axis(grid["A1_MHz"])
         b_values = axis(grid["B_MHz"])
         upper_spec = dict(grid["B_MHz"])
         upper_spec["step"] = str(
@@ -86,19 +85,52 @@ def make_tasks(config):
         upper = axis(upper_spec)
         pairs = [(b1, b2) for b1 in b_values for b2 in b_values if b2 <= b1]
         pairs += [(b1, b2) for b1 in upper for b2 in upper if b2 > b1]
-        payloads = [
-            {
-                **defaults,
-                "ec_GHz": [
-                    float(a / 1000),
-                    float(Decimal(str(grid["A2_fixed_MHz"])) / 1000),
-                    float(b1 / 1000),
-                    float(b2 / 1000),
-                ],
-            }
-            for a in a_values
-            for b1, b2 in pairs
-        ]
+        logical_axis_name = next(
+            (name for name in ("logical_A_GHz", "logical_B_GHz") if name in grid),
+            None,
+        )
+        if logical_axis_name:
+            logical_values = axis(grid[logical_axis_name])
+            fixed_a1 = Decimal(str(grid["A1_fixed_MHz"])) / 1000
+            fixed_a2 = Decimal(str(grid["A2_fixed_MHz"])) / 1000
+            base_splits = defaults.get("logical_splittings_GHz", [0.150, 0.090])
+            split_index = 0 if logical_axis_name == "logical_A_GHz" else 1
+            payloads = [
+                {
+                    **defaults,
+                    "logical_splittings_GHz": [
+                        float(logical_value)
+                        if split_index == 0
+                        else float(base_splits[0]),
+                        float(logical_value)
+                        if split_index == 1
+                        else float(base_splits[1]),
+                    ],
+                    "ec_GHz": [
+                        float(fixed_a1),
+                        float(fixed_a2),
+                        float(b1 / 1000),
+                        float(b2 / 1000),
+                    ],
+                }
+                for logical_value in logical_values
+                for b1, b2 in pairs
+            ]
+        else:
+            a_values = axis(grid["A1_MHz"])
+            payloads = [
+                {
+                    **defaults,
+                    "ec_GHz": [
+                        float(a / 1000),
+                        float(Decimal(str(grid["A2_fixed_MHz"])) / 1000),
+                        float(b1 / 1000),
+                        float(b2 / 1000),
+                    ],
+                }
+                for a in a_values
+                for b1, b2 in pairs
+            ]
     else:
         raise ValueError("Configuration requires tasks or grid")
     for payload in payloads:

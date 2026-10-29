@@ -86,6 +86,39 @@ class PhysicsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "intersection"):
             validate_payload(bad)
 
+        logical_cfg = json.loads((ROOT / "configs/logical_b_grid.json").read_text())
+        logical_tasks = make_tasks(logical_cfg)
+        self.assertEqual(len(logical_tasks), 4805)
+        self.assertEqual(logical_tasks[0]["payload"]["ec_GHz"][:2], [0.15, 0.21])
+        self.assertEqual(
+            sorted(
+                {
+                    task["payload"]["logical_splittings_GHz"][1]
+                    for task in logical_tasks
+                }
+            ),
+            [0.08, 0.085, 0.09, 0.095, 0.1],
+        )
+
+        logical_a_cfg = json.loads(
+            (ROOT / "configs/logical_a_grid.json").read_text()
+        )
+        logical_a_tasks = make_tasks(logical_a_cfg)
+        self.assertEqual(len(logical_a_tasks), 4805)
+        self.assertEqual(
+            sorted(
+                {
+                    task["payload"]["logical_splittings_GHz"][0]
+                    for task in logical_a_tasks
+                }
+            ),
+            [0.14, 0.145, 0.15, 0.155, 0.16],
+        )
+        self.assertEqual(
+            {task["payload"]["logical_splittings_GHz"][1] for task in logical_a_tasks},
+            {0.09},
+        )
+
     def test_calibration_preserves_independent_frequency_bounds(self):
         p = json.loads((ROOT / "configs/smoke.json").read_text())
         payload = {**p["task_defaults"], **p["tasks"][1]}

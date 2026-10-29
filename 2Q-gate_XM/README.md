@@ -28,15 +28,19 @@ output paths resolve relative to the config file; outputs and caches are ignored
 All energies and matrix elements are cyclic GHz; time is ns. The grid uses MHz.
 Physical order: A1,A2,B1,B2. See `configs/example_grid.json` for an executable
 template. `task_defaults` applies to every point; individual task fields override it.
+`configs/logical_b_grid.json` is the fixed-A1/A2 variant: its
+`grid.logical_B_GHz` axis replaces the A1 charging-energy axis and generates one
+B1/B2 charging-energy map per B-rail logical splitting. The splitting array
+keeps the public `[A, B]` order, so the generated tasks vary index 1.
 
-| Field | Meaning | Default |
-|---|---|---|
-| `logical_splittings_GHz` | Isolated A and B rail eigenmode splittings | `[0.150,0.090]` |
-| `bare_f01_bounds_GHz` | Separate bounds for A1,A2,B1,B2 | `[4,5]` each |
-| `frequency_GHz` | Common A frequency scan: start, stop, step | `[4,5,0.05]` |
-| `resonance_channel` | Physical auxiliary occupation, `0020` or `0200` | `0020` |
-| `g_GHz` | Intended dressed matrix-element magnitude | `0.005` |
-| `duration_ns` | Optional explicit calibration time window | `[0.7,1.3]/(2*g)` |
+| Field                    | Meaning                                         | Default           |
+| ------------------------ | ----------------------------------------------- | ----------------- |
+| `logical_splittings_GHz` | Isolated A and B rail eigenmode splittings      | `[0.150,0.090]`   |
+| `bare_f01_bounds_GHz`    | Separate bounds for A1,A2,B1,B2                 | `[4,5]` each      |
+| `frequency_GHz`          | Common A frequency scan: start, stop, step      | `[4,5,0.05]`      |
+| `resonance_channel`      | Physical auxiliary occupation, `0020` or `0200` | `0020`            |
+| `g_GHz`                  | Intended dressed matrix-element magnitude       | `0.005`           |
+| `duration_ns`            | Optional explicit calibration time window       | `[0.7,1.3]/(2*g)` |
 
 The same rail's two bare f01 frequencies remain equal. Its allowed common
 frequency is the intersection of its two input bounds; empty intersections are
