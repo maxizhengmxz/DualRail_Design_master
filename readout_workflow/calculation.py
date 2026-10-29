@@ -205,7 +205,7 @@ def annotate(m, ej1, ej2):
     return p
 
 
-def check_chi_sign_stability(point, model=None):
+def check_chi_sign_stability(point, model=None, *, early_exit=False):
     """Attach a sign-stability certificate at fixed fabricated components.
 
     Purpose: avoid operating positions too close to qubit-resonator resonances,
@@ -226,10 +226,11 @@ def check_chi_sign_stability(point, model=None):
         raise ValueError("Use an odd chi-sign grid size of at least three.")
     if not 0 < c.chi_sign_ej_fraction < 1 or c.chi_sign_zero_tolerance_ghz < 0:
         raise ValueError("Invalid chi-sign perturbation or zero tolerance.")
+    probe_basis = point.get("chi_sign_probe_basis", point["basis"])
     if model is None:
-        model = ReadoutModel(Device(**point["device"]), Basis(**point["basis"]))
-    if asdict(model.device) != point["device"] or asdict(model.basis) != point["basis"]:
-        raise ValueError("Sign probes must use the nominal point's device and basis.")
+        model = ReadoutModel(Device(**point["device"]), Basis(**probe_basis))
+    if asdict(model.device) != point["device"] or asdict(model.basis) != probe_basis:
+        raise ValueError("Sign probes must use the fixed device and recorded probe basis.")
     nominal = np.array([point["chi_m_ghz"], point["chi_p_ghz"]], dtype=float)
     nominal_ok = bool(
         np.all(np.isfinite(nominal))
@@ -240,7 +241,10 @@ def check_chi_sign_stability(point, model=None):
     )
     probes = []
     with threadpool_limits(limits=1):
+        stopped = False
         for delta1 in offsets:
+            if stopped:
+                break
             for delta2 in offsets:
                 if delta1 == 0 and delta2 == 0:
                     continue
@@ -272,8 +276,13 @@ def check_chi_sign_stability(point, model=None):
                         same_sign=same,
                     )
                 )
+                if early_exit and not (same and reliable):
+                    stopped = True
+                    break
     certificate = dict(
-        schema="chi-sign-grid-v1",
+        schema="chi-sign-grid-v2" if probe_basis != point["basis"] else "chi-sign-grid-v1",
+        probe_basis=dict(probe_basis),
+        grid_complete=len(probes) == c.chi_sign_samples_per_axis**2 - 1,
         passed=bool(
             nominal_ok
             and all(p["same_sign"] and p["reliable_assignment"] for p in probes)
@@ -301,7 +310,8 @@ def chi_sign_certificate_valid(point):
     c = CONDITIONS
     return bool(
         d
-        and d.get("schema") == "chi-sign-grid-v1"
+        and d.get("schema") in ("chi-sign-grid-v1", "chi-sign-grid-v2")
+        and d.get("probe_basis", d["basis"]) == point.get("chi_sign_probe_basis", point["basis"])
         and d["device"] == point["device"]
         and d["basis"] == point["basis"]
         and d["ej1_ghz"] == point["ej1_ghz"]
@@ -529,7 +539,7 @@ def search(task):
             except (ValueError, FloatingPointError) as exc:
                 attempts.append({"seed": seed.tolist(), "error": str(exc)})
             if best_pass is not None:
-                best_pass = check_chi_sign_stability(best_pass)
+                best_pass = check_chi_sign_stability(best_pass, early_exit=True)
                 if not failures(best_pass, require_sign_check=True):
                     break
                 attempts[-1]["chi_sign_rejection"] = best_pass["chi_sign_stability"]
@@ -550,28 +560,26 @@ def search(task):
     }
 
 
-def validate(result, basis=VALIDATION_BASIS):
-    """Recompute unchanged physical inputs/EJs at the larger validation basis."""
+def validate(result, basis=None):
+    """Shared adaptive validation; an explicit basis requests a fixed audit.
+
+    Lazy import avoids the calculation/validation module dependency cycle.
+    Physical device inputs and EJs remain fixed in both paths.
+    """
     p = result["point"]
     with threadpool_limits(limits=1):
-        m = ReadoutModel(Device(**p["device"]), basis)
-        q = m.evaluate(p["ej1_ghz"], p["ej2_ghz"])
-        q.update(diagnostics(m, q))
-        ec = m.ec_ghz[:2]
-        q.update(
-            device=p["device"],
-            basis=asdict(basis),
-            x=p["x"],
-            loaded_ec1_mhz=float(ec[0] * 1000),
-            loaded_ec2_mhz=float(ec[1] * 1000),
-            ej1_over_ec1=float(p["ej1_ghz"] / ec[0]),
-            ej2_over_ec2=float(p["ej2_ghz"] / ec[1]),
-            participation1=p["participation1"],
-            participation2=p["participation2"],
-        )
-        q["ratio"] = chi_ratio(q)
-        if not failures(q):
-            q = check_chi_sign_stability(q, m)
+        if basis is None:
+            from .validation import audit_point
+            q = audit_point(p)
+        else:
+            m = ReadoutModel(Device(**p["device"]), basis)
+            q = annotate(m, p["ej1_ghz"], p["ej2_ghz"])
+            q["x"] = x_from_point(q)
+            if not failures(q):
+                q = check_chi_sign_stability(q, m, early_exit=True)
+        for name in ("participation1", "participation2"):
+            if name in p:
+                q[name] = p[name]
     out = dict(result)
     out["screening_point"] = p
     out["point"] = q
