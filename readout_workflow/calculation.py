@@ -230,7 +230,9 @@ def check_chi_sign_stability(point, model=None, *, early_exit=False):
     if model is None:
         model = ReadoutModel(Device(**point["device"]), Basis(**probe_basis))
     if asdict(model.device) != point["device"] or asdict(model.basis) != probe_basis:
-        raise ValueError("Sign probes must use the fixed device and recorded probe basis.")
+        raise ValueError(
+            "Sign probes must use the fixed device and recorded probe basis."
+        )
     nominal = np.array([point["chi_m_ghz"], point["chi_p_ghz"]], dtype=float)
     nominal_ok = bool(
         np.all(np.isfinite(nominal))
@@ -280,7 +282,9 @@ def check_chi_sign_stability(point, model=None, *, early_exit=False):
                     stopped = True
                     break
     certificate = dict(
-        schema="chi-sign-grid-v2" if probe_basis != point["basis"] else "chi-sign-grid-v1",
+        schema="chi-sign-grid-v2"
+        if probe_basis != point["basis"]
+        else "chi-sign-grid-v1",
         probe_basis=dict(probe_basis),
         grid_complete=len(probes) == c.chi_sign_samples_per_axis**2 - 1,
         passed=bool(
@@ -311,7 +315,8 @@ def chi_sign_certificate_valid(point):
     return bool(
         d
         and d.get("schema") in ("chi-sign-grid-v1", "chi-sign-grid-v2")
-        and d.get("probe_basis", d["basis"]) == point.get("chi_sign_probe_basis", point["basis"])
+        and d.get("probe_basis", d["basis"])
+        == point.get("chi_sign_probe_basis", point["basis"])
         and d["device"] == point["device"]
         and d["basis"] == point["basis"]
         and d["ej1_ghz"] == point["ej1_ghz"]
@@ -328,7 +333,10 @@ def chi_sign_certificate_valid(point):
 def inverse_frequency(frequency, ec, basis):
     """Invert the numerically diagonalized local f01, not sqrt(8 EJ EC)-EC."""
     return brentq(
-        lambda ej: transmon_spectrum(ej, ec, basis)[0][1] - frequency, 0.02, 100.0, xtol=2e-10
+        lambda ej: transmon_spectrum(ej, ec, basis)[0][1] - frequency,
+        0.02,
+        100.0,
+        xtol=2e-10,
     )
 
 
@@ -416,7 +424,9 @@ def seed_candidates(c1, c2, warm=()):
         upper = min(
             CONDITIONS.operation_frequency_ghz[1] - 0.02,
             *(
-                transmon_spectrum(CONDITIONS.ej_upper_ghz - 0.01, value, SCREENING_BASIS)[0][1]
+                transmon_spectrum(
+                    CONDITIONS.ej_upper_ghz - 0.01, value, SCREENING_BASIS
+                )[0][1]
                 for value in ec
             ),
         )
@@ -570,6 +580,7 @@ def validate(result, basis=None):
     with threadpool_limits(limits=1):
         if basis is None:
             from .validation import audit_point
+
             q = audit_point(p)
         else:
             m = ReadoutModel(Device(**p["device"]), basis)
@@ -710,7 +721,8 @@ def reasons(point, tier, target, *, require_sign_check=False):
     low, high = tier["logical_frequency"]
     ec1, ec2 = point["loaded_ec1_mhz"], point["loaded_ec2_mhz"]
     checks = {
-        "chi_matching": point["ratio"] <= c.mismatch_max + 1e-8,
+        "chi_matching": point["ratio"]
+        <= tier.get("mismatch_max", c.mismatch_max) + 1e-8,
         "absolute_mean_chi": absolute_mean_chi_mhz(point) >= c.abs_mean_chi_min_mhz,
         "dispersive": point["lambda_max"] <= c.dispersive_max + 1e-9,
         "hybridization": point["hybridization"] >= tier["H"] - 1e-8,
@@ -753,7 +765,8 @@ def slacks(point, tier, include_H=False, margin=0.0):
     """
     c = CONDITIONS
     values = [
-        (c.mismatch_max - margin * 1e-6 - point["ratio"]) / c.mismatch_max,
+        (tier.get("mismatch_max", c.mismatch_max) - margin * 1e-6 - point["ratio"])
+        / tier.get("mismatch_max", c.mismatch_max),
         absolute_mean_chi_mhz(point) - c.abs_mean_chi_min_mhz,
         (c.dispersive_max - margin * 1e-7 - point["lambda_max"]) / c.dispersive_max,
         (point["min_assignment_overlap"] - c.reference_overlap_min - margin * 1e-7)

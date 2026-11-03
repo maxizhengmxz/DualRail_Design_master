@@ -26,3 +26,6 @@ output/
 
 # Secrets
 .env
+
+# Browser crash diagnostics
+debug.log

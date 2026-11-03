@@ -1,0 +1,104 @@
+"""Approved circuit presentation template. Fill the two path tokens before running.
+All physics values come from the parameter JSON; optional readouts are contextual.
+"""
+import os
+for k in ['OPENBLAS_NUM_THREADS','MKL_NUM_THREADS','OMP_NUM_THREADS']:os.environ[k]='1'
+import pathlib,json,numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+p=pathlib.Path(r'{{OUTPUT_DIRECTORY}}');p.mkdir(parents=True,exist_ok=True);z=json.loads(pathlib.Path(r'{{PARAMETERS_JSON}}').read_text());phys=z['physical'];params=z['rail_labels'];coupler=z['coupler_labels']
+def coupling(a,b):
+ return next(q['capacitance_ff'] for q in phys['links'] if {q['from'],q['to']}=={a,b})
+plt.rcParams.update({'mathtext.fontset':'stix','font.family':'STIXGeneral','font.size':14,'svg.fonttype':'path','pdf.fonttype':42})
+fig,ax=plt.subplots(figsize=(14,7.26));ax.set_xlim(-1.7,19.7);ax.set_ylim(-2.75,8.35);ax.set_aspect('equal',adjustable='box');ax.axis('off');black='#202020';blue='#244b70'
+def wire(x1,y1,x2,y2):ax.plot([x1,x2],[y1,y2],color=black,lw=1.5,solid_capstyle='butt')
+def node(x,y):ax.plot(x,y,'o',color=black,ms=4)
+def label(x,y,s,size=14,**kwargs):ax.text(x,y,s,fontsize=size,ha=kwargs.pop('ha','center'),va=kwargs.pop('va','center'),**kwargs)
+def cap(x1,y1,x2,y2):
+ if y1==y2:
+  m=(x1+x2)/2;wire(x1,y1,m-.105,y1);wire(m+.105,y1,x2,y2);wire(m-.105,y1-.30,m-.105,y1+.30);wire(m+.105,y1-.30,m+.105,y1+.30)
+ else:
+  m=(y1+y2)/2;high=max(y1,y2);low=min(y1,y2);wire(x1,high,x1,m+.105);wire(x1,m-.105,x1,low);wire(x1-.30,m+.105,x1+.30,m+.105);wire(x1-.30,m-.105,x1+.30,m-.105)
+def ground(x,y):
+ wire(x,y+.15,x,y)
+ for dy,w in [(0,.25),(-.08,.17),(-.16,.08)]:wire(x-w,y+dy,x+w,y+dy)
+def jj(x,y):
+ ax.add_patch(Rectangle((x-.19,y-.19),.38,.38,ec=black,fc='white',lw=1.3,zorder=4));ax.plot([x-.19,x+.19],[y-.19,y+.19],color=black,lw=1.3,zorder=5);ax.plot([x-.19,x+.19],[y+.19,y-.19],color=black,lw=1.3,zorder=5)
+# Wide, shallow transmons on a uniform four-unit pitch. Short aligned ground legs.
+BUS=2.80; GROUND=1.10; TOP=3.20; BOTTOM=2.40; HALF=1.10
+centres={'A1':0.0,'A2':6.0,'B1':12.0,'B2':18.0};coords={}
+for name,cx in centres.items():
+ a,b=phys['pad_pairs'][name];left,right=cx-HALF,cx+HALF;coords[a]=(left,BUS);coords[b]=(right,BUS);l=params[name]
+ label(cx,7.90,rf'$\mathrm{{{name}}}$',19,color=blue)
+ label(cx,7.45,rf'$E_C/h={l["ec_mhz"]:.2f}\,\mathrm{{MHz}}$',13)
+ label(cx,7.00,rf'$E_J^{{\rm idle}}/h={l["ej_idle_ghz"]:.2f}\,\mathrm{{GHz}}$',12)
+ if 'ej_gate_ghz' in l:label(cx,6.55,rf'$E_J^{{\rm gate}}/h={l["ej_gate_ghz"]:.2f}\,\mathrm{{GHz}}$',12)
+ for x in [left,right]:node(x,BUS);wire(x,BOTTOM,x,TOP)
+ wire(left,TOP,cx-.19,TOP);jj(cx,TOP);wire(cx+.19,TOP,right,TOP)
+ cap(left,BOTTOM,right,BOTTOM);label(cx,1.83,rf'$C_{{s,{name}}}$',13)
+ for x,sign in [(left,'+'),(right,'-')]:
+  wire(x,BUS,x,1.92);cap(x,1.92,x,1.58);wire(x,1.58,x,GROUND+.15);ground(x,GROUND)
+  label(x,.70,rf'$C_{{g,{sign}}}$',11)
+ if a in ['A21','B11','B21']:label(left+.15,3.00,rf'$\mathrm{{{a}}}$',12,ha='left')
+ else:label(left-.08,3.02,rf'$\mathrm{{{a}}}$',12,ha='right')
+ if b in ['A12','A22','B12']:label(right-.15,3.00,rf'$\mathrm{{{b}}}$',12,ha='right')
+ else:label(right+.08,3.02,rf'$\mathrm{{{b}}}$',12,ha='left')
+ label(cx,.35,rf'$C_{{s,{name}}}={phys["shunts_ff"][name]:.2f}$',13)
+ label(cx,-.15,rf'$C_{{g,+}}=C_{{g,-}}={phys["grounds_ff"][a]:.2f}$',12)
+# Exposed terminals and a compact direct capacitor above the coupling bus.
+A22=7.4; B11=10.6; C1=9.0
+wire(7.1,BUS,A22,BUS);wire(B11,BUS,10.9,BUS);node(A22,BUS);node(B11,BUS)
+for xleft,xright,value,tag in [(2.2,3.8,coupling('A12','A21'),'A1A2'),(A22,C1,coupling('A22','C1'),'A2C'),(C1,B11,coupling('C1','B11'),'CB1'),(14.2,15.8,coupling('B12','B21'),'B1B2')]:
+ cap(xleft,BUS,xright,BUS);label((xleft+xright)/2,2.43 if tag in ['A1A2','B1B2'] else 3.43,rf'$C_{{{tag}}}$',12)
+DIRECT=3.85
+wire(A22,BUS,A22,DIRECT);cap(A22,DIRECT,B11,DIRECT);wire(B11,DIRECT,B11,BUS)
+label(C1,4.48,r'$C_{A2B1}$',13)
+# A wider and shallower vertical coupler, with the same lower ground baseline.
+cx=C1;node(cx,BUS);label(cx,3.02,r'$C_1$',13);wire(cx,BUS,cx,2.30)
+LEFT=cx-.80; RIGHT=cx+.80; LOWER=1.25; MID=1.775; COUPLER_TOP=2.30
+wire(LEFT,COUPLER_TOP,RIGHT,COUPLER_TOP);wire(LEFT,LOWER,RIGHT,LOWER)
+for xx in [cx-.80,cx]:wire(xx,COUPLER_TOP,xx,MID+.19);jj(xx,MID);wire(xx,MID-.19,xx,LOWER)
+label(cx-.40,MID,r'$\Phi_C$',10)
+cap(RIGHT,COUPLER_TOP,RIGHT,LOWER);label(RIGHT,.95,r'$C_{s,C}$',12)
+node(cx,LOWER);wire(cx,LOWER,cx,GROUND+.15);ground(cx,GROUND);label(cx,.70,r'$C_2$',12)
+label(cx,7.90,r'$\mathrm{Coupler}\ C$',19,color=blue);label(cx,7.45,rf'$E_C/h={coupler["ec_mhz"]:.2f}\,\mathrm{{MHz}}$',13)
+label(cx,7.00,rf'$E_J^{{\rm OFF}}/h={coupler["ej_off_ghz"]:.2f}\,\mathrm{{GHz}}$',12);label(cx,6.55,rf'$E_J^{{\rm ON}}/h={coupler["ej_on_ghz"]:.2f}\,\mathrm{{GHz}}$',12)
+label(cx,.35,rf'$C_{{s,C}}={phys["shunts_ff"]["C"]:.2f}$',13);label(cx,6.10,rf'$E_{{J1}}/h={coupler["ej1_ghz"]:.2f}\,\mathrm{{GHz}}$',12);label(cx,5.65,rf'$E_{{J2}}/h={coupler["ej2_ghz"]:.2f}\,\mathrm{{GHz}}$',12)
+# Short outward leads at all four rail-pair readout terminals.
+for original,extended in [(1.1,2.2),(4.9,3.8),(13.1,14.2),(16.9,15.8)]:wire(original,BUS,extended,BUS);node(extended,BUS)
+# Shared parallel-LC readout resonators above the rail pairs, with aligned upper grounds.
+for rail,x,left,right,rname in ([('A',3.0,2.2,3.8,'r_1'),('B',15.0,14.2,15.8,'r_2')] if z.get('readouts') else []):
+ ro=z['readouts'][rail];PORT=4.30
+ for xx,tag,sign in [(left,rail+'1r',-1),(right,rail+'2r',1)]:
+  cap(xx,BUS,xx,PORT);label(xx+sign*.55,3.55,rf'$C_{{{tag}}}$',11,ha='right' if sign==-1 else 'left')
+ wire(left,PORT,right,PORT);node(x,PORT);wire(x,PORT,x,4.45)
+ # LC signal port below; grounded port above. Both resonators use the same heights.
+ wire(x-.30,4.45,x+.30,4.45);wire(x-.30,5.15,x+.30,5.15)
+ cap(x-.30,5.15,x-.30,4.45)
+ yy=np.linspace(5.06,4.54,160);xx=x+.30+.10*np.sin(np.linspace(0,8*np.pi,160));wire(x+.30,5.15,x+.30,5.06);ax.plot(xx,yy,color=black,lw=1.4);wire(x+.30,4.54,x+.30,4.45)
+ wire(x,5.15,x,5.45)
+ for dy,w in [(0,.25),(.08,.17),(.16,.08)]:wire(x-w,5.45+dy,x+w,5.45+dy)
+ # Same unhighlighted header style as the rail transmons; only fr is shown.
+ label(x,7.90,rf'${rname}$',19,color=blue)
+ label(x,7.45,rf'$f_r={ro["target_frequency_ghz"]:.2f}\,\mathrm{{GHz}}$',13)
+ c1=ro['links'][0]['capacitance_ff'];c2=ro['links'][1]['capacitance_ff']
+ label(x,-1.25,rf'$C_{{{rail}1r}}={c1:.2f}$',12)
+ label(x,-1.75,rf'$C_{{{rail}2r}}={c2:.2f}$',12)
+# All capacitance values are reported below the corresponding modules/links.
+for x,a,b,tag in [(3.0,'A12','A21','A1A2'),(8.2,'A22','C1','A2C'),(9.8,'C1','B11','CB1'),(15.0,'B12','B21','B1B2')]:
+ label(x,-.75,rf'$C_{{{tag}}}={coupling(a,b):.2f}$',11.5)
+label(C1,-1.25,rf'$C_{{A2B1}}={coupling("A22","B11"):.2f}$',12)
+label(9.0,-2.33,r'All capacitances are in fF. Readout branches are contextual; decoherence calculations exclude resonator dynamics.',11)
+fig.subplots_adjust(left=.01,right=.99,bottom=.01,top=.99);fig.savefig(p/'transmon-circuit.pdf',transparent=True);fig.savefig(p/'transmon-circuit.png',dpi=200,transparent=False);fig.savefig(p/'transmon-circuit.svg',transparent=True)
+from matplotlib import mathtext
+mathtext.math_to_image(r'$\mu\Phi_0/\sqrt{\mathrm{Hz}}$',p/'flux-unit.png',dpi=500,color='black')
+mathtext.math_to_image(r'$100\,\mu\Phi_0/\sqrt{\mathrm{Hz}}$',p/'flux-unit-100.png',dpi=500,color='black')
+mathtext.math_to_image(r'$10\,\mu\Phi_0/\sqrt{\mathrm{Hz}}$',p/'flux-unit-10.png',dpi=500,color='black')
+from PIL import Image
+for name in ['flux-unit.png','flux-unit-100.png','flux-unit-10.png']:
+ image=Image.open(p/name).convert('RGB');alpha=image.convert('L').point(lambda x:255-x);ink=Image.new('RGBA',image.size,(0,0,0,0));ink.putalpha(alpha);ink.save(p/name)
+print('horizontal schematic and typeset units ready')
+
+

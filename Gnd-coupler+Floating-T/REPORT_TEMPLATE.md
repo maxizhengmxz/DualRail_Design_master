@@ -2,7 +2,7 @@
 
 Use this structure and level of detail for every subsequent full coupler-design
 report. The detailed reference is
-[the 13-page design report](output/report-reference/coupler-design-report.pdf).
+[the 13-page design report](templates/report-references/design-reference.pdf).
 The visual PDF is a local reference under ignored output/, excluded from Git.
 This checked-in specification is the portable template for a fresh checkout.
 The six-page timing benchmark is supplementary; it does not replace this format.
@@ -10,6 +10,10 @@ Reference case: loaded EC/h = (165,250,160,260) MHz, 29 October 2026.
 Its numerical values and historical completion status are examples, not defaults.
 
 ## Visual format
+
+Circuit schematics follow [CIRCUIT_TEMPLATE.md](CIRCUIT_TEMPLATE.md), including
+the approved component orientations, terminal extensions, C1 lead, mathematical
+typesetting and two-decimal circuit labels.
 
 - A4 portrait, margins 42 pt left/right and 38 pt top/bottom.
 - Helvetica body 9 pt with 12 pt leading; main headings 17 pt, subheadings 12 pt.
@@ -92,3 +96,6 @@ Its numerical values and historical completion status are examples, not defaults
 - Use the PDF skill, render and visually inspect every page before delivery.
   Keep final PDFs and figure inputs; move rendering previews and one-off scripts
   into ignored archives when cleaning up.
+
+
+Optional robustness/decoherence reports use STUDY_REPORT_TEMPLATES.md and the exact latest PDFs under templates/report-references/. They are not part of the default design workflow.

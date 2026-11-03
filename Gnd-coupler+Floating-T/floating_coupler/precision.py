@@ -25,7 +25,9 @@ class GateRefinement:
     No fidelity target is imposed here; raw, postselected and survival metrics
     must all plateau. Phase-pi feasibility is retained independently.
     """
-    def __init__(self, evaluate, max_evaluations=48):
+    def __init__(self, evaluate, max_evaluations=48, objective="raw_cz_fidelity"):
+        if objective not in ("raw_cz_fidelity","postselected_cz_fidelity"):raise ValueError("Unknown gate objective")
+        self.objective=objective
         self.evaluate=evaluate
         self.max_evaluations=max_evaluations
         self.cache={}
@@ -46,7 +48,7 @@ class GateRefinement:
                     abs(row['phase_error_rad'])<=GATE_PHASE_TOL and
                     all(np.isfinite(row.get(k,np.nan)) for k in
                         ('raw_cz_fidelity','postselected_cz_fidelity','logical_survival'))):
-                if self.best is None or row['raw_cz_fidelity']>self.best['raw_cz_fidelity']:
+                if self.best is None or row[self.objective]>self.best[self.objective]:
                     self.best,self.best_x=row,np.array(key)
         return self.cache[key]
 
@@ -69,18 +71,18 @@ class GateRefinement:
         if self.best is None:
             raise ValueError('Local refinement found no phase-pi feasible endpoint')
         return dict(best=self.best,x=self.best_x.tolist(),
-                    optimizer_success=bool(success),stop_reason=self.reason,
+                    optimizer_success=bool(success),stop_reason=self.reason,objective=self.objective,
                     evaluations=len(self.cache),gate_error_accuracy_absolute=GATE_ERROR_ABS)
 
 
-def refine_gate_controls(evaluate,start,bounds,maxiter=12,max_evaluations=48,constrain_phase=True):
+def refine_gate_controls(evaluate,start,bounds,maxiter=12,max_evaluations=48,constrain_phase=True,objective="raw_cz_fidelity"):
     """SLSQP in caller-scaled controls; retain best phase-pi feasible point."""
     from scipy.optimize import minimize
-    track=GateRefinement(evaluate,max_evaluations)
+    track=GateRefinement(evaluate,max_evaluations,objective=objective)
     success=False
     try:
         track.at(start)
-        fit=minimize(lambda x:-100*track.at(x)['raw_cz_fidelity'],start,
+        fit=minimize(lambda x:-100*track.at(x)[objective],start,
                      method='SLSQP',bounds=bounds,
                      constraints=([dict(type='eq',fun=lambda x:track.at(x)['phase_error_rad'])]
                                   if constrain_phase else []),

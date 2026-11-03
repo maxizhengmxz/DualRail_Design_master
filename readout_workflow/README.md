@@ -277,3 +277,22 @@ Bounds do not prove that the full intervening interval is connected/feasible,
 or certify a global optimum. Results and attempts are retained separately in
 `data/frequency_limits_100mhz_ec_step2/`, checkpointed after every endpoint.
 The six-pair pilot is reused in the full 5,004-endpoint run.
+
+
+## Fabrication recovery ladder
+
+`recovery.py` restores the historical `reordered_robustness.py` policy from Git
+commit b0964c3. For the explicitly requested coupler-fabrication study the order is:
+case baseline -> loaded EC floor 120 MHz -> free dressed idle frequency -> logical
+window widened 10 MHz on each side -> H>=0.90 -> EJ/EC>40. The current A/B windows
+and approved EJ/EC>45 baseline are preserved; historical 90-110/50 defaults are not
+silently substituted. EJ<25 GHz, |mean chi|>=1 MHz, chi mismatch<=1% until the final 5% tier, dispersivity,
+overlap and sign checks remain hard at every tier. An inactive EC relaxation is
+skipped. These are explicit fabrication-study relaxations, not new nominal-map
+acceptance rules, and no campaign starts automatically.
+
+Recovery uses mean/differential frequency coordinates, tracks the best candidate
+across all evaluations, stops at first feasible recovery, validates the basis and
+sign probes, and records the first passing tier. A rejected endpoint is returned
+only as `diagnostic_point`; `point`, EJs and idle coordinates are None on failure.
+A failed recovery is not proof of physical infeasibility.

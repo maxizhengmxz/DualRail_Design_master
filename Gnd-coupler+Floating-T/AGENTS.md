@@ -97,8 +97,40 @@ this readout policy never certifies residual couplings to 1 Hz.
 
 ## Report format
 
+Use CIRCUIT_TEMPLATE.md and templates/circuit-schematic.py.in for circuit drawings.
+The approved layout and two-decimal circuit-label convention are user preferences.
+
 All subsequent full design reports must follow REPORT_TEMPLATE.md and the
-preserved detailed 13-page PDF in output/report-reference/. Keep its form,
+preserved detailed 13-page PDF in templates/report-references/. Keep its form,
 section sequence and level of detail; the short benchmark report is supplementary.
 Use current results and explicit validation status, not the reference case
 numbers. Render and inspect every page. No optimization runs during reporting.
+
+## Fabrication-study exception
+
+The explicitly authorized +/-5% fabrication campaign is documented in
+FABRICATION.md. Unlike design synthesis, it recomputes loaded EC from fixed
+perturbed physical capacitors WITHOUT self-capacitance compensation. It uses
+separate readout triples and five transmons, sharing fractional errors and
+relative readout-derived idle shifts. Only EJs/duration may recover performance.
+Do not change numerical source during an active source-hashed campaign.
+
+Fabrication OFF rescue now broadens below 11 GHz before basis escalation and
+passes on physical |g0100,0010|<1 Hz at the reported basis. This magnitude pass
+is separate from cross-basis convergence. Fabrication gate recovery maximizes
+postselected fidelity, with no raw/survival/return-quality cutoff. Preserve phase
+pi, physical bounds and the selected-channel/tracking validity checks. See FABRICATION.md.
+
+Fabrication continuation (2026-10-30): if readout rescue fails, continue from the
+last tier best diagnostic, preserving rejection flags. Retain closest wrapped-phase
+approximate gates when phase pi is unmet. Gate precision warnings use raw/postselected
+fidelity and average survival; leakage-only differences remain details.
+
+## Optional study entry points and retained report templates
+
+Robustness and decoherence are OPT-IN post-design workflows. Never launch them
+from nominal design or by importing a module. Use study.py and OPTIONAL_STUDIES.md.
+The source lives in studies/; report style is STUDY_REPORT_TEMPLATES.md with exact
+latest references in templates/report-references/. No production code may import
+from a generated output directory. Preserve nominal inputs and validation flags;
+full robustness data live in one verified tar.xz archive, not loose campaign trees.

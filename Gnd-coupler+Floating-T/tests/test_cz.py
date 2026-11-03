@@ -281,3 +281,32 @@ class IdleGateTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+class PostselectedSearchObjectiveTests(unittest.TestCase):
+    def test_refinement_keeps_higher_postselected_despite_lower_raw_and_survival(self):
+        from floating_coupler.precision import GateRefinement
+        def at(x):
+            return dict(raw_cz_fidelity=.9 if x[0]==0 else .3,
+                        postselected_cz_fidelity=.95 if x[0]==0 else .999,
+                        logical_survival=.95 if x[0]==0 else .301,
+                        phase_error_rad=0.,leakage_by_input=[.05 if x[0]==0 else .699]*4)
+        track=GateRefinement(at,objective='postselected_cz_fidelity')
+        track.at([0.]);track.at([1.])
+        self.assertEqual(track.result()['best']['postselected_cz_fidelity'],.999)
+        self.assertEqual(track.result()['best']['raw_cz_fidelity'],.3)
+
+    def test_phase_roots_allow_postselected_objective_without_return_floor(self):
+        from floating_coupler.calibrate_on import PhaseCalibration
+        class Roots(PhaseCalibration):
+            def __init__(self):
+                self.fb_bounds=(.5,2.5);self.phase_samples=17;self.minimum_midpoint_b20=None
+            def at(self,fb,t):
+                second=fb>1.5
+                return dict(fb_ghz=fb,time_ns=t,phase_error_rad=.1*(fb-1)*(fb-2),
+                            raw_cz_fidelity=.3 if second else .9,
+                            postselected_cz_fidelity=.999 if second else .95,
+                            return_by_input=[.3 if second else .95]*4)
+        cal=Roots()
+        self.assertAlmostEqual(cal.phase_root(100)['fb_ghz'],1.)
+        self.assertAlmostEqual(cal.phase_root(100,objective='postselected_cz_fidelity',minimum_return=None)['fb_ghz'],2.)
+        self.assertAlmostEqual(cal.phase_root(100,objective='postselected_cz_fidelity',minimum_return=None,acceptance=lambda r:r['fb_ghz']<1.5)['fb_ghz'],1.)

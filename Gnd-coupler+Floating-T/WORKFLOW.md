@@ -211,7 +211,15 @@ threshold stays H>=0.95; this changes only when the basis is increased.
 ## Report format
 
 All subsequent full design reports must follow REPORT_TEMPLATE.md and the
-preserved detailed 13-page PDF in output/report-reference/. Keep its form,
+preserved detailed 13-page PDF in templates/report-references/. Keep its form,
 section sequence and level of detail; the short benchmark report is supplementary.
 Use current results and explicit validation status, not the reference case
 numbers. Render and inspect every page. No optimization runs during reporting.
+
+## Optional post-design studies
+
+Robustness and decoherence are separate, opt-in branches after a saved nominal
+solution. Neither runs by default or on import. Use study.py with explicit inputs
+and output folders; see OPTIONAL_STUDIES.md. Current approved report references
+are in templates/report-references/ and governed by STUDY_REPORT_TEMPLATES.md.
+Normal three -> five -> ON -> seven design/validation is unchanged.

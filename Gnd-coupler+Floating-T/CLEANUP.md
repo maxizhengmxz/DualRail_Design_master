@@ -1,75 +1,60 @@
-# Cleanup record: 2026-10-28
+﻿# Cleanup record: 2026-11-03
 
-The current source, templates and instructions consistently implement the
-confirmed temporary physical OFF objective. S1 selection and ON physics were
-preserved. The complete workflow and future reversion are documented separately.
+Approved scope: keep the authoritative nominal design and its decoherence study;
+compress full retained robustness data into one file; consolidate both studies
+as opt-in workflows; preserve the latest reports as future report templates.
 
-- Retired 12 one-off case/report scripts from active source paths. A generic
-  `off_sweep.py` replaces hardcoded fixed-case physical/logical sweep scripts.
-- Relocated 51 historical case inputs to `configs/legacy-inputs/`.
-  Explicit source/test references were updated. These are reproduction fixtures,
-  not current accepted design choices. Readout-only selected inputs were preserved.
-- Retired 488 old files/artifacts from active paths,
-  including superseded logical/CZ/ZZ-null capacitor searches and loose scripts.
-  They reside in ignored `output/retired-2026-10-28/` for reversible recovery;
-  they are not imported, resumed or presented as current results.
-- Retained the original physical three-body seed, compensated five-body circuit
-  and verified five-body physical-null numerical reference, with original provenance.
-- Preserved unrelated toy/readout implementation edits and readout-only outputs.
-- A machine-readable inventory is `output/cleanup/manifest.json`; no upload ZIPs.
-- No production optimization campaign or readout run was launched by cleanup.
-  No additional performance proposal was enabled. Tests and small smoke checks
-  validate the refactor.
+## Retained
 
-The original broad floating topology and older same-source/CZ/ZZ studies are
-historical only; the old HISTORICAL_WORKFLOW.md is now in the ignored retirement archive.
+- output/nominal-design/: self-contained fabrication input, three/five/seven
+  nominal results, calibrated controls, readout/gate validation, timing and
+  reports. Detailed hardware report and later benchmark validation have distinct
+  provenance. The final seven-mode OFF result is not recertified to1 Hz.
+- output/decoherence/: approved six-page PDF, normalized results.json, validation
+  and participation records, circuit assets and final figures. No superseded
+  combined-noise report section is retained as an active result.
+- output/robustness/: approved twelve-page summary PDF and ONE64,032,856-byte
+  robustness-data.tar.xz. It holds9,456 evaluation records including failed,
+  approximate and unavailable outcomes, reproduction input and source/run
+  provenance. Repeated physical settings remain separate evaluation records.
+- templates/report-references/: exact latest decoherence and robustness PDFs,
+  plus the existing detailed design reference. manifest.json records checksums.
+  STUDY_REPORT_TEMPLATES.md governs their future use; example values are not
+  future defaults.
+- output/RESULTS.json and output/cleanup-manifest.json index retained files,
+  archive checksum, validation and deletion results.
 
-## Approved follow-up: 2026-10-29
+## Source consolidation
 
-The eight performance proposals were subsequently approved and implemented.
-Residual checks now target 1 Hz and gate-error checks 1e-4 absolute probability.
-No new production campaign was started; small numerical smoke/regression checks
-validate exact accelerations, adaptive stopping and process checkpointing.
+study.py is the explicit entry point. studies/ owns archive I/O, recovery runner,
+shared policy, decoherence calculation and report rendering. No imports from
+output folders remain. Previous fabrication entry modules retain compatibility
+imports. The shared readout rescue implementation and default coupler-design
+physics remain intact. Source-hashed historical data are readonly; do not claim
+that old runs were resumed or re-certified under the refactored source hash.
 
-## Working-tree follow-up: 2026-10-29
+The default workflow remains nominal three -> five -> ON -> seven validation.
+Robustness and decoherence run only when explicitly requested. They have
+independent controls/configuration and generated output folders. Report-only
+commands do not run Hamiltonian optimization.
 
-The first cleanup still left 51 historical JSON inputs plus their README in the
-Git-visible tree. These are now in the ignored retirement archive; only two
-required regression inputs were retained under tests/fixtures. This reduces the
-working-tree file count by 50 without deleting unrelated changes or useful code.
-The complete coupler package remains untracked because it has not been committed;
-Git therefore counts all its source, tests and templates as additions.
+## Removed
 
-## Source consolidation: 2026-10-29
+28 obsolete result directories/subtrees containing11,822 files and944,833,364
+bytes were removed only after preservation and archive checks. These included
+superseded topology/capacitor searches, dated campaign copies, intermediate PDFs,
+per-point loose files, previews, one-off launch/patch/audit scripts and downloaded
+paper copies. Temporary cleanup/check outputs and Python caches are also removed.
+No unrelated project workflow or existing user edit was deleted; no commit/push
+or upload ZIP was created.
 
-- Consolidated 29 regression files into six suites, preserving all 89 checks.
-  Original source sections are labeled inside each suite. The independent
-  readout reference helper and two JSON fixtures remain test-only material.
-- Retired 34 standalone audit, plotting, alternate optimizer and legacy CLI files
-  from active source paths. Kept the supported stage entry points and extracted
-  reusable ZZ diagnostics into the numerical library.
-- Archived six saved readout-case inputs and the obsolete workflow narrative.
-- Removed superseded A90/B150 case defaults from active code; the generic readout
-  regression uses explicit current inputs instead.
-- Archives are ignored output artifacts, not importable active workflow modules.
-  Unrelated existing changes in other workflows were preserved.
+## Verification
 
-## Final benchmark/report cleanup: 2026-10-29
-
-- Archived two obsolete active readout scripts (hardcoded calibration and plotting),
-  and removed the historical-case CLI/function from readout_common_sweep.py.
-  Its supported explicit-input concurrent runner and numerical kernels are intact.
-- Archived 244 files across 123 moves: superseded campaigns, loose performance
-  experiments, one-off case runners/logs and PDF rendering previews. Original and
-  destination paths/sizes are in output/retired-2026-10-29/final-cleanup/manifest.json.
-  Final numerical records, source hashes, convergence data, figures and PDFs stay
-  at their existing case paths. No unrelated workflow files were changed.
-- Preserved the detailed 13-page report and added REPORT_TEMPLATE.md to specify
-  subsequent reports' content, layout and validation requirements. The missing
-  original detailed PDF was regenerated from its retained authoring source/data;
-  numerical provenance files were protected from the historical renderer's writes.
-- Moved the readout suite's unittest entry point after all test classes so direct
-  execution includes the new basis guards. All existing tests remain.
-- Archives are ignored and reversible, not active source. No capacitor/gate/readout
-  optimization was rerun, no acceptance threshold was changed, and no new numerical
-  approximation was introduced by this cleanup.
+- Per-archive-member SHA256 and size checks; record count and outcome statistics
+  matched the completed final study (9,456 records,9,436 finite gate results).
+- Both optional report commands rendered from preserved data/archive alone.
+- The consolidated nominal decoherence calculation exactly reproduced the saved
+  echo/Ramsey postselected fidelity at noise amplitude10.
+- Archive reuse credited every filled bin and ran zero new samples.
+- Required regression suite:123 tests passed. Formatting and undefined/unused
+  symbol checks passed. A final check is repeated after file removal.

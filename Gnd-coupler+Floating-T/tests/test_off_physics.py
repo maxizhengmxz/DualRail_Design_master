@@ -263,3 +263,50 @@ class ThreeBodyChannelTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+class OffRescueAcceptanceTests(unittest.TestCase):
+    def test_sub_hz_magnitude_passes_without_a_sign_change_or_exact_zero(self):
+        from floating_coupler.off_search import threshold_off_search
+        r=threshold_off_search(lambda f:.5e-6,np.linspace(7.,11.,9),9.8)
+        self.assertTrue(r['passed'])
+        self.assertAlmostEqual(r['residual_hz'],.5)
+        self.assertFalse(threshold_off_search(lambda f:1.e-6,np.linspace(7.,11.,9),9.8)['passed'])
+
+    def test_broadens_frequency_before_using_a_larger_basis(self):
+        from unittest.mock import patch
+        from types import SimpleNamespace
+        from floating_coupler.fabrication import find_off,OFF_BASES
+        created=[]
+        class FakePair:
+            def __init__(self,model,**basis):self.basis=basis;created.append(basis)
+            def physical_off(self,f):
+                g=1.5e-6 if self.basis==OFF_BASES[0] else .5e-6
+                return {'physical_exchange':{'g_mhz':g,'valid':True}}
+            def evaluate(self,f):return dict(physical_exchange=self.physical_off(f)['physical_exchange'],minimum_subspace_overlap=.99)
+        with patch('floating_coupler.fabrication.PairModel',FakePair):
+            r=find_off(SimpleNamespace(ec=np.array([.165,.25,.45,.16,.26])),9.8)
+        self.assertTrue(r['passed'])
+        self.assertEqual([h['range_ghz'][1] for h in r['history']],[9.9999,10.9999,10.9999])
+        self.assertEqual(len(created),2)
+        self.assertEqual(r['history'][0]['basis'],r['history'][1]['basis'])
+        self.assertIsNone(r['reference_10ghz'])
+
+    def test_root_above_ten_can_pass_before_basis_escalation(self):
+        from unittest.mock import patch
+        from types import SimpleNamespace
+        from floating_coupler.fabrication import find_off
+        created=[]
+        class FakePair:
+            def __init__(self,model,**basis):created.append(basis)
+            def physical_off(self,f):return {'physical_exchange':{'g_mhz':.001*(f-10.5),'valid':True}}
+            def evaluate(self,f):return dict(physical_exchange=self.physical_off(f)['physical_exchange'],minimum_subspace_overlap=.99)
+        with patch('floating_coupler.fabrication.PairModel',FakePair):
+            r=find_off(SimpleNamespace(ec=np.array([.165,.25,.45,.16,.26])),9.8)
+        self.assertTrue(r['residual_pass'])
+        self.assertLess(abs(r['fc_ghz']-10.5),.001)
+        self.assertLess(abs(r['target_residual_hz']),1.)
+        self.assertEqual(len(created),1)
+        self.assertFalse(r['convergence_checked'])
+        self.assertEqual(r['reference_10ghz']['fc_ghz'],10.)
+        self.assertEqual(r['reference_10ghz']['basis'],r['basis'])
+        self.assertAlmostEqual(r['reference_10ghz']['metrics']['physical_exchange_hz'],-500.)

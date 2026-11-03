@@ -149,8 +149,9 @@ class PhaseCalibration:
         row['channel_selection']=self.selection.to_dict()
         return row
 
-    def phase_root(self, time_ns):
+    def phase_root(self, time_ns, *, objective="raw_cz_fidelity", minimum_return=.5, acceptance=None):
         """Solve a signed near-pi error; never accept a +/-pi branch jump."""
+        if objective not in ("raw_cz_fidelity","postselected_cz_fidelity"):raise ValueError("Unknown gate objective")
         bounds = np.linspace(*self.fb_bounds, self.phase_samples)
         rows = [self.at(fb, time_ns) for fb in bounds]
         solutions = []
@@ -161,12 +162,14 @@ class PhaseCalibration:
             fb = brentq(lambda frequency: self.at(frequency, time_ns)["phase_error_rad"],
                          left["fb_ghz"], right["fb_ghz"], xtol=2e-12)
             row = self.at(fb, time_ns)
-            if abs(row["phase_error_rad"]) < 1e-7 and min(row["return_by_input"]) > 0.5:
+            if (abs(row["phase_error_rad"]) < 1e-7 and
+                    (minimum_return is None or min(row["return_by_input"]) > minimum_return) and
+                    (acceptance is None or acceptance(row))):
                 if self.minimum_midpoint_b20 is None or row["midpoint_selected_auxiliary_from_selected_source"] >= self.minimum_midpoint_b20:
                     solutions.append(row)
         if not solutions:
             raise ValueError("No reliable phase-pi root in the B-frequency bracket")
-        return max(solutions, key=lambda row: row["raw_cz_fidelity"])
+        return max(solutions, key=lambda row: row[objective])
 
     def optimize_time(self, time_bounds, points=21):
         """Maximize raw fidelity along the phase-pi constraint, locally in time."""

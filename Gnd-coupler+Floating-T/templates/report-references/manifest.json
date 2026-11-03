@@ -1,0 +1,18 @@
+{
+  "preserved_date": "2026-11-03",
+  "references": {
+    "decoherence-reference.pdf": {
+      "pages": 6,
+      "sha256": "f7468e2a117e02cfadacd606eb8ddd4a2c73b94777076cac5548d59a5a9482a5"
+    },
+    "design-reference.pdf": {
+      "pages": 13,
+      "sha256": "4cf1ab29f57c6d2f12e3c24813db5255862c56d9d4b69e261a865c263d415c6f"
+    },
+    "robustness-reference.pdf": {
+      "pages": 12,
+      "sha256": "40b00ef8189fd2f3dbceb535d259a21ce55c84fec834916262aafd0ee7622342"
+    }
+  },
+  "policy": "Exact approved reference PDFs; new reports populate new data. No numerical defaults inferred from reference cases."
+}

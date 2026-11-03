@@ -1,0 +1,153 @@
+﻿# Optional studies
+
+The normal design workflow ends with nominal seven-mode validation. Neither
+study below runs automatically. Both require an explicit nominal input and an
+output folder. Importing the modules performs no calculation.
+
+## Default policy and scope
+
+The current approved rescue ladder is the DEFAULT for an explicitly launched
+robustness study. It is NOT the default acceptance policy for nominal design or
+standalone readout optimization. A sample starts at baseline; cumulative rescue
+tiers are tried only after failure, stopping at the first feasible tier. Always
+report the tier used, rejection flags, and whether a gate is accepted or merely
+the best available diagnostic. Do not label a rescued result a baseline pass.
+
+| Quantity | Robustness baseline | Last cumulative rescue tier |
+|---|---|---|
+| Loaded readout EC floor | 150 MHz | 120 MHz |
+| Idle frequency | nominal target | may retune |
+| Dressed splitting window | supplied case window (current A140–160/B80–100 MHz) | widened by 10 MHz at each end |
+| H-score | >=0.95 | >=0.90 |
+| EJ/EC | >45 | >40 |
+| Chi mismatch | <=1% | <=5%, final tier only |
+| OFF upper bound | <10 GHz | <11 GHz, then basis escalation |
+
+Mean |chi|>=1 MHz, EJ/h<25 GHz, dispersivity, overlap and sign checks remain
+hard. The current robustness gate duration interval is 70–130 ns; maximize
+postselected fidelity with phase pi and tracking validity, with no fidelity or
+survival threshold. These study policies do not replace supplied design inputs.
+
+CLI defaults: independent sampling, +/-5% capacitor errors, 200 samples, two
+workers, 48-hour budget, seed 20261103. Maximum-deviation bin sampling must be
+selected explicitly; its defaults are 0.25% bins and 200 finite-gate records per
+bin. A CLI budget/count is not a guarantee of completed samples.
+
+## Known nominal seven-mode OFF accuracy limitation
+
+The retained nominal OFF is a numerical cancellation in the selected basis,
+NOT a certified 1 Hz physical null. In the saved fixed-control audit
+(`output/nominal-design/final/off-convergence.json`), physical exchange changes
+from -275.981441 Hz to approximately zero on enlarging the basis (difference
+275.981442 Hz); logical exchange and double-flip change by about 154 Hz, and
+secular ZZ by 2.487 Hz. The audit explicitly records `converged: false`.
+These values describe that saved audit, not universal model errors.
+
+Report the basis and this unresolved convergence status alongside nominal OFF
+residuals. A sub-1 Hz residual in one basis is acceptance at that basis, not
+cross-basis certification. Never claim certified hardware isolation, reinterpret
+the logical residuals as zero, or remove this warning because a root was found.
+New designs must retain their own audit status; this historical limitation is
+not a reason to launch an unrequested calculation.
+
+## Robustness
+
+```powershell
+.venv/Scripts/python.exe Gnd-coupler+Floating-T/study.py robustness --input Gnd-coupler+Floating-T/output/nominal-design/fabrication-input.json --output Gnd-coupler+Floating-T/output/new-robustness --sampling independent --samples 200 --deviation-percent 5 --workers 2 --hours 12
+```
+
+For maximum-deviation strata, use `--sampling max-bins --bin-width-percent .25
+--target-per-bin 200`. `--reuse <robustness-data.tar.xz>` retains previous records
+and credits their finite gate results toward each bin. A dry run validates the
+input without launching numerical work: add `--dry-run`.
+
+Twenty-four actual positive capacitors vary; no fabrication-time EC compensation
+is made. The same signed fractional error is shared across the independently
+synthesized five-body/readout representations. Readout-derived individual bare
+frequency shifts transfer relative to each subsystem's nominal calibration.
+Only EJs and gate duration recover performance. Resonator L remains fixed.
+
+Independent sampling draws every deviation uniformly in the requested interval.
+Max-stratified sampling draws the observed maximum uniformly within a bin, chooses
+a random signed limiting component, and draws the other 23 errors uniformly
+inside that maximum. These distributions differ. Structured/targeted/stratified
+records are excluded from independent-random correlation analyses.
+
+Nominal readout uses A140-160/B80-100 MHz dressed windows, H>=.95, mismatch<=1%,
+absolute mean chi>=1 MHz, worst dispersive ratio<=.1, overlap>=.95, EJ/EC>45,
+EJ/h<25 GHz and the established sign grid. Recovery is cumulative:
+EC floor120 MHz; free idle frequency; splitting windows widened10 MHz per side;
+H>=.90; EJ/EC>40; mismatch<=5%. Mean chi>=1 MHz and EJ<25 GHz remain hard.
+Rejected readouts continue from their best diagnostic point with rejection flags.
+
+OFF searches below10 GHz, then below11 GHz in the same basis, then larger bases.
+Physical |g0100,0010|<1 Hz is acceptance; logical exchanges and ZZ are residuals.
+Report 10 GHz reference residuals when the accepted OFF is above10 GHz.
+
+Gate recovery maximizes postselected fidelity with phase pi, the S1-selected
+channel and validity screens retained; 70-130 ns. No raw, return, survival or
+fidelity-magnitude cutoff defines failure. Extra bounded starts and closest-phase
+finite diagnostics are retained even when acceptance fails. No result is silently
+skipped. Loaded EC, basis checks and flags are saved per point.
+
+Runs use 1-4 processes with BLAS=1, exact checkpoints/source signatures and bounded
+replacement attempts. `STOP` requests graceful shutdown. Resume with unchanged
+input/source/output. A deadline includes a final-report reserve; incomplete
+coverage is reported as partial, never completed. Do not edit numerical source
+while a source-hashed run is active.
+
+The archive format is a single `.tar.xz` containing `records.jsonl`, self-contained
+input, source/run provenance, summary and per-member SHA256 manifest. Reports
+can be rebuilt without unpacking it:
+
+```powershell
+.venv/Scripts/python.exe Gnd-coupler+Floating-T/study.py verify-archive Gnd-coupler+Floating-T/output/robustness/robustness-data.tar.xz
+.venv/Scripts/python.exe Gnd-coupler+Floating-T/study.py report --kind robustness --study Gnd-coupler+Floating-T/output/robustness/robustness-data.tar.xz --output Gnd-coupler+Floating-T/output/robustness-report-check
+```
+
+## Decoherence
+
+```powershell
+.venv/Scripts/python.exe Gnd-coupler+Floating-T/study.py decoherence --input Gnd-coupler+Floating-T/output/nominal-design/fabrication-input.json --output Gnd-coupler+Floating-T/output/new-decoherence --rail-tuning 4.4 5.8 --coupler-tuning 6.5 11 --amplitudes 1 100 --gate-time 100
+```
+
+Endpoints are GHz; amplitudes are microPhi0/sqrt(Hz) at1 Hz per loop; gate duration
+is ns. `--low-cutoff` sets the Ramsey infrared cutoff in Hz. Defaults are explicit
+examples, not automatically inferred user inputs. Confirm them for a new study.
+
+The central calculation is the isolated B rail, resonant at each supplied idle/
+gate mean, with independent B1/B2 flux noise. Include logical B, B20-B0 and an
+isolated B1 0-1 reference. Every ideal gate curve includes B20, raw/selected fidelity
+and echo-/Ramsey-based exponential rates. A is noiseless in this B-focused budget.
+
+Separately compute coupler-induced dephasing in independent A1-A2-C and C-B1-B2
+subsystems, with noiseless rail EJs. Calibrate differential settings once at idle
+with C OFF and freeze them during the common gate-frequency shift. This differs
+from independently resonating the isolated B pair. Do not attribute the resulting
+static dressing/calibration change to an added noise rate. Do not automatically
+add combined-noise sections. Quote actual rate ratios; the nominal auxiliary
+comparison is about47x, while logical B is about5x, not uniformly10x.
+
+Use first-order Gaussian1/f reference times and explicitly label exponential
+substitution. Isolated Ramsey times are solved at each amplitude; the separate
+coupler plot scales its amplitude100 reference inversely with amplitude, holding
+the Ramsey logarithm fixed. No T1, quadratic/transverse noise, noisy matrix
+elements, ramps or total-device fidelity claim. Static coupler participation and
+ground-decay matrix elements are different quantities.
+
+Report-only rendering takes `--kind decoherence --study <saved-folder>` and does
+not rerun a Hamiltonian. Retained nominal study data and exact approved report
+are under `output/decoherence/`.
+
+## Reports and accuracy
+
+Use [STUDY_REPORT_TEMPLATES.md](STUDY_REPORT_TEMPLATES.md). Preserve the latest
+approved references under `templates/report-references/`. Residual accuracy is
+1 Hz; gate probability accuracy is1e-4 absolute (0.01 percentage point). These are
+precision targets, not fidelity acceptance cuts. No exhaustive basis search is
+required once modest fixed-control checks agree.
+The five-mode physical-basis participation data are retained separately in
+output/decoherence/participation.json. To calculate them for a new nominal case,
+add `--participation` to the explicit decoherence command. This optional diagnostic
+uses the full five-mode OFF model; it is not silently substituted for the
+independent-rail dephasing calculation.

@@ -619,3 +619,29 @@ class OffSeedTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+class FabricationElectrostaticsTests(unittest.TestCase):
+    def test_uniform_fabrication_scaling_changes_ec_and_j_without_compensation(self):
+        from floating_coupler.fabrication import five_model,parameter_names
+        from floating_coupler.model import FULL
+        pads={n:[n+'1',n+'2'] for n in FULL}
+        grounds={p:80. for n in FULL for p in pads[n]}
+        grounds['C1']=grounds['C2']=0.
+        ph=dict(pad_pairs=pads,grounds_ff=grounds,shunts_ff={n:40. for n in FULL},
+                links=[{'from':a,'to':b,'capacitance_ff':c} for a,b,c in [('A22','C1',6.),('C1','B11',14.),('A22','B11',.8),('A12','A21',20.),('B12','B21',8.)]],
+                idle_frequencies_ghz=dict(zip(FULL,[4.61,4.61,9.8,5.39,5.39])))
+        base=dict(five_physical=ph,readouts={},selection={})
+        nominal,_=five_model(base,{},{});varied,_=five_model(base,{n:.05 for n in parameter_names(base)},{})
+        np.testing.assert_allclose(varied.ec,nominal.ec/1.05,rtol=2e-13)
+        np.testing.assert_allclose(varied.j,nominal.j/1.05,atol=1e-12)
+        self.assertFalse(np.array_equal(varied.ec,nominal.ec))
+
+    def test_readout_fabrication_keeps_inductance_and_allows_link_imbalance(self):
+        from floating_coupler.fabrication import readout_device,edge_key
+        ro=dict(case=dict(resonator_node='r'),physical=dict(pad_pairs={'A1':['a','b'],'A2':['c','d']},
+            ground_capacitances_ff={n:80. for n in ['a','b','c','d']},pad_mutual_capacitances_ff={'A1':40.,'A2':50.},
+            physical_links=[{'from':'b','to':'c','capacitance_ff':20.},{'from':'b','to':'r','capacitance_ff':10.},{'from':'c','to':'r','capacitance_ff':10.}],
+            resonator_self_capacitance_ff=500.,resonator_inductance_nh=1.4))
+        d=readout_device(ro,{edge_key('b','r'):.05,edge_key('c','r'):-.05,'resonator:r':.05})
+        self.assertEqual(d.Lr_nH,1.4)
+        self.assertNotAlmostEqual(d.C1r_fF,d.C2r_fF)
