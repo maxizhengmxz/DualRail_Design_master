@@ -1,5 +1,10 @@
 # Transmon-based CZ: approximate physical-collision search
 
+**LEGACY ONLY.** New toy CZ searches and coupler toy-stage calculations use
+`../2Q-gate_XM/run.py` and its WORKFLOW.md. This folder preserves historical
+tools/results and a policy compatibility shim; it is not an active dependency.
+Its tests run only when explicitly requested with root `run_tests.py --legacy`.
+
 Four full-cosine transmons A1,A2,B1,B2 encode two dual-rail qubits. The
 coupler-mediated interaction is approximated by an effective direct A2-B1
 charge coupling. There are no explicit resonators or coupler dynamics here.
@@ -9,7 +14,7 @@ inferred from a physical collision label. This is separate from the
 logical-transition iSWAP/CZ workflow.
 
 [WORKFLOW.md](WORKFLOW.md) is the authoritative definition shared with the
-coupler workflow. `transmon_cz/channel_policy.py` implements the logical ordering
+coupler workflow. `core/cz_channel_policy.py` implements the logical ordering
 and minimum-S1/common-g selection rule. Logical source and physical auxiliary must both
 be recorded for ON. Explicit-coupler OFF temporarily nulls physical 0100-0010
 exchange in five/seven modes using all four physical single-excitation references;

@@ -5,7 +5,7 @@ is the end-to-end specification; configs/workflow-request-template.json is its
 request schema, not a directly executable stage config. Keep new floating-coupler source,
 templates and tests in this folder. Preserve other workflows and existing edits.
 
-Use the toy workflow's WORKFLOW.md and transmon_cz/channel_policy.py as the sole
+Use ../2Q-gate_XM/WORKFLOW.md and ../core/cz_channel_policy.py as the sole
 authority for logical state and CZ channel definitions. The local channel_policy
 module imports that authority. Select one feasible minimum-S1 resonance at common
 intended g, with common score basis and comparison conditions. Exclude the

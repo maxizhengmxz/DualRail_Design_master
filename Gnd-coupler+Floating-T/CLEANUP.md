@@ -1,4 +1,4 @@
-﻿# Cleanup record: 2026-11-03
+# Cleanup record: 2026-11-03
 
 Approved scope: keep the authoritative nominal design and its decoherence study;
 compress full retained robustness data into one file; consolidate both studies
@@ -58,3 +58,11 @@ or upload ZIP was created.
 - Archive reuse credited every filled bin and ran zero new samples.
 - Required regression suite:123 tests passed. Formatting and undefined/unused
   symbol checks passed. A final check is repeated after file removal.
+# Deferred cleanup outside this workflow
+
+2026-11-03 user decision: KEEP `../transmon-based CZ/output/ec_gate_campaign_4to5GHz/`
+as is for now (approximately 1.23 GiB; 82,008 retained parameter points).
+It is a candidate for later cleanup, not authorized for deletion or compression.
+At the next project-wide results cleanup, ask the user whether to clean up this
+campaign before taking action. Preserve its final report and provenance unless
+the user explicitly directs otherwise. No scheduled reminder date was specified.

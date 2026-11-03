@@ -29,7 +29,7 @@ Implementation map:
 - `../2Q-gate_XM/xm_cz/evaluator.py:evaluate_ec` (nested `build`): cache the spectrum
   at a frequency offset; vary duration using spectral phases, not a new eigensolve.
   Calibrate conditional phase pi, then compare raw fidelity at that same gate.
-- `../transmon-based CZ/transmon_cz/simulation.py:spectral_decomposition/unitary_trajectories`: cached
+- Historical reference only (not imported): the legacy CZ simulation's `spectral_decomposition/unitary_trajectories`: cached
   static spectrum and batched propagation of inputs/times.
 - `../2Q-gate_XM/xm_cz/runner.py`: process workers with one BLAS thread, atomic
   checkpoints, source/input hashes and resume without duplicate writers.

@@ -5,13 +5,12 @@ importable without core forwarding imports or an additional package install.
 """
 
 import argparse
+import os
 from pathlib import Path
+import subprocess
 import sys
-import unittest
 
 ROOT = Path(__file__).resolve().parent
-for source in (ROOT, ROOT / "logical-resonance gate", ROOT / "coupler turn-off", ROOT / "transmon-based CZ"):
-    sys.path.insert(0, str(source))
 
 
 def main():
@@ -19,14 +18,25 @@ def main():
     parser.add_argument("--legacy", action="store_true", help="also run archived tests")
     args = parser.parse_args()
     directories = [ROOT / "tests", ROOT / "readout_workflow" / "tests",
-                   ROOT / "coupler turn-off" / "tests", ROOT / "transmon-based CZ" / "tests"]
+                   ROOT / "coupler turn-off" / "tests", ROOT / "2Q-gate_XM" / "tests",
+                   ROOT / "Gnd-coupler+Floating-T" / "tests"]
     if args.legacy:
-        directories.append(ROOT / "legacy" / "tests")
-    suite = unittest.TestSuite(
-        unittest.TestLoader().discover(str(directory)) for directory in directories
-    )
-    result = unittest.TextTestRunner(verbosity=1).run(suite)
-    return 0 if result.wasSuccessful() else 1
+        directories += [ROOT / "transmon-based CZ" / "tests", ROOT / "legacy" / "tests"]
+    # Separate processes prevent duplicate test-module names across workflows
+    # from sharing imports, discovery state or numerical runtime settings.
+    failed = False
+    for directory in directories:
+        env = os.environ.copy()
+        paths = [ROOT, ROOT / "logical-resonance gate", ROOT / "coupler turn-off",
+                 ROOT / "2Q-gate_XM", ROOT / "Gnd-coupler+Floating-T"]
+        if directory.parent.name in ("legacy", "transmon-based CZ"):
+            paths.append(ROOT / "transmon-based CZ")
+        env["PYTHONPATH"] = os.pathsep.join(map(str, paths))
+        print(f"\nTesting {directory.relative_to(ROOT)}", flush=True)
+        result = subprocess.run([sys.executable, "-m", "unittest", "discover",
+                                 "-s", str(directory)], cwd=ROOT, env=env)
+        failed |= result.returncode != 0
+    return int(failed)
 
 
 if __name__ == "__main__":

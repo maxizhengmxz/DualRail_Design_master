@@ -1,8 +1,8 @@
 # Project guidance for coding agents
 
 Dual-rail logical definitions, S1/S2 scoring and selected-resonance policy are
-owned by `transmon-based CZ/WORKFLOW.md` and
-`transmon-based CZ/transmon_cz/channel_policy.py`. The active S1 toy search
+owned by `2Q-gate_XM/WORKFLOW.md` and
+`core/cz_channel_policy.py`. The active S1 toy search
 (`2Q-gate_XM/`) and explicit coupler workflow import that stable authority.
 Select one feasible minimum-S1 resonance at common intended coupling and in
 the same score basis; keep S2 and crossing-order diagnostics separate. Never

@@ -21,7 +21,7 @@ def source_signature():
     root=Path(__file__).resolve().parents[2]
     files=[p for p in Path(__file__).resolve().parents[1].rglob('*.py') if 'output' not in p.parts]
     files+=list((root/'core').glob('*.py'))
-    files+=[root/'transmon-based CZ/transmon_cz/channel_policy.py']
+    files+=[root/'core/cz_channel_policy.py']
     return digest([(str(p.relative_to(root)),hashlib.sha256(p.read_bytes()).hexdigest())
                    for p in sorted(files)])
 

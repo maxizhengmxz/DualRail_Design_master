@@ -21,15 +21,15 @@ criterion is temporary; do not infer that residual logical exchange vanishes.
 
 ## Exact change map
 
-Line numbers were refreshed 2026-10-29 after the performance update; stable function/anchor names identify the
+Shared-policy line numbers were refreshed 2026-11-03 after relocation; stable function/anchor names identify the
 same locations after later edits. The logical extractor was retained intact in
 physics, with diagnostic-only metadata, to make revisiting the choice explicit.
 
 | File | Line | Function / anchor | Responsibility |
 |---|---:|---|---|
-| [../transmon-based CZ/transmon_cz/channel_policy.py](../transmon-based%20CZ/transmon_cz/channel_policy.py#L23) | 23 | `def off_target_definition` | Versioned temporary target and physical/logical status |
-| [../transmon-based CZ/transmon_cz/channel_policy.py](../transmon-based%20CZ/transmon_cz/channel_policy.py#L55) | 55 | `def physical_exchange_from_eigenpairs` | Four-physical-reference canonical extraction |
-| [../transmon-based CZ/transmon_cz/channel_policy.py](../transmon-based%20CZ/transmon_cz/channel_policy.py#L106) | 106 | `def logical_exchange_from_eigenpairs` | Preserved logical residual calculation |
+| [../core/cz_channel_policy.py](../core/cz_channel_policy.py#L28) | 28 | `def off_target_definition` | Versioned temporary target and physical/logical status |
+| [../core/cz_channel_policy.py](../core/cz_channel_policy.py#L60) | 60 | `def physical_exchange_from_eigenpairs` | Four-physical-reference canonical extraction |
+| [../core/cz_channel_policy.py](../core/cz_channel_policy.py#L111) | 111 | `def logical_exchange_from_eigenpairs` | Preserved logical residual calculation |
 | [floating_coupler/off_observables.py](floating_coupler/off_observables.py#L10) | 10 | `def physical_single_excitation_references` | Physical reference vectors in hybridized-pair basis |
 | [floating_coupler/pairs.py](floating_coupler/pairs.py#L196) | 196 | `physical_exchange=physical_exchange_from_eigenpairs` | Five-mode odd-parity extraction |
 | [seven_readout.py](seven_readout.py#L85) | 85 | `def physical_off_detail` | Seven-mode odd-parity extraction with vacuum photons |

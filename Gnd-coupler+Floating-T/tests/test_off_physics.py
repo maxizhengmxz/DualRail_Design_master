@@ -195,7 +195,7 @@ import unittest
 import numpy as np
 
 from floating_coupler import channel_policy as circuit
-from transmon_cz import channel_policy as toy
+from core import cz_channel_policy as toy
 from floating_coupler.paired_design import selected_channel
 
 

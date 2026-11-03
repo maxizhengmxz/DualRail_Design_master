@@ -2,7 +2,7 @@
 
 Keep the numerical model independent of the original exploratory simulation
 and search kernels. Shared `core.runtime` and the stable definitions/S1 policy
-in `transmon-based CZ/transmon_cz/channel_policy.py` are permitted; both the
+in `core/cz_channel_policy.py` are permitted; both the
 coupler and this active toy search import that single authority. Do not import
 original exploratory scripts or use dynamic source rewriting/monkeypatches.
 

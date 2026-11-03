@@ -123,7 +123,7 @@ class PhysicsTests(unittest.TestCase):
         )
 
     def test_score_and_logical_definitions_have_one_authority(self):
-        from transmon_cz import channel_policy as shared
+        from core import cz_channel_policy as shared
         from xm_cz import channel_policy as xm
 
         self.assertIs(xm.interaction_scores, shared.interaction_scores)

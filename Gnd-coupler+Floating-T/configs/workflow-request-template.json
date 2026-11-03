@@ -315,7 +315,7 @@
     "Begin with A2-C-B1; then five-body refinement. Readout design and seven-mode validation occur only after a successful coupler design.",
     "OFF temporarily nulls physical 0100-0010 in five/seven modes, after full-state four-physical-reference projection; logical exchanges remain residuals. Three-body seed nulls physical 01-10. ON S1 selection is separate. Historical capacitor sets remain geometry seeds, not OFF certificates."
   ],
-  "definition_authority": "transmon_cz.channel_policy",
+  "definition_authority": "core.cz_channel_policy",
   "tuning_path": {
     "moved_pair": null,
     "idle_frequency_ghz": null,

@@ -2,8 +2,9 @@
 
 ## Authority and temporary OFF policy
 
-The toy workflow (`../transmon-based CZ/WORKFLOW.md` and its
-`transmon_cz/channel_policy.py`) owns logical states, S1/S2 and ON selection.
+The neutral shared module `../core/cz_channel_policy.py` owns executable logical
+definitions, S1/S2 and ON selection. The written specification remains in
+`../2Q-gate_XM/WORKFLOW.md`; the active toy search is `../2Q-gate_XM/`.
 Logical 0/1 are the lower/upper isolated-pair one-excitation modes; pair ground
 is separate. Logical bit order is A,B. Physical rail order is A1,A2,B1,B2.
 Physical auxiliary 0020 means B20; it never determines the logical source.
@@ -48,7 +49,7 @@ rail frequencies stay fixed during design refinement. Do not launch readout now.
 Search physical capacitor ratios and the signed physical `01 <-> 10` OFF branch
 before increasing coupling scale. Use roots, not extrapolation or same-sign
 endpoints alone; inspect interiors and extrema. Verify overlaps and convergence.
-Use the established **transmon-based CZ** toy workflow for the dressed ON strength
+Use the active **2Q-gate_XM** toy workflow for the dressed ON strength
 and minimum-S1 channel. A reduced physical matrix element is only a strength seed,
 not a logical channel definition or gate-fidelity certificate.
 
