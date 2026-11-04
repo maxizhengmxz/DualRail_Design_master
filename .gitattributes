@@ -1,0 +1,2 @@
+# PDF artifacts are binary; never apply text diffs or whitespace checks.
+*.pdf binary

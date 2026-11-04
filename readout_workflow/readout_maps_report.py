@@ -135,7 +135,7 @@ def insert_maps(report, maps, output, date, after_page=None):
         "Source: readout-cavity-EJ-maps/{A,B}-summary.json and {A,B}-maps.npz, from "
         "nominal-design/fabrication-input.json readout hardware. Effective modal capacitors "
         "in the map snapshots are reductions of the physical floating-pad circuit, not "
-        "fabricated link values. Replot with readout_shift_map.py; no optimization is run "
+        "fabricated link values. Replot with python -m readout_workflow.readout_shift_map; no optimization is run "
         "during report assembly. Seven-mode 2D maps are optional and excluded here.",
         y,
     )

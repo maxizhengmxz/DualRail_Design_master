@@ -104,9 +104,10 @@ Do not confuse these readout triples with the three-transmon A2-C-B1 seed.
 
 Use CIRCUIT_TEMPLATE.md and templates/circuit-schematic.py.in for circuit drawings.
 The approved layout and two-decimal circuit-label convention are user preferences.
+Every design-report page must use identical A4 portrait dimensions. Keep original grouped figure layouts and scale them to fit portrait pages; do not add landscape or larger figure inserts.
 
 All subsequent full design reports must follow REPORT_TEMPLATE.md and the
-preserved detailed 13-page PDF in templates/report-references/. Keep its form,
+preserved detailed PDF in templates/report-references/. Keep its form,
 section sequence and level of detail; the short benchmark report is supplementary.
 Use current results and explicit validation status, not the reference case
 numbers. Render and inspect every page. No optimization runs during reporting.
@@ -132,6 +133,17 @@ approximate gates when phase pi is unmet. Gate precision warnings use raw/postse
 fidelity and average survival; leakage-only differences remain details.
 
 ## Optional study entry points and retained report templates
+
+Explicitly requested tuning-pulse CZ studies use PULSED_CZ_WORKFLOW.md and
+pulse_cz.py: fixed hardware, EJ tanh ramps, SAME dressed idle logical input/output
+states, complete rise/hold/fall. Do not substitute static ON references or omit
+moving-basis derivative terms. This optional branch never replaces static design
+benchmarks or launches automatically. Report hold time and total pulse time.
+The tanh/cosine bandwidth comparison is also opt-in and uses
+pulse_shape_comparison.py. Include saved results as an optional design-report
+section only when requested: define10-90% rise, EJ/filter coordinate, fixed idle
+logical references, complete propagation, calibration controls and numerical
+status. Keep programmed duration separate from filter-tail simulation padding.
 
 Robustness and decoherence are OPT-IN post-design workflows. Never launch them
 from nominal design or by importing a module. Use study.py and OPTIONAL_STUDIES.md.

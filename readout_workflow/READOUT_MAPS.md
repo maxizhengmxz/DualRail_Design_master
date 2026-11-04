@@ -31,7 +31,7 @@ The ranges above reproduce the retained case only; use each new case's supplied
 tuning ranges. Keep source data and basis audits. A/B calculations can run as two
 processes with one BLAS thread each. Replotting uses saved results only.
 
-`readout_maps_report.py --report <design.pdf> --maps <maps-folder> --output
+`python -m readout_workflow.readout_maps_report --report <design.pdf> --maps <maps-folder> --output
 <updated-design.pdf> --date YYYY-MM-DD` inserts a methods/nominal
 summary page and one A4 portrait map page with the original six-panel layout after the calibrated-idle readout
 section, including when an optional pulse section has shifted page numbers. Use
@@ -41,7 +41,7 @@ repeated edit. Existing design/gate/readout validation status remains unchanged.
 For coupler design reports use ../Gnd-coupler+Floating-T/REPORT_TEMPLATE.md and place this material in the
 standalone readout section; the PDF insertion helper supports existing reports.
 
-Seven-mode extension: `seven_readout_shift_map.py --cell <calibrated-cell.json>
+Seven-mode extension: `python -m readout_workflow.seven_readout_shift_map --cell <calibrated-cell.json>
 --output <new-folder> --pair A|B --points 31`. Use the retained seven-mode idle
 calibration, including its differential rail trims and final OFF EJ. Freeze
 hardware, coupler EJ and the unswept rail EJs. Scan the selected pair over A4-5GHz
@@ -59,7 +59,7 @@ Check nine grid locations and nominal idle using C5 at frozen controls. This
 does not certify 1 Hz OFF convergence or that the nominal OFF bias stays an
 exchange null away from nominal rail frequencies. Report the saved OFF limitation.
 
-`plot_seven_readout_maps.py --output <completed-folder>` only processes saved
+`python -m readout_workflow.plot_seven_readout_maps --output <completed-folder>` only processes saved
 grids. It produces individual spectator0L/1L figures and a conservative BOTH
 figure. In the latter, each contour is the minimum gap over spectators, shading
 requires every gap to pass for both states, and assignment validity also applies

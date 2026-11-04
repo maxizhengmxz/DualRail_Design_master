@@ -1,4 +1,4 @@
-"""Six-page optional decoherence report following the approved visual reference."""
+"""Decoherence report; optional saved comparisons append to its six core pages."""
 
 from pathlib import Path
 import datetime, json
@@ -38,6 +38,8 @@ def figures(out, r):
     labels = {"logical_B": "Logical B", "B20_B0": "B20-B0", "B1_01": "Isolated B1 0-1"}
     for state, c in palette.items():
         for pos, alpha in [("idle", 0.6), ("gate", 1.0)]:
+            if pos == "idle" and state != "logical_B":
+                continue
             for kind, ls in [("echo", "-"), ("ramsey", "--")]:
                 axs[0].plot(
                     x,
@@ -50,10 +52,19 @@ def figures(out, r):
                     ms=3,
                     label=f"{labels[state]}, {pos}, {kind}",
                 )
+    for kind, ls in [("echo", "-"), ("ramsey", "--")]:
+        axs[0].plot(
+            x,
+            [q["times_us"]["logical_A"][kind] for q in r["isolated_A_idle"]["rows"]],
+            color="#299447",
+            ls=ls,
+            lw=2,
+            label=f"Logical A, idle, {kind}",
+        )
     axs[0].set(
         yscale="log",
         ylabel=r"Pure-dephasing time ($\mu$s)",
-        title="Isolated B rail: idle versus gate",
+        title="A | Isolated rail dephasing",
     )
     axs[0].legend(fontsize=8, ncol=2)
     for kind, c in [("echo", "#2266aa"), ("ramsey", "#c34740")]:
@@ -63,25 +74,27 @@ def figures(out, r):
         ]:
             axs[1].plot(
                 x,
-                [100 * q["fidelity"][kind][key] for q in iso["gate"]["rows"]],
+                [1 - q["fidelity"][kind][key] for q in iso["gate"]["rows"]],
                 c=c,
                 ls=ls,
                 label=kind + ", " + label,
             )
     axs[1].set(
-        ylabel="Ideal CZ fidelity (%)",
-        title=f"{r['assumptions']['gate_time_ns']:g} ns, full B20-inclusive gate",
+        yscale="log",
+        ylabel="Decoherence error (1 - fidelity)",
+        title=f"B | {r['assumptions']['gate_time_ns']:g} ns CZ: A idle + B gate noise",
     )
     axs[1].legend()
     for ax in axs:
         ax.set(
             xscale="log",
             xlim=(min(x), max(x)),
-            xlabel=r"Independent noise per B SQUID ($\mu\Phi_0/\sqrt{\mathrm{Hz}}$ at 1 Hz)",
+            xlabel=r"Independent noise per SQUID ($\mu\Phi_0/\sqrt{\mathrm{Hz}}$ at 1 Hz)",
         )
         ax.grid(alpha=0.2, which="both")
     fig.tight_layout()
     fig.savefig(folder / "isolated-B-dephasing-and-CZ.png", dpi=200)
+    fig.savefig(folder / "isolated-B-dephasing-and-CZ.svg")
     plt.close(fig)
     fig, axs = plt.subplots(2, 2, figsize=(11.5, 8))
     for ax, key in zip(axs.ravel()[:3], ["A_idle", "B_idle", "B_gate"]):
@@ -151,8 +164,10 @@ def figures(out, r):
 def ensure_circuit(out, result):
     """Render the approved circuit template from explicit nominal inputs."""
     circuit = out / "circuit"
-    if (circuit / "circuit.pdf").exists():
-        return
+    if (circuit / "circuit.pdf").exists() and (circuit / "parameters.json").exists():
+        cached = json.loads((circuit / "parameters.json").read_text())
+        if cached.get("show_transmon_parameters") is False:
+            return
     from floating_coupler.fabrication import five_model
     from floating_coupler.design import ej_for_frequency
 
@@ -190,6 +205,7 @@ def ensure_circuit(out, result):
             target_frequency_ghz=ro["case"]["readout_target_ghz"],
         )
     parameters = dict(
+        show_transmon_parameters=False,
         physical=base["five_physical"],
         rail_labels=labels,
         readouts=readouts,
@@ -217,7 +233,40 @@ def ensure_circuit(out, result):
 def generate(folder):
     out = Path(folder).resolve()
     r = json.loads((out / "results.json").read_text())
+    if "isolated_A_idle" not in r:
+        raise ValueError(
+            "Add isolated A data before reporting; rendering must not launch a noise calculation"
+        )
+    from .noise import squid_design
+    from floating_coupler.fabrication import five_model
+
+    model, _ = five_model(r["input"], {}, {})
+    # Hardware range is distinct from adding intrinsic A-rail noise to the
+    # established B-only gate-dephasing calculation.
+    a_range = r["assumptions"].get("a_rail_tuning", [4.0, 5.0])
+    b_range = r["assumptions"]["rail_tuning"]
+    rail_designs = {
+        name: squid_design(float(model.ec[i]), *(a_range if i < 2 else b_range))
+        for i, name in ((0, "A1"), (1, "A2"), (3, "B1"), (4, "B2"))
+    }
+    (out / "rail-squid-designs.json").write_text(json.dumps(rail_designs, indent=2))
     ensure_circuit(out, r)
+    all_designs = dict(
+        A1=rail_designs["A1"],
+        A2=rail_designs["A2"],
+        C=r["c_squid_design"],
+        B1=rail_designs["B1"],
+        B2=rail_designs["B2"],
+    )
+    circuit_parameters = json.loads((out / "circuit/parameters.json").read_text())
+    operating_ej = {
+        name: (d["ej_idle_ghz"], d.get("ej_gate_ghz", d["ej_idle_ghz"]))
+        for name, d in circuit_parameters["rail_labels"].items()
+    }
+    operating_ej["C"] = (
+        circuit_parameters["coupler_labels"]["ej_off_ghz"],
+        circuit_parameters["coupler_labels"]["ej_on_ghz"],
+    )
     figures(out, r)
     pdfmetrics.registerFont(
         TTFont(
@@ -275,14 +324,14 @@ def generate(folder):
         for amp in [1, 10, 100]
     ]
     selected = list({q["amplitude_microphi0"]: q for q in selected}.values())
-    title("B-rail and coupler-induced dephasing")
+    title("2 | Isolated rails and CZ decoherence error")
     image("isolated-B-dephasing-and-CZ.png")
     txt(
-        "Central result: isolated B rail, independent intrinsic SQUID flux noise. Logical B, B20-B0 and isolated physical B1 references are shown at idle and gate. Every fidelity curve includes B20. No coupler noise is added to this central gate estimate; A is noiseless."
+        "Panel A: logical A at idle; logical B at idle/gate; B20-B0 and isolated B1 only at gate. Panel B: log-scale error for the ideal 100 ns B20-inclusive CZ, with independent A-idle and B-gate noise. The auxiliary has A in its pair ground. No coupler noise is added."
     )
     table(
         [
-            "Noise per B loop",
+            "Noise per loop",
             "Echo raw",
             "Echo selected",
             "Ramsey raw",
@@ -301,8 +350,9 @@ def generate(folder):
         ],
     )
     txt(a["gate_model"])
-    page()
-    title("1 | Circuit context and fixed inputs")
+    central_result = story[:]
+    story.clear()
+    title("1 | Circuit and rail SQUID design")
     circuit = out / "circuit/circuit.pdf"
     box = []
 
@@ -310,7 +360,8 @@ def generate(folder):
         def __init__(self):
             super().__init__()
             self.width = width
-            self.height = width * 7.26 / 14
+            with pymupdf.open(circuit) as drawing:
+                self.height = width * drawing[0].rect.height / drawing[0].rect.width
 
         def draw(self):
             m = self.canv._currentMatrix
@@ -319,7 +370,36 @@ def generate(folder):
     if circuit.exists():
         story.append(Placeholder())
     txt(
-        "Circuit drawing is contextual. The main B-rail calculation omits C and resonators while retaining loaded EC and intra-pair charge coupling. The separate C-noise calculation includes one rail pair and C at a time. No full seven-mode noise model is implied."
+        "Circuit context: B-noise omits C and resonators; C-noise uses one pair plus C. Rail JJ symbols represent effective SQUIDs. Loaded EC and EJ values are collected below; capacitance values remain on the drawing."
+    )
+    table(
+        [
+            "Transmon",
+            "Loaded EC/h (MHz)",
+            "Bare f01 range (GHz)",
+            "Large junction EJ/h (GHz)",
+            "Small junction EJ/h (GHz)",
+            "Asymmetry d",
+            "Effective EJ/h<br/>idle/OFF / gate/ON (GHz)",
+        ],
+        [
+            [
+                name,
+                f"{d['ec_ghz'] * 1000:.2f}",
+                f"{d['lower_ghz']:.2f} - {d['upper_ghz']:.2f}",
+                f"{d['ej_large_ghz']:.2f}",
+                f"{d['ej_small_ghz']:.2f}",
+                f"{d['asymmetry']:.2f}",
+                f"{operating_ej[name][0]:.2f} / {operating_ej[name][1]:.2f}",
+            ]
+            for name, d in all_designs.items()
+        ],
+    )
+    txt(
+        "Asymmetric SQUIDs, negligible loop inductance: EJ,max = EJ,large + EJ,small; "
+        "EJ,min = EJ,large - EJ,small; d = EJ,min/EJ,max. Junction energies use the "
+        "numerical full-cosine f01 at the specified loaded EC. A tunability is a "
+        "hardware specification; the central CZ estimate includes A at idle and B at gate."
     )
     table(
         ["Input", "Value"],
@@ -328,15 +408,18 @@ def generate(folder):
                 "B idle / gate frequency (GHz)",
                 f"{iso['idle']['bare_frequency_ghz']:.5f} / {iso['gate']['bare_frequency_ghz']:.5f}",
             ],
-            ["Rail SQUID range (GHz)", str(a["rail_tuning"])],
-            ["C SQUID range (GHz)", str(a["coupler_tuning"])],
             ["Ideal gate duration (ns)", a["gate_time_ns"]],
-            ["Ramsey infrared cutoff (Hz)", a["low_cutoff_hz"]],
+            [
+                "1/f cutoff assumptions",
+                f"Ramsey low: {a['low_cutoff_hz']:g} Hz; no finite high cutoff",
+            ],
             ["Local transmon levels", a["levels"]],
         ],
     )
     page()
-    title("2 | Isolated B-rail details")
+    story.extend(central_result)
+    page()
+    title("3 | Isolated B-rail details")
     table(
         ["SQUID parameter", "B1", "B2"],
         [
@@ -379,19 +462,19 @@ def generate(folder):
         "Both bare B frequencies are calibrated to resonance independently at idle and gate. Differential detuning is first-order protected, but flux dependence of charge matrix elements changes the pair coupling. This calculation includes first-order longitudinal sensitivity only; quadratic and transverse noise are excluded."
     )
     page()
-    title("3 | Separate coupler-induced dephasing")
+    title("4 | Separate coupler-induced dephasing")
     image("coupler-frequency-response.png")
     txt(
         "Rail EJs are noiseless. Differential rail bias is calibrated once at idle with C OFF, then held fixed for the common move to gate. Only C EJ changes along the sweep. Dashed/dotted lines denote OFF/ON. This differs from independently resonating the isolated B pair at every operating point; the comparison is not an identical-control subtraction."
     )
     page()
-    title("4 | Coupler-induced dephasing times")
+    title("5 | Coupler-induced dephasing times")
     image("coupler-induced-dephasing.png")
     txt(
         "Times are in microseconds. Reference amplitude100 microPhi0/sqrt(Hz) at1Hz is scaled inversely with amplitude for the adopted exponential-rate convention. The Ramsey cutoff logarithm is held at its reference value in this separate C-noise figure; isolated B Ramsey times are solved independently at every amplitude. B20 is shown only relative to B0 and only with C ON. No intrinsic rail noise or T1 is added here."
     )
     page()
-    title("5 | Relative size, interpretation and checks")
+    title("6 | Relative size, interpretation and checks")
     q = min(iso["gate"]["rows"], key=lambda q: abs(q["amplitude_microphi0"] - 100))
     cp = next(p for p in r["coupled"]["B_gate"]["points"] if p["bias"] == "ON")
     comparison = []
@@ -410,8 +493,94 @@ def generate(folder):
         "Compare the listed rate ratios rather than assume a uniform order-of-magnitude reduction. Static dressing and different calibration conventions can matter separately from adding a noise source. Combined-noise decoherence and fidelity are intentionally omitted from this report."
     )
     txt(
-        "Gate rates are phenomenological exponential substitutions of echo/Ramsey first-order 1/f reference times. Physical phase correlations among B0/B1/B20 are retained and rate matrices are checked for complete positivity. Raw fidelity, survival and survival-weighted selected fidelity are separate metrics. No T1, thermal population, gate-matrix-element noise, pulse ramps, baseline coherent error or new full-device gate calibration is included. All inputs and derivatives remain in results.json."
+        "Gate rates are phenomenological exponential substitutions of echo/Ramsey first-order 1/f reference times. Independent A/B generators add, retaining state correlations and the A-ground/B20 auxiliary. Rate matrices are checked for complete positivity. No T1, thermal population, gate-matrix-element noise, pulse ramps or baseline coherent error is included. Separate coupler-noise curves remain diagnostics, not an added gate-error source here. All inputs and derivatives remain in results.json."
     )
+
+    tuning_comparison = out / "tuning-comparison.json"
+    if tuning_comparison.exists():
+        comparison = json.loads(tuning_comparison.read_text())
+        page()
+        title("7 | A-rail tunability comparison (alternative only)")
+        txt(
+            "The nominal A1/A2 design remains 4.00-5.00 GHz (1 GHz span), as used "
+            "on pages 1-6. The alternative is 4.36-4.86 GHz (500 MHz total span), "
+            "centered at the same 4.61 GHz idle setting. This comparison both "
+            "narrows the range and recenters it. Loaded ECs, idle position, B design "
+            "and the 100 ns exponential gate model are unchanged. No coupler noise is added."
+        )
+        table(
+            [
+                "A transmon",
+                "Large EJ/h: nominal / alternative (GHz)",
+                "Small EJ/h: nominal / alternative (GHz)",
+            ],
+            [
+                [
+                    f"A{i + 1}",
+                    f"{old['ej_large_ghz']:.2f} / {new['ej_large_ghz']:.2f}",
+                    f"{old['ej_small_ghz']:.2f} / {new['ej_small_ghz']:.2f}",
+                ]
+                for i, (old, new) in enumerate(
+                    zip(r["a_squid_designs"], comparison["junction_designs"])
+                )
+            ],
+        )
+        txt(
+            "Isolated logical A at idle: dephasing times in microseconds. Noise "
+            "amplitude is in μΦ<sub>0</sub>/√Hz at 1 Hz per independent physical loop."
+        )
+        table(
+            [
+                "Noise",
+                "Echo: 1 GHz",
+                "Echo: 500 MHz",
+                "Ramsey: 1 GHz",
+                "Ramsey: 500 MHz",
+            ],
+            [
+                [
+                    f"{row['amplitude_microphi0']:g}",
+                    *[
+                        f"{row[design]['a_times_us'][kind]:.2f}"
+                        for kind in ("echo", "ramsey")
+                        for design in ("old", "500MHz")
+                    ],
+                ]
+                for row in comparison["rows"]
+            ],
+        )
+        txt(
+            "Full B20-inclusive CZ with A-idle and B-gate noise: fidelities below "
+            "are percentages, corresponding to error 1-F in page 2 panel B."
+        )
+        table(
+            [
+                "Noise / rates",
+                "Raw: 1 GHz",
+                "Raw: 500 MHz",
+                "Selected: 1 GHz",
+                "Selected: 500 MHz",
+            ],
+            [
+                [
+                    f"{row['amplitude_microphi0']:g} / {kind}",
+                    *[
+                        f"{100 * row[design]['gate'][kind][key]:.4f}%"
+                        for key in ("raw_fidelity", "postselected_fidelity")
+                        for design in ("old", "500MHz")
+                    ],
+                ]
+                for row in comparison["rows"]
+                for kind in ("echo", "ramsey")
+            ],
+        )
+        txt(
+            "The narrower-range alternative approximately doubles logical A "
+            "coherence. At noise amplitude 10, total raw and selected gate errors "
+            "decrease by about 12%; B noise still contributes most of the error. "
+            "This alternative is not adopted as the nominal design. Complete "
+            "comparison values are retained in tuning-comparison.json."
+        )
 
     def footer(c, d):
         c.setFont("Helvetica", 7)
@@ -434,12 +603,18 @@ def generate(folder):
     if box:
         doc = pymupdf.open(pdf)
         reference = pymupdf.open(circuit)
-        doc[1].show_pdf_page(pymupdf.Rect(box), reference, 0)
+        doc[0].show_pdf_page(pymupdf.Rect(box), reference, 0)
         temp = pdf.with_suffix(".vector.pdf")
         doc.save(temp, garbage=4, deflate=True)
         doc.close()
         reference.close()
         temp.replace(pdf)
     result = dict(pdf=str(pdf), pages=len(pymupdf.open(pdf)))
+    with pymupdf.open(pdf) as full:
+        standalone = pymupdf.open()
+        standalone.insert_pdf(full, from_page=0, to_page=0)
+        standalone.save(out / "circuit-and-squid-design.pdf", garbage=4, deflate=True)
+        standalone.close()
+    result["first_page_pdf"] = str(out / "circuit-and-squid-design.pdf")
     (out / "report-status.json").write_text(json.dumps(result, indent=2))
     return result

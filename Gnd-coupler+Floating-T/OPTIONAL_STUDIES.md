@@ -1,8 +1,40 @@
 ﻿# Optional studies
 
-The normal design workflow ends with nominal seven-mode validation. Neither
-study below runs automatically. Both require an explicit nominal input and an
+The normal design workflow ends with nominal seven-mode validation. None of the
+studies below runs automatically. Each requires an explicit nominal input and an
 output folder. Importing the modules performs no calculation.
+
+## Finite-rise pulse gate and control bandwidth
+
+The optional five-transmon branch in PULSED_CZ_WORKFLOW.md starts/ends in the same
+dressed idle logical space. It retains nominal hardware and the S1-selected CZ
+channel; A is fixed, C and B move simultaneously and return symmetrically. The
+shape comparison uses tanh/half-cosine EJ controls, supplied 10-90% widths and an
+explicit line response. The saved case uses widths10/5/2/1/0.5ns and an ideal
+zero-phase1GHz sharp cutoff on EJ. Do not infer a nonlinear flux-line result.
+
+Run one shape per process, BLAS=1, with explicit input/output paths:
+
+```powershell
+.venv/Scripts/python.exe Gnd-coupler+Floating-T/pulse_shape_comparison.py --input <nominal-input.json> --output <new-folder> --shape tanh
+.venv/Scripts/python.exe Gnd-coupler+Floating-T/pulse_shape_comparison.py --input <nominal-input.json> --output <new-folder> --shape cosine
+```
+
+Calibrate B endpoint and hold at phase pi, optimizing raw fidelity as in the
+original pulse study. Report raw/postselected scores and survival at that SAME
+point; this does not change the robustness branch's postselected objective.
+Include rise+hold+fall and explicit pre/post-ringing propagation. Show programmed
+duration separately from numerical tail windows; an ideal brick wall has no exact
+finite settling time. Report basis/time-step/tail checks without substituting
+regression-test success for a per-case numerical certificate. No resonators,
+T1 or flux-noise channels are added implicitly. This branch does not replace
+static ON benchmarks or certify OFF isolation.
+
+`plot_pulse_shape_comparison.py` plots saved results. `pulse_comparison_report.py`
+inserts the OPTIONAL section into an existing design PDF using saved data only.
+Include it only when requested; preserve all earlier validation status. The
+retained PDF also describes measured costs, implemented search limits and further
+speed proposals. Extra approximations/basis changes require separate agreement.
 
 ## Default policy and scope
 
@@ -107,6 +139,13 @@ can be rebuilt without unpacking it:
 
 ## Decoherence
 
+The report now starts with circuit/SQUID hardware inputs, followed by the
+central B-rail figure on page 2. `--a-rail-tuning 4 5` specifies the A1/A2
+asymmetric-SQUID hardware range; `--rail-tuning 4.4 5.8` remains the B1/B2 range.
+The central gate estimate includes intrinsic A noise at idle and B noise at gate.
+All four loaded ECs remain fixed when inverting f01 to EJ. The B-only baseline
+is retained in data for provenance but is not an extra curve in the report.
+
 ```powershell
 .venv/Scripts/python.exe Gnd-coupler+Floating-T/study.py decoherence --input Gnd-coupler+Floating-T/output/nominal-design/fabrication-input.json --output Gnd-coupler+Floating-T/output/new-decoherence --rail-tuning 4.4 5.8 --coupler-tuning 6.5 11 --amplitudes 1 100 --gate-time 100
 ```
@@ -115,10 +154,13 @@ Endpoints are GHz; amplitudes are microPhi0/sqrt(Hz) at1 Hz per loop; gate durat
 is ns. `--low-cutoff` sets the Ramsey infrared cutoff in Hz. Defaults are explicit
 examples, not automatically inferred user inputs. Confirm them for a new study.
 
-The central calculation is the isolated B rail, resonant at each supplied idle/
+The rail calculation uses isolated B, resonant at each supplied idle/
 gate mean, with independent B1/B2 flux noise. Include logical B, B20-B0 and an
-isolated B1 0-1 reference. Every ideal gate curve includes B20, raw/selected fidelity
-and echo-/Ramsey-based exponential rates. A is noiseless in this B-focused budget.
+isolated B1 0-1 reference. Also calculate isolated logical A at idle, using the
+specified A SQUID range. The report omits idle B20-B0 and idle isolated B1 curves.
+Every ideal gate curve includes B20, raw/selected ERROR and echo-/Ramsey-based
+exponential rates. Independent A-idle and B-gate generators add; preserve A's
+transition to pair ground in the auxiliary. No coupler noise is added here.
 
 Separately compute coupler-induced dephasing in independent A1-A2-C and C-B1-B2
 subsystems, with noiseless rail EJs. Calibrate differential settings once at idle

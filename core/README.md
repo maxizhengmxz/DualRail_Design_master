@@ -52,6 +52,16 @@ optimizer. Circuit topologies, capacitance budgets, conditions and searches
 remain workflow-owned. The old gate backend retains its existing SQUID model;
 this extraction does not silently replace its physics.
 
+Fixed-hardware EJ cavity maps are owned by `readout_workflow` and are optional
+in readout searches. The coupler design delegates map/report work there through
+`python -m readout_workflow.readout_shift_map` and
+`python -m readout_workflow.readout_maps_report`. The optional floating-pad input
+adapter and seven-mode maps reuse the existing `floating_coupler` electrostatics
+and integrated Hamiltonian under `Gnd-coupler+Floating-T`; that explicit
+integration dependency does not launch a coupler search. No map runners remain
+in the coupler folder. Logical/CZ authority remains `core.cz_channel_policy`
+and `2Q-gate_XM/WORKFLOW.md`; active code does not import the legacy CZ package.
+
 Public `core` exports are lazy: importing shared physics does not load the
 gate backend or Monte Carlo modules. Readout's historical Basis/_transmon and
 coupling imports remain compatibility aliases; current internals use core

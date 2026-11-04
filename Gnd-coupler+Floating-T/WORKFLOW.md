@@ -149,7 +149,8 @@ and C, compensating self-capacitances to retain loaded rail ECs.
 **Standard standalone readout contrast maps (2026-11-03):** after fitting each
 independent readout triple, freeze its capacitors and resonator components and
 scan the two rail EJs independently over the supplied transmon tuning ranges.
-Use `../readout_workflow/readout_shift_map.py`; record a 61x61 EJ grid and display the corresponding
+From the repository root call `python -m readout_workflow.readout_shift_map`;
+record a 61x61 EJ grid and display the corresponding
 full-cosine bare f01 axes, with nominal idle stars. Plot the three absolute
 cavity-frequency contrasts 01-10, 01-00 and 10-00 with 0.5/1/2 MHz contours,
 orange shading when ALL three exceed 0.5 MHz and pink when ALL exceed 1 MHz.
@@ -229,12 +230,31 @@ threshold stays H>=0.95; this changes only when the basis is increased.
 ## Report format
 
 All subsequent full design reports must follow REPORT_TEMPLATE.md and the
-preserved detailed 13-page PDF in templates/report-references/. Keep its form,
+preserved detailed PDF in templates/report-references/. Keep its form,
 section sequence and level of detail; the short benchmark report is supplementary.
 Use current results and explicit validation status, not the reference case
 numbers. Render and inspect every page. No optimization runs during reporting.
 
 ## Optional post-design studies
+
+An explicitly requested five-transmon pulse branch is defined separately in
+[PULSED_CZ_WORKFLOW.md](PULSED_CZ_WORKFLOW.md). It propagates idle logical states
+through simultaneous EJ-tanh coupler/B controls and symmetric return, calibrates
+phase pi, and reports idle-space survival/fidelity. It never replaces the static
+ON benchmark above. Use pulse_cz.py; no resonators or noise are added implicitly.
+
+Its optional finite-bandwidth comparison uses pulse_shape_comparison.py to compare
+tanh and half-cosine EJ edges at matched 10-90% rise times, with an explicitly
+specified line response. Freeze the saved five-body hardware, stationary A EJs,
+coupler ON endpoint and idle logical input/output basis; calibrate moved-B EJs and
+hold duration to phase pi. The retained case assumes a 1 GHz ideal zero-phase
+cutoff applied to EJ, not a nonlinear flux waveform. Include the complete pulse,
+filter ringing and explicit tail-window checks. When requested, include its
+definitions, scope, results, figure, numerical status and timings as an optional
+section of the design report. It is OFF by default and never runs during report
+assembly. See PULSED_CZ_WORKFLOW.md and OPTIONAL_STUDIES.md for commands. Proposed
+additional speedups must be distinguished from already implemented limits/caches;
+do not silently change bases, filter physics or precision to speed up a new case.
 
 Robustness and decoherence are separate, opt-in branches after a saved nominal
 solution. Neither runs by default or on import. Use study.py with explicit inputs

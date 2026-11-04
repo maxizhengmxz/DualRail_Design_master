@@ -153,6 +153,71 @@ def coupler_participation(base):
     )
 
 
+def add_isolated_A(result):
+    """Add only isolated A at idle and AB gate rates; reuse all saved B/C data.
+
+    Repeat calls are safe: B-only rates remain saved under fidelity_B_only.
+    No coupler-induced noise is added to the central gate curves.
+    """
+    model, _ = five_model(result["input"], {}, {})
+    assumptions = result["assumptions"]
+    designs = [
+        squid_design(float(model.ec[i]), *assumptions.get("a_rail_tuning", [4.0, 5.0]))
+        for i in (0, 1)
+    ]
+    mean = result["input"]["readouts"]["A"]["case"]["bare_frequency_guide_ghz"]
+    system = Subsystem(model, "A", assumptions["levels"])
+    energies, derivatives, flux = system.derivatives(mean, 0.0, designs)
+    g = derivatives[1] - derivatives[0]
+    rows = []
+    for b in result["isolated"]["gate"]["rows"]:
+        amp = b["amplitude_microphi0"]
+        rows.append(
+            dict(
+                amplitude_microphi0=amp,
+                times_us={
+                    "logical_A": {
+                        kind: 1e6
+                        * dephasing_time(
+                            amp * 1e-6 * np.linalg.norm(g),
+                            kind,
+                            assumptions["low_cutoff_hz"],
+                        )
+                        for kind in ("echo", "ramsey")
+                    }
+                },
+            )
+        )
+        b.setdefault("fidelity_B_only", b["fidelity"])
+        b["fidelity"] = {
+            kind: exponential_cz(
+                result["isolated"]["gate"]["derivatives_hz_per_phi0"],
+                amp,
+                kind,
+                assumptions["gate_time_ns"],
+                assumptions["low_cutoff_hz"],
+                a_derivatives=derivatives[:2],
+            )
+            for kind in ("echo", "ramsey")
+        }
+    result["isolated_A_idle"] = dict(
+        bare_frequency_ghz=mean,
+        logical_frequency_mhz=float((energies[1] - energies[0]) / 1e6),
+        derivatives_hz_per_phi0=derivatives.tolist(),
+        flux_phi0=flux,
+        rows=rows,
+        scope="Isolated A pair, resonant bare idle frequencies; independent A1/A2 1/f noise",
+    )
+    result["a_squid_designs"] = designs
+    assumptions["gate_model"] = (
+        "First-order echo/Ramsey references substituted into exponential pure dephasing. "
+        "Independent A-idle and B-gate generators added; correlations among logical and auxiliary states retained. "
+        "B20 has A in pair ground. Equal noise amplitude per physical SQUID. "
+        "No coupler noise, T1, quadratic/transverse noise or ramps in the central gate estimate."
+    )
+    return result
+
+
 def run(args):
     base = json.loads(Path(args.input).read_text())
     model, _ = five_model(base, {}, {})
@@ -287,6 +352,7 @@ def run(args):
         input=base,
         scope="Isolated B pair; separate independent A1-A2-C/C-B1-B2 coupler-noise estimates. Fixed loaded EC/J; no resonators or other-rail dynamics.",
         assumptions=dict(
+            a_rail_tuning=list(getattr(args, "a_rail_tuning", [4.0, 5.0])),
             rail_tuning=list(args.rail_tuning),
             coupler_tuning=list(args.coupler_tuning),
             low_cutoff_hz=args.low_cutoff,
@@ -296,10 +362,17 @@ def run(args):
             gate_model="First-order echo/Ramsey references substituted into exponential pure dephasing; full B20 correlations; A noiseless. No T1, quadratic/transverse noise or ramp errors.",
         ),
         b_squid_designs=bdesign,
+        a_squid_designs=[
+            squid_design(
+                float(model.ec[i]), *getattr(args, "a_rail_tuning", [4.0, 5.0])
+            )
+            for i in (0, 1)
+        ],
         c_squid_design=cdesign,
         isolated=isolated,
         coupled=coupled,
     )
+    add_isolated_A(result)
     if getattr(args, "participation", False):
         (out / "participation.json").write_text(
             json.dumps(coupler_participation(base), indent=2)

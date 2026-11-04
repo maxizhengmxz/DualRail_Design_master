@@ -88,6 +88,22 @@ class OptionalStudyTests(unittest.TestCase):
         )
         self.assertLess(result["raw_fidelity"], result["postselected_fidelity"])
 
+    def test_zero_A_noise_reduces_to_saved_B_model(self):
+        d = np.array([[1e8, 2e8], [1.1e8, 2.1e8], [4e8, 5e8]])
+        b = exponential_cz(d, 10.0, "echo")
+        ab = exponential_cz(d, 10.0, "echo", a_derivatives=np.zeros((2, 2)))
+        for key in b:
+            self.assertAlmostEqual(b[key], ab[key], places=12)
+
+    def test_A_common_logical_sensitivity_still_dephases_auxiliary_excursion(self):
+        # A0/A1 have identical flux derivatives: logical A has infinite Tphi,
+        # but losing A's excitation in the B20 excursion still changes energy.
+        ab = exponential_cz(
+            np.zeros((3, 2)), 100.0, "echo", a_derivatives=np.full((2, 2), 1e9)
+        )
+        self.assertLess(ab["postselected_fidelity"], 0.999)
+        self.assertLess(ab["raw_fidelity"], ab["postselected_fidelity"])
+
 
 if __name__ == "__main__":
     unittest.main()

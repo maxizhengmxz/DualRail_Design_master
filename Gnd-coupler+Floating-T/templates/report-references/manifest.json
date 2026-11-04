@@ -2,17 +2,19 @@
   "preserved_date": "2026-11-03",
   "references": {
     "decoherence-reference.pdf": {
-      "pages": 6,
-      "sha256": "f7468e2a117e02cfadacd606eb8ddd4a2c73b94777076cac5548d59a5a9482a5"
+      "pages": 7,
+      "sha256": "03a1997016b1634554e6328419c3d00be52c28f1b72cf9889a174b6351e3e63d"
     },
     "design-reference.pdf": {
-      "pages": 13,
-      "sha256": "4cf1ab29f57c6d2f12e3c24813db5255862c56d9d4b69e261a865c263d415c6f"
+      "pages": 21,
+      "sha256": "0fe6d993c32ec27bea3ca67fdc2f471da4e99b053c4ec3f11005e56e1963c30f"
     },
     "robustness-reference.pdf": {
       "pages": 12,
       "sha256": "40b00ef8189fd2f3dbceb535d259a21ce55c84fec834916262aafd0ee7622342"
     }
   },
-  "policy": "Exact approved reference PDFs; new reports populate new data. No numerical defaults inferred from reference cases."
+  "policy": "Exact approved reference PDFs; new reports populate new data. No numerical defaults inferred from reference cases.",
+  "decoherence_layout": "Six core pages unchanged; optional seventh page compares 500 MHz alternative. Nominal A remains 4-5 GHz.",
+  "design_layout": "All pages A4 portrait. Preserve original grouped four-panel pulse and six-panel readout layouts, scaled down as whole figures; do not split panels. Tuning schematic page 8; optional pulse pages 7-12; readout grouped maps page 17."
 }

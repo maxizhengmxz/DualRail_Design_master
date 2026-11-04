@@ -2,7 +2,7 @@
 
 These are project report references, not auto-executing workflows or case defaults.
 
-- `templates/report-references/decoherence-reference.pdf`: latest approved six-page
+- `templates/report-references/decoherence-reference.pdf`: latest approved core
   report, preserved after the coupler-dephasing plot was restored.
 - `templates/report-references/robustness-reference.pdf`: latest approved final
   twelve-page summary. No per-record appendix and no Spearman heatmap.
@@ -21,12 +21,27 @@ results. See OPTIONAL_STUDIES.md for the saved audit and default-policy table.
 
 ## Decoherence
 
-Lead with the isolated B-rail two-panel figure. First panel: logical B, B20-B0,
-and isolated B1 0-1; idle/gate; echo/Ramsey. Second: ideal B20-inclusive CZ,
-echo/Ramsey reference rates, raw/selected. x=1-100 microPhi0/sqrt(Hz), log scale;
-times in us. Then circuit/inputs, SQUID parameters, separate coupler frequency
+Page 1: circuit context and all five asymmetric SQUID designs (four rails plus
+coupler), listing loaded EC, tunability, large/small junction EJs, asymmetry and
+effective idle/OFF and gate/ON EJs. Remove these EC/EJ parameter labels from the
+schematic; retain component names, resonator frequencies and capacitor labels.
+Current hardware ranges are
+A1/A2 4-5 GHz, B1/B2 4.4-5.8 GHz; populate from each case's explicit assumptions.
+Page 2: isolated-rail two-panel figure. Panel A: logical A at idle, logical B at
+idle/gate, B20-B0 and isolated B1 0-1 only at gate; echo/Ramsey for each. Panel B:
+ideal B20-inclusive CZ ERROR (1-fidelity), echo/Ramsey raw/selected on a log y-axis,
+including independent A-idle and B-gate exponential generators. Keep A in pair
+ground for the auxiliary; do not model it as logical A0. x=1-100
+microPhi0/sqrt(Hz) per independent physical loop, log scale;
+times in us. Then B details, separate coupler frequency
 response, coupler-induced dephasing-time plots, and a qualified comparison.
 Do not restore the superseded combined-noise section by default.
+Save an exact standalone copy of page 1 as circuit-and-squid-design.pdf while
+retaining the page in the main report. Coupler-induced noise remains separate
+from the central A+B intrinsic-noise gate estimate.
+When tuning-comparison.json is supplied, append a clearly labelled alternative
+comparison page. Preserve the nominal 4-5 GHz A range and core curves; the
+500 MHz 4.36-4.86 GHz range remains an alternative, not an adopted design.
 
 ## Robustness
 

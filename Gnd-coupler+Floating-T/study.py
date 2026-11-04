@@ -43,6 +43,14 @@ def parser():
     deco.add_argument("--input", required=True)
     deco.add_argument("--output", required=True)
     deco.add_argument(
+        "--a-rail-tuning",
+        type=float,
+        nargs=2,
+        default=[4.0, 5.0],
+        metavar=("MIN", "MAX"),
+        help="A1/A2 SQUID range for isolated A-idle dephasing and the central AB-noise gate estimate",
+    )
+    deco.add_argument(
         "--rail-tuning", type=float, nargs=2, default=[4.4, 5.8], metavar=("MIN", "MAX")
     )
     deco.add_argument(

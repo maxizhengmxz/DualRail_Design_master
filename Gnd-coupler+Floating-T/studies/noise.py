@@ -82,11 +82,21 @@ def dephasing_time(asd_hz, kind, low_cutoff_hz=1.0):
 
 
 def exponential_cz(
-    derivatives, amplitude_microphi0, kind, duration_ns=100.0, low_cutoff_hz=1.0
+    derivatives,
+    amplitude_microphi0,
+    kind,
+    duration_ns=100.0,
+    low_cutoff_hz=1.0,
+    *,
+    a_derivatives=None,
 ):
     """Ideal source10/B20 cycle with correlated B-state phase derivatives.
 
     Derivatives: B0,B1,B20 rows; physical independent B1/B2 noise columns.
+    Optional A derivatives: A0,A1 rows, referenced to pair ground, with A1/A2
+    independent noise columns. The auxiliary has A in pair ground, not A0.
+    Construct each rail's reference-time exponential generator separately and
+    ADD their rates, consistent with independent exponential noise mechanisms.
     Reference 1/f times are converted to exponential rates per coherence.
     This substitution is phenomenological, not a Gaussian short-gate prediction.
     """
@@ -98,11 +108,28 @@ def exponential_cz(
         * np.linalg.norm(refs[:, None] - refs[None, :], axis=2)
     )
     gamma = np.zeros((5, 5))
+    a_distances = None
+    if a_derivatives is not None:
+        a = np.asarray(a_derivatives)
+        if a.shape != (2, 2):
+            raise ValueError(
+                "Supply A0/A1 derivatives with two independent A noise columns"
+            )
+        a_refs = np.vstack((a[[0, 0, 1, 1]], np.zeros((1, 2))))
+        a_distances = (
+            amplitude_microphi0
+            * 1e-6
+            * np.linalg.norm(a_refs[:, None] - a_refs[None, :], axis=2)
+        )
     for i in range(5):
         for j in range(i):
             gamma[i, j] = gamma[j, i] = 1 / dephasing_time(
                 distances[i, j], kind, low_cutoff_hz
             )
+            if a_distances is not None:
+                gamma[i, j] = gamma[j, i] = gamma[i, j] + 1 / dephasing_time(
+                    a_distances[i, j], kind, low_cutoff_hz
+                )
     center = np.eye(5) - np.ones((5, 5)) / 5
     spectrum = np.linalg.eigvalsh(-0.5 * center @ gamma @ center)
     if spectrum.min() < -max(1e-7, np.linalg.norm(gamma) * 1e-10):

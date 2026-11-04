@@ -3,10 +3,18 @@
 The default workflow remains [WORKFLOW.md](WORKFLOW.md): confirm inputs; solve
 A2-C-B1; refine all five transmons and calibrate the S1-selected CZ; validate with
 both resonators. Loaded rail ECs are immutable during design. Compensation of
-self capacitances preserves them. S1/logical definitions come from the transmon
-CZ workflow. The temporary physical OFF target is documented in OFF_POLICY.md.
+self capacitances preserves them. S1/logical definitions come from
+`../2Q-gate_XM/WORKFLOW.md` and `core.cz_channel_policy`.
+The temporary physical OFF target is documented in OFF_POLICY.md.
 
 ## Optional studies
+
+The explicitly invoked five-transmon tuning-pulse study is documented in
+[PULSED_CZ_WORKFLOW.md](PULSED_CZ_WORKFLOW.md). It starts/ends in dressed idle
+logical states and is separate from static ON gate benchmarks. Use pulse_cz.py.
+The opt-in pulse_shape_comparison.py branch compares tanh/cosine EJ edges with
+the stated control bandwidth. Its saved-data report section is optional; see
+OPTIONAL_STUDIES.md and PULSED_CZ_WORKFLOW.md. Report assembly never runs a gate search.
 
 Neither is part of a normal design run. Explicitly invoke `study.py robustness`
 or `study.py decoherence`; both take a saved nominal input and output folder.
@@ -22,6 +30,8 @@ imports; study.py is the supported runner.
 - `floating_coupler/`: circuit, physical/logical OFF, CZ and precision kernels.
 - Existing stage CLIs: three-body design, five-body refinement, idle/gate
   calibration and seven-mode validation. No automatic full workflow on import.
+- `../readout_workflow/readout_shift_map.py`: standard standalone readout-triple contrast maps in
+  the design report; see ../readout_workflow/READOUT_MAPS.md. Seven-mode 2D maps are optional.
 - `studies/`: optional study runner, consolidated physics/reporting, archive I/O.
 - `templates/`: circuit template and exact latest design/decoherence/robustness
   report references. Use REPORT_TEMPLATE.md and STUDY_REPORT_TEMPLATES.md.
@@ -29,9 +39,13 @@ imports; study.py is the supported runner.
 
 All frequencies/couplings are cyclic GHz internally; physical capacitances fF.
 Residual precision target1 Hz; gate probability target1e-4 absolute. Acceptance
-- `../readout_workflow/readout_shift_map.py`: standard standalone readout-triple contrast maps in
-  the design report; see ../readout_workflow/READOUT_MAPS.md. Seven-mode 2D maps are optional.
 and convergence are separate. Preserve failed diagnostics and explicit bounds.
+
+PDF report helpers additionally require the optional `reportlab` and `pymupdf`
+packages. In a fresh project environment, install them with
+`uv pip install reportlab pymupdf`. Rendering/visual review uses Poppler's
+`pdftoppm`; it is not needed to run the physics kernels. Report-only commands
+read existing results and do not launch optimization.
 
 ## Retained results
 

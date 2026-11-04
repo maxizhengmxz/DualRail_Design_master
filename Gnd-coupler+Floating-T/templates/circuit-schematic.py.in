@@ -9,10 +9,12 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 p=pathlib.Path(r'{{OUTPUT_DIRECTORY}}');p.mkdir(parents=True,exist_ok=True);z=json.loads(pathlib.Path(r'{{PARAMETERS_JSON}}').read_text());phys=z['physical'];params=z['rail_labels'];coupler=z['coupler_labels']
+show_parameters=z.get('show_transmon_parameters',True)
+header_y=7.90 if show_parameters else 6.35
 def coupling(a,b):
  return next(q['capacitance_ff'] for q in phys['links'] if {q['from'],q['to']}=={a,b})
 plt.rcParams.update({'mathtext.fontset':'stix','font.family':'STIXGeneral','font.size':14,'svg.fonttype':'path','pdf.fonttype':42})
-fig,ax=plt.subplots(figsize=(14,7.26));ax.set_xlim(-1.7,19.7);ax.set_ylim(-2.75,8.35);ax.set_aspect('equal',adjustable='box');ax.axis('off');black='#202020';blue='#244b70'
+fig,ax=plt.subplots(figsize=(14,7.26 if show_parameters else 6.2));ax.set_xlim(-1.7,19.7);ax.set_ylim(-2.75,8.35 if show_parameters else 6.75);ax.set_aspect('equal',adjustable='box');ax.axis('off');black='#202020';blue='#244b70'
 def wire(x1,y1,x2,y2):ax.plot([x1,x2],[y1,y2],color=black,lw=1.5,solid_capstyle='butt')
 def node(x,y):ax.plot(x,y,'o',color=black,ms=4)
 def label(x,y,s,size=14,**kwargs):ax.text(x,y,s,fontsize=size,ha=kwargs.pop('ha','center'),va=kwargs.pop('va','center'),**kwargs)
@@ -31,10 +33,11 @@ BUS=2.80; GROUND=1.10; TOP=3.20; BOTTOM=2.40; HALF=1.10
 centres={'A1':0.0,'A2':6.0,'B1':12.0,'B2':18.0};coords={}
 for name,cx in centres.items():
  a,b=phys['pad_pairs'][name];left,right=cx-HALF,cx+HALF;coords[a]=(left,BUS);coords[b]=(right,BUS);l=params[name]
- label(cx,7.90,rf'$\mathrm{{{name}}}$',19,color=blue)
- label(cx,7.45,rf'$E_C/h={l["ec_mhz"]:.2f}\,\mathrm{{MHz}}$',13)
- label(cx,7.00,rf'$E_J^{{\rm idle}}/h={l["ej_idle_ghz"]:.2f}\,\mathrm{{GHz}}$',12)
- if 'ej_gate_ghz' in l:label(cx,6.55,rf'$E_J^{{\rm gate}}/h={l["ej_gate_ghz"]:.2f}\,\mathrm{{GHz}}$',12)
+ label(cx,header_y,rf'$\mathrm{{{name}}}$',19,color=blue)
+ if show_parameters:
+  label(cx,7.45,rf'$E_C/h={l["ec_mhz"]:.2f}\,\mathrm{{MHz}}$',13)
+  label(cx,7.00,rf'$E_J^{{\rm idle}}/h={l["ej_idle_ghz"]:.2f}\,\mathrm{{GHz}}$',12)
+  if 'ej_gate_ghz' in l:label(cx,6.55,rf'$E_J^{{\rm gate}}/h={l["ej_gate_ghz"]:.2f}\,\mathrm{{GHz}}$',12)
  for x in [left,right]:node(x,BUS);wire(x,BOTTOM,x,TOP)
  wire(left,TOP,cx-.19,TOP);jj(cx,TOP);wire(cx+.19,TOP,right,TOP)
  cap(left,BOTTOM,right,BOTTOM);label(cx,1.83,rf'$C_{{s,{name}}}$',13)
@@ -63,9 +66,12 @@ for xx in [cx-.80,cx]:wire(xx,COUPLER_TOP,xx,MID+.19);jj(xx,MID);wire(xx,MID-.19
 label(cx-.40,MID,r'$\Phi_C$',10)
 cap(RIGHT,COUPLER_TOP,RIGHT,LOWER);label(RIGHT,.95,r'$C_{s,C}$',12)
 node(cx,LOWER);wire(cx,LOWER,cx,GROUND+.15);ground(cx,GROUND);label(cx,.70,r'$C_2$',12)
-label(cx,7.90,r'$\mathrm{Coupler}\ C$',19,color=blue);label(cx,7.45,rf'$E_C/h={coupler["ec_mhz"]:.2f}\,\mathrm{{MHz}}$',13)
-label(cx,7.00,rf'$E_J^{{\rm OFF}}/h={coupler["ej_off_ghz"]:.2f}\,\mathrm{{GHz}}$',12);label(cx,6.55,rf'$E_J^{{\rm ON}}/h={coupler["ej_on_ghz"]:.2f}\,\mathrm{{GHz}}$',12)
-label(cx,.35,rf'$C_{{s,C}}={phys["shunts_ff"]["C"]:.2f}$',13);label(cx,6.10,rf'$E_{{J1}}/h={coupler["ej1_ghz"]:.2f}\,\mathrm{{GHz}}$',12);label(cx,5.65,rf'$E_{{J2}}/h={coupler["ej2_ghz"]:.2f}\,\mathrm{{GHz}}$',12)
+label(cx,header_y,r'$\mathrm{Coupler}\ C$',19,color=blue)
+if show_parameters:
+ label(cx,7.45,rf'$E_C/h={coupler["ec_mhz"]:.2f}\,\mathrm{{MHz}}$',13)
+ label(cx,7.00,rf'$E_J^{{\rm OFF}}/h={coupler["ej_off_ghz"]:.2f}\,\mathrm{{GHz}}$',12);label(cx,6.55,rf'$E_J^{{\rm ON}}/h={coupler["ej_on_ghz"]:.2f}\,\mathrm{{GHz}}$',12)
+ label(cx,6.10,rf'$E_{{J1}}/h={coupler["ej1_ghz"]:.2f}\,\mathrm{{GHz}}$',12);label(cx,5.65,rf'$E_{{J2}}/h={coupler["ej2_ghz"]:.2f}\,\mathrm{{GHz}}$',12)
+label(cx,.35,rf'$C_{{s,C}}={phys["shunts_ff"]["C"]:.2f}$',13)
 # Short outward leads at all four rail-pair readout terminals.
 for original,extended in [(1.1,2.2),(4.9,3.8),(13.1,14.2),(16.9,15.8)]:wire(original,BUS,extended,BUS);node(extended,BUS)
 # Shared parallel-LC readout resonators above the rail pairs, with aligned upper grounds.
@@ -81,8 +87,8 @@ for rail,x,left,right,rname in ([('A',3.0,2.2,3.8,'r_1'),('B',15.0,14.2,15.8,'r_
  wire(x,5.15,x,5.45)
  for dy,w in [(0,.25),(.08,.17),(.16,.08)]:wire(x-w,5.45+dy,x+w,5.45+dy)
  # Same unhighlighted header style as the rail transmons; only fr is shown.
- label(x,7.90,rf'${rname}$',19,color=blue)
- label(x,7.45,rf'$f_r={ro["target_frequency_ghz"]:.2f}\,\mathrm{{GHz}}$',13)
+ label(x,header_y,rf'${rname}$',19,color=blue)
+ label(x,header_y-.45,rf'$f_r={ro["target_frequency_ghz"]:.2f}\,\mathrm{{GHz}}$',13)
  c1=ro['links'][0]['capacitance_ff'];c2=ro['links'][1]['capacitance_ff']
  label(x,-1.25,rf'$C_{{{rail}1r}}={c1:.2f}$',12)
  label(x,-1.75,rf'$C_{{{rail}2r}}={c2:.2f}$',12)
