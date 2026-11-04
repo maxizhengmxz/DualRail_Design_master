@@ -95,6 +95,11 @@ exactly |0>,|1>,|2>. The proposed local4/pair8 truncation failed empirical
 chi checks and is not the default. Record each selected basis and audit changes;
 this readout policy never certifies residual couplings to 1 Hz.
 
+Standard readout validation also includes the separate A1-r1-A2 and B1-r2-B2
+two-dimensional cavity-contrast maps in ../readout_workflow/READOUT_MAPS.md. Keep these standalone
+three-body results in the design report; the seven-mode 2D extension is opt-in.
+Do not confuse these readout triples with the three-transmon A2-C-B1 seed.
+
 ## Report format
 
 Use CIRCUIT_TEMPLATE.md and templates/circuit-schematic.py.in for circuit drawings.

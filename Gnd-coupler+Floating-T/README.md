@@ -29,6 +29,8 @@ imports; study.py is the supported runner.
 
 All frequencies/couplings are cyclic GHz internally; physical capacitances fF.
 Residual precision target1 Hz; gate probability target1e-4 absolute. Acceptance
+- `../readout_workflow/readout_shift_map.py`: standard standalone readout-triple contrast maps in
+  the design report; see ../readout_workflow/READOUT_MAPS.md. Seven-mode 2D maps are optional.
 and convergence are separate. Preserve failed diagnostics and explicit bounds.
 
 ## Retained results

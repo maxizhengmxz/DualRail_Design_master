@@ -146,6 +146,23 @@ First design each rail-pair plus shared resonator independently under the
 readout workflow, excluding C and the opposite pair. Integrate both resonators
 and C, compensating self-capacitances to retain loaded rail ECs.
 
+**Standard standalone readout contrast maps (2026-11-03):** after fitting each
+independent readout triple, freeze its capacitors and resonator components and
+scan the two rail EJs independently over the supplied transmon tuning ranges.
+Use `../readout_workflow/readout_shift_map.py`; record a 61x61 EJ grid and display the corresponding
+full-cosine bare f01 axes, with nominal idle stars. Plot the three absolute
+cavity-frequency contrasts 01-10, 01-00 and 10-00 with 0.5/1/2 MHz contours,
+orange shading when ALL three exceed 0.5 MHz and pink when ALL exceed 1 MHz.
+Show the <10 kHz logical matching band and flag reference overlap below95%.
+Here 00 is pair ground, 10/01 are lower/upper one-excitation branches, not
+physical product occupations. Keep all values; these contrast thresholds are
+diagnostics, not new readout acceptance constraints or measurement fidelities.
+Include the maps, fixed hardware, ranges, conventions and basis checks in the
+coupler-design PDF. This is a pair+resonator THREE-mode characterization, distinct
+from A2-C-B1 design. Seven-mode versions of these 2D maps are optional and must
+not run automatically. Existing integrated idle checks and +/-100 MHz constraint
+sweeps below remain part of validation. See ../readout_workflow/READOUT_MAPS.md for commands.
+
 **First retune seven-mode OFF**, varying only coupler EJ. Apply the SAME temporary
 physical `0100 <-> 0010` target as five modes, with C ground and both resonators
 vacuum reference states. Include their virtual paths and report logical residuals.

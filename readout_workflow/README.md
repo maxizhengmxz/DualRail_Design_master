@@ -4,7 +4,31 @@ Start with [Readout_ParamSpace_Robustness.py](../Readout_ParamSpace_Robustness.p
 in the main folder. It is a small entry point; opening it or running it without
 arguments only shows saved status. Calculations are performed on request.
 
-## Reading the calculation
+## Optional fixed-hardware cavity-shift maps
+
+The optional EJ1/EJ2 maps are owned by this workflow; see
+[READOUT_MAPS.md](READOUT_MAPS.md). They keep fitted capacitors and resonator
+components fixed, sweep the two EJs and plot the three state-dependent cavity
+contrasts. They do not run with the default feasibility/strength search and do
+not change its acceptance criteria. Enable them only when requested, or when
+explicitly called by the coupler-design readout-validation stage.
+
+From the repository root:
+
+```powershell
+python -m readout_workflow.readout_shift_map --input <nominal-input.json> --output <maps-folder> --pair A --points 61 --frequency-bounds-ghz 4 5
+python -m readout_workflow.readout_shift_map --input <nominal-input.json> --output <maps-folder> --pair B --points 61 --frequency-bounds-ghz 4.4 5.8
+python -m readout_workflow.readout_shift_map --output <maps-folder> --three-state-contours --frequency-axes --dual-threshold
+```
+
+Those ranges reproduce the saved example; supply new-case tuning ranges.
+`seven_readout_shift_map.py` and `plot_seven_readout_maps.py` provide a separately
+requested integrated diagnostic using the existing explicit-coupler Hamiltonian.
+`readout_maps_report.py` inserts completed maps into an existing design report;
+it never launches numerical optimization. Existing generated results remain in
+their original ignored output directories.
+
+## Calculation modules
 
 | File | Purpose |
 | --- | --- |
