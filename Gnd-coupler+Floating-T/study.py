@@ -84,6 +84,7 @@ def parser():
         "--study", required=True, help="Study folder or retained robustness .tar.xz"
     )
     report.add_argument("--output", help="Required when rendering an archive")
+    report.add_argument("--design-report", help="Existing design PDF whose hardware cover should be refreshed (decoherence reporting only)")
     archive = commands.add_parser(
         "verify-archive", help="Verify archive checksums and outcome counts"
     )
@@ -137,7 +138,7 @@ def main(argv=None):
     if args.kind == "decoherence":
         from studies.decoherence_report import generate
 
-        return generate(args.study)
+        return generate(args.study, design_report=args.design_report)
     from studies.robustness_report import generate
 
     study = Path(args.study)

@@ -21,13 +21,9 @@ results. See OPTIONAL_STUDIES.md for the saved audit and default-policy table.
 
 ## Decoherence
 
-Page 1: circuit context and all five asymmetric SQUID designs (four rails plus
-coupler), listing loaded EC, tunability, large/small junction EJs, asymmetry and
-effective idle/OFF and gate/ON EJs. Remove these EC/EJ parameter labels from the
-schematic; retain component names, resonator frequencies and capacitor labels.
-Current hardware ranges are
-A1/A2 4-5 GHz, B1/B2 4.4-5.8 GHz; populate from each case's explicit assumptions.
-Page 2: isolated-rail two-panel figure. Panel A: logical A at idle, logical B at
+The circuit and all five SQUID hardware tables belong on the FIRST page of the
+coupler DESIGN report (REPORT_TEMPLATE.md), not in the decoherence PDF.
+Page 1: isolated-rail two-panel figure. Panel A: logical A at idle, logical B at
 idle/gate, B20-B0 and isolated B1 0-1 only at gate; echo/Ramsey for each. Panel B:
 ideal B20-inclusive CZ ERROR (1-fidelity), echo/Ramsey raw/selected on a log y-axis,
 including independent A-idle and B-gate exponential generators. Keep A in pair
@@ -36,11 +32,12 @@ microPhi0/sqrt(Hz) per independent physical loop, log scale;
 times in us. Then B details, separate coupler frequency
 response, coupler-induced dephasing-time plots, and a qualified comparison.
 Do not restore the superseded combined-noise section by default.
-Save an exact standalone copy of page 1 as circuit-and-squid-design.pdf while
-retaining the page in the main report. Coupler-induced noise remains separate
+Save the hardware cover as circuit-and-squid-design.pdf beside the design PDF,
+and retain that cover in the design report. Coupler-induced noise remains separate
 from the central A+B intrinsic-noise gate estimate.
-When tuning-comparison.json is supplied, append a clearly labelled alternative
-comparison page. Preserve the nominal 4-5 GHz A range and core curves; the
+When tuning-comparison.json is supplied, insert the clearly labelled A-rail
+alternative comparison between B details and the separate coupler-noise sections
+(sections 2 and 3 before insertion), renumbering subsequent sections. Preserve the nominal 4-5 GHz A range and core curves; the
 500 MHz 4.36-4.86 GHz range remains an alternative, not an adopted design.
 
 ## Robustness

@@ -33,6 +33,14 @@ typesetting and two-decimal circuit labels.
 
 ## Required report sequence and detail
 
+The FIRST page is the approved full circuit diagram and its associated hardware
+tables: all five loaded ECs, frequency tunabilities, asymmetric SQUID junction
+EJs, asymmetries and effective idle/OFF and gate/ON EJs. Preserve the approved
+diagram layout; keep capacitances on the drawing and EC/EJ values in the tables.
+Save an exact standalone hardware page beside the design PDF. This page belongs
+only to the design report, not the optional decoherence report. The sequence
+below follows this hardware cover; do not discard the confirmed-input section.
+
 1. **Summary and all confirmed inputs.** Loaded EC tuple; idle and gate positions;
    splitting convention and reference; moved pair; selected CZ auxiliary;
    duration scope; topology; all frequency, EC, loading and tuning constraints;

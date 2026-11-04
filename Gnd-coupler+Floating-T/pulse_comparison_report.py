@@ -13,7 +13,7 @@ from pathlib import Path
 PREFIX = "Optional EJ-pulse CZ"
 
 
-def insert_report(report, study, output, date, after_page=6):
+def insert_report(report, study, output, date, after_page=None):
     import pymupdf
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import A4
@@ -370,6 +370,11 @@ def insert_report(report, study, output, date, after_page=6):
     for i in range(len(source) - 1, -1, -1):
         if PREFIX in source[i].get_text():
             source.delete_page(i)
+    if after_page is None:
+        anchors = [i for i, p in enumerate(source) if "5 | Prior static CZ benchmarks" in p.get_text()]
+        if len(anchors) != 1:
+            raise ValueError("Specify --after-page: expected one static CZ section")
+        after_page = anchors[0] + 1
     if not 0 <= after_page <= len(source):
         raise ValueError("Invalid insertion page")
     addition = pymupdf.open(stream=stream.getvalue(), filetype="pdf")
@@ -414,7 +419,7 @@ if __name__ == "__main__":
     parser.add_argument("--study", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--date", required=True)
-    parser.add_argument("--after-page", type=int, default=6)
+    parser.add_argument("--after-page", type=int, default=None)
     a = parser.parse_args()
     print(
         json.dumps(

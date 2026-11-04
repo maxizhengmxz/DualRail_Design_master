@@ -139,8 +139,13 @@ can be rebuilt without unpacking it:
 
 ## Decoherence
 
-The report now starts with circuit/SQUID hardware inputs, followed by the
-central B-rail figure on page 2. `--a-rail-tuning 4 5` specifies the A1/A2
+The report starts with the central isolated-rail figure on page 1. The circuit
+and SQUID hardware tables belong on page 1 of the coupler design report only.
+Use `study.py report --kind decoherence --study STUDY_FOLDER --design-report DESIGN.pdf`
+to refresh that design cover while generating the separate decoherence PDF.
+Omitting `--design-report` writes a separate hardware page under the sibling
+`design-hardware/` directory and never inserts it in the decoherence PDF.
+`--a-rail-tuning 4 5` specifies the A1/A2
 asymmetric-SQUID hardware range; `--rail-tuning 4.4 5.8` remains the B1/B2 range.
 The central gate estimate includes intrinsic A noise at idle and B noise at gate.
 All four loaded ECs remain fixed when inverting f01 to EJ. The B-only baseline
