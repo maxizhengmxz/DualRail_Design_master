@@ -1,0 +1,1314 @@
+{
+  "source_results": "/Users/chenlu/work/\u91cf\u65cb/Dual-rail/Simulation/code/DualRail_Design_master/weekend_simulation/readout/direct_ec/rail_a_step5/results.json",
+  "selection_policy": "Original 12 maximin interior points plus 8 validated boundary points and 14 gap-filling interior points; each exact label-swapped ordering is a separate gate repetition.",
+  "runtime_target_hours": 24,
+  "runtime_basis": {
+    "completed_ordered_repetitions": 24,
+    "observed_wall_hours": 8.43,
+    "additional_ordered_repetitions": 44,
+    "projected_total_wall_hours": 23.89
+  },
+  "base_lobe_centroid_mhz": [
+    159.6969696969697,
+    237.87878787878788
+  ],
+  "original_base_pairs": 12,
+  "boundary_additions": 8,
+  "interior_additions": 14,
+  "base_pairs": 34,
+  "ordered_repetitions": 68,
+  "selections": [
+    {
+      "selection_id": "A1",
+      "pair_id": "A1",
+      "orientation": "base",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        160,
+        240
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.44517746286544,
+      "readout_operating_frequency_ghz": 4.894977819300675,
+      "idle_ej_ghz": [
+        20.057369713802387,
+        13.805031607680634
+      ],
+      "interior_margin_mhz": 15.0,
+      "source_checkpoint": "ec_160_240.json"
+    },
+    {
+      "selection_id": "A1s",
+      "pair_id": "A1",
+      "orientation": "swapped",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        240,
+        160
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.44517746291342,
+      "readout_operating_frequency_ghz": 4.894977819300706,
+      "idle_ej_ghz": [
+        13.80503160768086,
+        20.057369713802387
+      ],
+      "interior_margin_mhz": 15.0,
+      "source_checkpoint": "ec_240_160.json"
+    },
+    {
+      "selection_id": "A2",
+      "pair_id": "A2",
+      "orientation": "base",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        155,
+        215
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.70813054816168,
+      "readout_operating_frequency_ghz": 4.616614428995083,
+      "idle_ej_ghz": [
+        18.455674444705572,
+        13.637737737560144
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_155_215.json"
+    },
+    {
+      "selection_id": "A2s",
+      "pair_id": "A2",
+      "orientation": "swapped",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        215,
+        155
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.7081305481608,
+      "readout_operating_frequency_ghz": 4.616614428995068,
+      "idle_ej_ghz": [
+        13.637737737560144,
+        18.455674444705572
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_215_155.json"
+    },
+    {
+      "selection_id": "A3",
+      "pair_id": "A3",
+      "orientation": "base",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        155,
+        260
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.2651773607788,
+      "readout_operating_frequency_ghz": 5.073348385376683,
+      "idle_ej_ghz": [
+        22.139261523925704,
+        13.753510102896511
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_155_260.json"
+    },
+    {
+      "selection_id": "A3s",
+      "pair_id": "A3",
+      "orientation": "swapped",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        260,
+        155
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.26517736076016,
+      "readout_operating_frequency_ghz": 5.073348385376674,
+      "idle_ej_ghz": [
+        13.753510102896511,
+        22.139261523925946
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_260_155.json"
+    },
+    {
+      "selection_id": "A4",
+      "pair_id": "A4",
+      "orientation": "base",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        170,
+        250
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.07023893216086,
+      "readout_operating_frequency_ghz": 4.882586850938572,
+      "idle_ej_ghz": [
+        18.86938925702162,
+        13.250113065706689
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_170_250.json"
+    },
+    {
+      "selection_id": "A4s",
+      "pair_id": "A4",
+      "orientation": "swapped",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        250,
+        170
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.07023441010347,
+      "readout_operating_frequency_ghz": 4.882586826294081,
+      "idle_ej_ghz": [
+        13.250112933946466,
+        18.869389089783933
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_250_170.json"
+    },
+    {
+      "selection_id": "A5",
+      "pair_id": "A5",
+      "orientation": "base",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        160,
+        225
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05999966267348,
+      "readout_operating_frequency_ghz": 4.666118739255809,
+      "idle_ej_ghz": [
+        18.289903426183216,
+        13.358105553982107
+      ],
+      "interior_margin_mhz": 11.180339887498949,
+      "source_checkpoint": "ec_160_225.json"
+    },
+    {
+      "selection_id": "A5s",
+      "pair_id": "A5",
+      "orientation": "swapped",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        225,
+        160
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05999966843598,
+      "readout_operating_frequency_ghz": 4.6661187392873735,
+      "idle_ej_ghz": [
+        13.358105554150582,
+        18.289903426427347
+      ],
+      "interior_margin_mhz": 11.180339887498949,
+      "source_checkpoint": "ec_225_160.json"
+    },
+    {
+      "selection_id": "A6",
+      "pair_id": "A6",
+      "orientation": "base",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        160,
+        250
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05504938069714,
+      "readout_operating_frequency_ghz": 4.970357157545964,
+      "idle_ej_ghz": [
+        20.65660251325091,
+        13.700277158109994
+      ],
+      "interior_margin_mhz": 15.0,
+      "source_checkpoint": "ec_160_250.json"
+    },
+    {
+      "selection_id": "A6s",
+      "pair_id": "A6",
+      "orientation": "swapped",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        250,
+        160
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05504938069714,
+      "readout_operating_frequency_ghz": 4.9703571575459815,
+      "idle_ej_ghz": [
+        13.700277158109772,
+        20.65660251325091
+      ],
+      "interior_margin_mhz": 15.0,
+      "source_checkpoint": "ec_250_160.json"
+    },
+    {
+      "selection_id": "A7",
+      "pair_id": "A7",
+      "orientation": "base",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        170,
+        240
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 141.03395471902581,
+      "readout_operating_frequency_ghz": 4.7312651966701695,
+      "idle_ej_ghz": [
+        17.763929852917336,
+        12.949645458502026
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_170_240.json"
+    },
+    {
+      "selection_id": "A7s",
+      "pair_id": "A7",
+      "orientation": "swapped",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        240,
+        170
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 141.03395471903823,
+      "readout_operating_frequency_ghz": 4.731265196670165,
+      "idle_ej_ghz": [
+        12.949645458502026,
+        17.763929852917336
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_240_170.json"
+    },
+    {
+      "selection_id": "A8",
+      "pair_id": "A8",
+      "orientation": "base",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        165,
+        245
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.09730130753084,
+      "readout_operating_frequency_ghz": 4.867150082243892,
+      "idle_ej_ghz": [
+        19.27918633229217,
+        13.40830289605914
+      ],
+      "interior_margin_mhz": 15.0,
+      "source_checkpoint": "ec_165_245.json"
+    },
+    {
+      "selection_id": "A8s",
+      "pair_id": "A8",
+      "orientation": "swapped",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        245,
+        165
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.097301307609,
+      "readout_operating_frequency_ghz": 4.8671500822439056,
+      "idle_ej_ghz": [
+        13.40830289605914,
+        19.27918633229217
+      ],
+      "interior_margin_mhz": 15.0,
+      "source_checkpoint": "ec_245_165.json"
+    },
+    {
+      "selection_id": "A9",
+      "pair_id": "A9",
+      "orientation": "base",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        165,
+        235
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.96382003515018,
+      "readout_operating_frequency_ghz": 4.7237766986419345,
+      "idle_ej_ghz": [
+        18.201512052852312,
+        13.15150520641399
+      ],
+      "interior_margin_mhz": 11.180339887498949,
+      "source_checkpoint": "ec_165_235.json"
+    },
+    {
+      "selection_id": "A9s",
+      "pair_id": "A9",
+      "orientation": "swapped",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        235,
+        165
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.96382003513952,
+      "readout_operating_frequency_ghz": 4.723776698641926,
+      "idle_ej_ghz": [
+        13.15150520641399,
+        18.201512052852312
+      ],
+      "interior_margin_mhz": 11.180339887498949,
+      "source_checkpoint": "ec_235_165.json"
+    },
+    {
+      "selection_id": "A10",
+      "pair_id": "A10",
+      "orientation": "base",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        165,
+        255
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.12008270317367,
+      "readout_operating_frequency_ghz": 4.9859166737593394,
+      "idle_ej_ghz": [
+        20.19657302150913,
+        13.54249892301221
+      ],
+      "interior_margin_mhz": 11.180339887498949,
+      "source_checkpoint": "ec_165_255.json"
+    },
+    {
+      "selection_id": "A10s",
+      "pair_id": "A10",
+      "orientation": "swapped",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        255,
+        165
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.1200778041769,
+      "readout_operating_frequency_ghz": 4.9859166423618735,
+      "idle_ej_ghz": [
+        13.542498761816962,
+        20.19657280435677
+      ],
+      "interior_margin_mhz": 11.180339887498949,
+      "source_checkpoint": "ec_255_165.json"
+    },
+    {
+      "selection_id": "A11",
+      "pair_id": "A11",
+      "orientation": "base",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        155,
+        245
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.0598032585796,
+      "readout_operating_frequency_ghz": 5.023167402130527,
+      "idle_ej_ghz": [
+        21.71797804066666,
+        14.232116356707467
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_155_245.json"
+    },
+    {
+      "selection_id": "A11s",
+      "pair_id": "A11",
+      "orientation": "swapped",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        245,
+        155
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.0598032671141,
+      "readout_operating_frequency_ghz": 5.023167402169344,
+      "idle_ej_ghz": [
+        14.232116356912153,
+        21.71797804100019
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_245_155.json"
+    },
+    {
+      "selection_id": "A12",
+      "pair_id": "A12",
+      "orientation": "base",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        155,
+        235
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.0598934921824,
+      "readout_operating_frequency_ghz": 4.955528399395763,
+      "idle_ej_ghz": [
+        21.15647385607976,
+        14.399573105068479
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_155_235.json"
+    },
+    {
+      "selection_id": "A12s",
+      "pair_id": "A12",
+      "orientation": "swapped",
+      "selection_group": "original",
+      "ec_a_mhz": [
+        235,
+        155
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.0598935033024,
+      "readout_operating_frequency_ghz": 4.955528399449421,
+      "idle_ej_ghz": [
+        14.399573105359442,
+        21.15647385653506
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_235_155.json"
+    },
+    {
+      "selection_id": "A13",
+      "pair_id": "A13",
+      "orientation": "base",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        150,
+        270
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.19907950714838,
+      "readout_operating_frequency_ghz": 5.147846464090889,
+      "idle_ej_ghz": [
+        23.48166153881259,
+        13.66884337016062
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_150_270.json"
+    },
+    {
+      "selection_id": "A13s",
+      "pair_id": "A13",
+      "orientation": "swapped",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        270,
+        150
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.19907950713952,
+      "readout_operating_frequency_ghz": 5.147846464090915,
+      "idle_ej_ghz": [
+        13.668843370160646,
+        23.48166153881259
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_270_150.json"
+    },
+    {
+      "selection_id": "A14",
+      "pair_id": "A14",
+      "orientation": "base",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        150,
+        195
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.04611084888376,
+      "readout_operating_frequency_ghz": 4.174946525300915,
+      "idle_ej_ghz": [
+        15.695598361725958,
+        12.316766648473282
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_150_195.json"
+    },
+    {
+      "selection_id": "A14s",
+      "pair_id": "A14",
+      "orientation": "swapped",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        195,
+        150
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.0461120428904,
+      "readout_operating_frequency_ghz": 4.174946385749499,
+      "idle_ej_ghz": [
+        12.316765852326311,
+        15.695597339319232
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_195_150.json"
+    },
+    {
+      "selection_id": "A15",
+      "pair_id": "A15",
+      "orientation": "base",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        165,
+        215
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.045681540105,
+      "readout_operating_frequency_ghz": 4.121666995488958,
+      "idle_ej_ghz": [
+        14.02880115610079,
+        11.016142880693387
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_165_215.json"
+    },
+    {
+      "selection_id": "A15s",
+      "pair_id": "A15",
+      "orientation": "swapped",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        215,
+        165
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.04568372149163,
+      "readout_operating_frequency_ghz": 4.121666681023083,
+      "idle_ej_ghz": [
+        11.016141293800837,
+        14.028799121985818
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_215_165.json"
+    },
+    {
+      "selection_id": "A16",
+      "pair_id": "A16",
+      "orientation": "base",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        175,
+        235
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.43750289195955,
+      "readout_operating_frequency_ghz": 4.507034258377306,
+      "idle_ej_ghz": [
+        15.76204986586491,
+        12.041594122592619
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_175_235.json"
+    },
+    {
+      "selection_id": "A16s",
+      "pair_id": "A16",
+      "orientation": "swapped",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        235,
+        175
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.4375055293503,
+      "readout_operating_frequency_ghz": 4.507034268670531,
+      "idle_ej_ghz": [
+        12.041594178021406,
+        15.762049925936093
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_235_175.json"
+    },
+    {
+      "selection_id": "A17",
+      "pair_id": "A17",
+      "orientation": "base",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        175,
+        255
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 141.1743418844118,
+      "readout_operating_frequency_ghz": 4.833380014197027,
+      "idle_ej_ghz": [
+        18.016635210624667,
+        12.773039599316556
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_175_255.json"
+    },
+    {
+      "selection_id": "A17s",
+      "pair_id": "A17",
+      "orientation": "swapped",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        255,
+        175
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 141.1743453737131,
+      "readout_operating_frequency_ghz": 4.833380032369572,
+      "idle_ej_ghz": [
+        12.773039693907876,
+        18.016635328829665
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_255_175.json"
+    },
+    {
+      "selection_id": "A18",
+      "pair_id": "A18",
+      "orientation": "base",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        165,
+        265
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.85734360029178,
+      "readout_operating_frequency_ghz": 5.018798855281235,
+      "idle_ej_ghz": [
+        20.453449307636166,
+        13.250404748339639
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_165_265.json"
+    },
+    {
+      "selection_id": "A18s",
+      "pair_id": "A18",
+      "orientation": "swapped",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        265,
+        165
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.85574264325908,
+      "readout_operating_frequency_ghz": 5.0187297463857785,
+      "idle_ej_ghz": [
+        13.250057834079547,
+        20.452901476845476
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_265_165.json"
+    },
+    {
+      "selection_id": "A19",
+      "pair_id": "A19",
+      "orientation": "base",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        155,
+        270
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 142.35130348603064,
+      "readout_operating_frequency_ghz": 5.113793682185175,
+      "idle_ej_ghz": [
+        22.481922010849466,
+        13.500292160553752
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_155_270.json"
+    },
+    {
+      "selection_id": "A19s",
+      "pair_id": "A19",
+      "orientation": "swapped",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        270,
+        155
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 142.07212606088683,
+      "readout_operating_frequency_ghz": 5.114043197799091,
+      "idle_ej_ghz": [
+        13.501607912341914,
+        22.48387878093588
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_270_155.json"
+    },
+    {
+      "selection_id": "A20",
+      "pair_id": "A20",
+      "orientation": "base",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        170,
+        225
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05987537431076,
+      "readout_operating_frequency_ghz": 4.331992539714899,
+      "idle_ej_ghz": [
+        15.008262451713943,
+        11.617386047774165
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_170_225.json"
+    },
+    {
+      "selection_id": "A20s",
+      "pair_id": "A20",
+      "orientation": "swapped",
+      "selection_group": "boundary_addition",
+      "ec_a_mhz": [
+        225,
+        170
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05987540908293,
+      "readout_operating_frequency_ghz": 4.331992539928866,
+      "idle_ej_ghz": [
+        11.617386048840965,
+        15.00826245316391
+      ],
+      "interior_margin_mhz": 5.0,
+      "source_checkpoint": "ec_225_170.json"
+    },
+    {
+      "selection_id": "A21",
+      "pair_id": "A21",
+      "orientation": "base",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        170,
+        255
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.92928881125388,
+      "readout_operating_frequency_ghz": 4.906896117015102,
+      "idle_ej_ghz": [
+        19.050068774584275,
+        13.14102637897364
+      ],
+      "interior_margin_mhz": 7.0710678118654755,
+      "source_checkpoint": "ec_170_255.json"
+    },
+    {
+      "selection_id": "A21s",
+      "pair_id": "A21",
+      "orientation": "swapped",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        255,
+        170
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.92928847104423,
+      "readout_operating_frequency_ghz": 4.906896118398389,
+      "idle_ej_ghz": [
+        13.14102637897364,
+        19.050068774584513
+      ],
+      "interior_margin_mhz": 7.0710678118654755,
+      "source_checkpoint": "ec_255_170.json"
+    },
+    {
+      "selection_id": "A22",
+      "pair_id": "A22",
+      "orientation": "base",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        170,
+        245
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.0599706033736,
+      "readout_operating_frequency_ghz": 4.819785730047165,
+      "idle_ej_ghz": [
+        18.406318318028376,
+        13.1656019670228
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_170_245.json"
+    },
+    {
+      "selection_id": "A22s",
+      "pair_id": "A22",
+      "orientation": "swapped",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        245,
+        170
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05997060336827,
+      "readout_operating_frequency_ghz": 4.8197857300471725,
+      "idle_ej_ghz": [
+        13.1656019670228,
+        18.406318318028376
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_245_170.json"
+    },
+    {
+      "selection_id": "A23",
+      "pair_id": "A23",
+      "orientation": "base",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        170,
+        235
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.287178043236,
+      "readout_operating_frequency_ghz": 4.631516907784635,
+      "idle_ej_ghz": [
+        17.053417055433663,
+        12.675633937735252
+      ],
+      "interior_margin_mhz": 7.0710678118654755,
+      "source_checkpoint": "ec_170_235.json"
+    },
+    {
+      "selection_id": "A23s",
+      "pair_id": "A23",
+      "orientation": "swapped",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        235,
+        170
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.2871780432502,
+      "readout_operating_frequency_ghz": 4.631516907784635,
+      "idle_ej_ghz": [
+        12.675633937735272,
+        17.053417055433663
+      ],
+      "interior_margin_mhz": 7.0710678118654755,
+      "source_checkpoint": "ec_235_170.json"
+    },
+    {
+      "selection_id": "A24",
+      "pair_id": "A24",
+      "orientation": "base",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        165,
+        260
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.46394596119427,
+      "readout_operating_frequency_ghz": 5.014720387555442,
+      "idle_ej_ghz": [
+        20.421835341370716,
+        13.455577010342704
+      ],
+      "interior_margin_mhz": 7.0710678118654755,
+      "source_checkpoint": "ec_165_260.json"
+    },
+    {
+      "selection_id": "A24s",
+      "pair_id": "A24",
+      "orientation": "swapped",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        260,
+        165
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.46394667833619,
+      "readout_operating_frequency_ghz": 5.014720391801365,
+      "idle_ej_ghz": [
+        13.455577032654556,
+        20.421835372080366
+      ],
+      "interior_margin_mhz": 7.0710678118654755,
+      "source_checkpoint": "ec_260_165.json"
+    },
+    {
+      "selection_id": "A25",
+      "pair_id": "A25",
+      "orientation": "base",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        165,
+        250
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.0753586035961,
+      "readout_operating_frequency_ghz": 4.961811828187413,
+      "idle_ej_ghz": [
+        20.009531825974157,
+        13.65826144840402
+      ],
+      "interior_margin_mhz": 14.142135623730951,
+      "source_checkpoint": "ec_165_250.json"
+    },
+    {
+      "selection_id": "A25s",
+      "pair_id": "A25",
+      "orientation": "swapped",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        250,
+        165
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.07535614955736,
+      "readout_operating_frequency_ghz": 4.961811816641487,
+      "idle_ej_ghz": [
+        13.658261380115626,
+        20.0095317359247
+      ],
+      "interior_margin_mhz": 14.142135623730951,
+      "source_checkpoint": "ec_250_165.json"
+    },
+    {
+      "selection_id": "A26",
+      "pair_id": "A26",
+      "orientation": "base",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        165,
+        240
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05997602284913,
+      "readout_operating_frequency_ghz": 4.838589367071177,
+      "idle_ej_ghz": [
+        19.06277722051373,
+        13.506885707342468
+      ],
+      "interior_margin_mhz": 14.142135623730951,
+      "source_checkpoint": "ec_165_240.json"
+    },
+    {
+      "selection_id": "A26s",
+      "pair_id": "A26",
+      "orientation": "swapped",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        240,
+        165
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05997599991903,
+      "readout_operating_frequency_ghz": 4.8385893669603615,
+      "idle_ej_ghz": [
+        13.506885706767049,
+        19.062777219651835
+      ],
+      "interior_margin_mhz": 14.142135623730951,
+      "source_checkpoint": "ec_240_165.json"
+    },
+    {
+      "selection_id": "A27",
+      "pair_id": "A27",
+      "orientation": "base",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        165,
+        230
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.059997280229,
+      "readout_operating_frequency_ghz": 4.540230322492733,
+      "idle_ej_ghz": [
+        16.864536223475262,
+        12.435925946282593
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_165_230.json"
+    },
+    {
+      "selection_id": "A27s",
+      "pair_id": "A27",
+      "orientation": "swapped",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        230,
+        165
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05999728465923,
+      "readout_operating_frequency_ghz": 4.540230322432723,
+      "idle_ej_ghz": [
+        12.435925946048187,
+        16.864536222928322
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_230_165.json"
+    },
+    {
+      "selection_id": "A28",
+      "pair_id": "A28",
+      "orientation": "base",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        165,
+        225
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05876625733293,
+      "readout_operating_frequency_ghz": 4.472663779805249,
+      "idle_ej_ghz": [
+        16.388140713579006,
+        12.32946613636649
+      ],
+      "interior_margin_mhz": 7.0710678118654755,
+      "source_checkpoint": "ec_165_225.json"
+    },
+    {
+      "selection_id": "A28s",
+      "pair_id": "A28",
+      "orientation": "swapped",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        225,
+        165
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.0587799428159,
+      "readout_operating_frequency_ghz": 4.4727373166833715,
+      "idle_ej_ghz": [
+        12.32985440721583,
+        16.38866276700692
+      ],
+      "interior_margin_mhz": 7.0710678118654755,
+      "source_checkpoint": "ec_225_165.json"
+    },
+    {
+      "selection_id": "A29",
+      "pair_id": "A29",
+      "orientation": "base",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        160,
+        260
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.25341012178137,
+      "readout_operating_frequency_ghz": 5.057599698195152,
+      "idle_ej_ghz": [
+        21.36316943321414,
+        13.673119454653335
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_160_260.json"
+    },
+    {
+      "selection_id": "A29s",
+      "pair_id": "A29",
+      "orientation": "swapped",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        260,
+        160
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.25341012182759,
+      "readout_operating_frequency_ghz": 5.057599698195157,
+      "idle_ej_ghz": [
+        13.673119454653335,
+        21.36316943321414
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_260_160.json"
+    },
+    {
+      "selection_id": "A30",
+      "pair_id": "A30",
+      "orientation": "base",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        160,
+        255
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.0596281451909,
+      "readout_operating_frequency_ghz": 5.036259769554663,
+      "idle_ej_ghz": [
+        21.189529371713164,
+        13.80051205878019
+      ],
+      "interior_margin_mhz": 14.142135623730951,
+      "source_checkpoint": "ec_160_255.json"
+    },
+    {
+      "selection_id": "A30s",
+      "pair_id": "A30",
+      "orientation": "swapped",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        255,
+        160
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.059628164928,
+      "readout_operating_frequency_ghz": 5.03625980782309,
+      "idle_ej_ghz": [
+        13.80051226888838,
+        21.189529650310288
+      ],
+      "interior_margin_mhz": 14.142135623730951,
+      "source_checkpoint": "ec_255_160.json"
+    },
+    {
+      "selection_id": "A31",
+      "pair_id": "A31",
+      "orientation": "base",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        160,
+        245
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.0599267958036,
+      "readout_operating_frequency_ghz": 4.947836039185434,
+      "idle_ej_ghz": [
+        20.476735116513247,
+        13.830371444247962
+      ],
+      "interior_margin_mhz": 15.0,
+      "source_checkpoint": "ec_160_245.json"
+    },
+    {
+      "selection_id": "A31s",
+      "pair_id": "A31",
+      "orientation": "swapped",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        245,
+        160
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05992681527778,
+      "readout_operating_frequency_ghz": 4.947836039275446,
+      "idle_ej_ghz": [
+        13.830371444715862,
+        20.476735117250634
+      ],
+      "interior_margin_mhz": 15.0,
+      "source_checkpoint": "ec_245_160.json"
+    },
+    {
+      "selection_id": "A32",
+      "pair_id": "A32",
+      "orientation": "base",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        160,
+        235
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.10140624025524,
+      "readout_operating_frequency_ghz": 4.8682583268897694,
+      "idle_ej_ghz": [
+        19.84731436579128,
+        13.923412698148521
+      ],
+      "interior_margin_mhz": 15.0,
+      "source_checkpoint": "ec_160_235.json"
+    },
+    {
+      "selection_id": "A32s",
+      "pair_id": "A32",
+      "orientation": "swapped",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        235,
+        160
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.101406240273,
+      "readout_operating_frequency_ghz": 4.868258326889764,
+      "idle_ej_ghz": [
+        13.923412698148537,
+        19.84731436579128
+      ],
+      "interior_margin_mhz": 15.0,
+      "source_checkpoint": "ec_235_160.json"
+    },
+    {
+      "selection_id": "A33",
+      "pair_id": "A33",
+      "orientation": "base",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        160,
+        230
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05975102272748,
+      "readout_operating_frequency_ghz": 4.823172037626778,
+      "idle_ej_ghz": [
+        19.496861869860883,
+        13.947854021991354
+      ],
+      "interior_margin_mhz": 14.142135623730951,
+      "source_checkpoint": "ec_160_230.json"
+    },
+    {
+      "selection_id": "A33s",
+      "pair_id": "A33",
+      "orientation": "swapped",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        230,
+        160
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05975098993062,
+      "readout_operating_frequency_ghz": 4.823172037460321,
+      "idle_ej_ghz": [
+        13.947854021094322,
+        19.49686186853144
+      ],
+      "interior_margin_mhz": 14.142135623730951,
+      "source_checkpoint": "ec_230_160.json"
+    },
+    {
+      "selection_id": "A34",
+      "pair_id": "A34",
+      "orientation": "base",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        160,
+        220
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05991135450557,
+      "readout_operating_frequency_ghz": 4.4857313314470995,
+      "idle_ej_ghz": [
+        16.9549998136793,
+        12.64877559682999
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_160_220.json"
+    },
+    {
+      "selection_id": "A34s",
+      "pair_id": "A34",
+      "orientation": "swapped",
+      "selection_group": "interior_addition",
+      "ec_a_mhz": [
+        220,
+        160
+      ],
+      "readout_status": "validated_pass",
+      "readout_logical_frequency_mhz": 140.05991134136588,
+      "readout_operating_frequency_ghz": 4.4857313287892175,
+      "idle_ej_ghz": [
+        12.648775571448493,
+        16.954999808577877
+      ],
+      "interior_margin_mhz": 10.0,
+      "source_checkpoint": "ec_220_160.json"
+    }
+  ]
+}

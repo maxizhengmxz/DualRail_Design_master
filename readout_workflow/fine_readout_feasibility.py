@@ -1,4 +1,4 @@
-"""Fine 140-160 MHz feasibility map plus 2 fF failure diagnosis.
+"""Fine C1-C2 feasibility map plus 2 fF failure diagnosis.
 
 No readout-strength maximization or branch continuation. Feasibility stops
 at its first fully audited witness. Diagnostics minimize normalized constraint
@@ -7,7 +7,7 @@ deficits under chi matching, not readout strength. All attempts are retained.
 from __future__ import annotations
 import os
 for name in ('OMP_NUM_THREADS','OPENBLAS_NUM_THREADS','MKL_NUM_THREADS'):os.environ[name]='1'
-import argparse,json,subprocess,time
+import argparse,json,subprocess,sys,time
 from pathlib import Path
 from dataclasses import asdict,replace
 from hashlib import sha256
@@ -23,18 +23,26 @@ from Readout_ParamSpace_Robustness import process_alive
 from threadpoolctl import threadpool_limits
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'readout_workflow/data/feasibility_150mhz_step1_diag2'
+ORIGINAL_SEED_CANDIDATES=s.seed_candidates
 
-def initialize():
-    s.CONDITIONS=replace(s.CONDITIONS,logical_frequency_ghz=(.14,.16))
-    s.BASELINE=dict(s.BASELINE,logical_frequency=(.14,.16))
-    original=s.seed_candidates
+def logical_range_ghz(bounds_mhz):
+    """Validate a CLI logical-frequency interval and convert MHz to GHz."""
+    import numpy as np
+    if len(bounds_mhz)!=2 or not all(np.isfinite(bounds_mhz)) or not 0<bounds_mhz[0]<bounds_mhz[1]:
+        raise ValueError('logical-frequency-mhz requires two positive increasing values')
+    return tuple(float(value)/1000 for value in bounds_mhz)
+
+def initialize(logical_frequency_ghz=(.14,.16)):
+    s.CONDITIONS=replace(s.CONDITIONS,logical_frequency_ghz=tuple(logical_frequency_ghz))
+    s.BASELINE=dict(s.BASELINE,logical_frequency=tuple(logical_frequency_ghz))
+    seed_scale=sum(logical_frequency_ghz)/2/.1
     def seeds(c1,c2,warm=()):
         # Original analytic C12 guesses target 100 MHz: scale only cold seeds.
-        cold=original(c1,c2,())
+        cold=ORIGINAL_SEED_CANDIDATES(c1,c2,())
         diverse=[]
         for x in cold:
             if not any(abs(x[0]-old[0])<.1 for old in diverse):
-                y=x.copy();y[2]=min(s.CONDITIONS.c12_bounds_ff[1]-.0001,y[2]*1.5);diverse.append(y)
+                y=x.copy();y[2]=min(s.CONDITIONS.c12_bounds_ff[1]-.0001,y[2]*seed_scale);diverse.append(y)
         warmed=[__import__('numpy').array(p.get('x',s.x_from_point(p)),float) for p in warm]
         return warmed+diverse
     s.seed_candidates=seeds
@@ -70,20 +78,20 @@ def diagnose(task):
         r['readout_optimized']=False
         return r
 
-def run(output,workers):
-    initialize()
+def run(output,workers,logical_frequency_ghz):
+    initialize(logical_frequency_ghz)
     pairs=[(c1,c2) for c2 in range(36,129) for c1 in range(c2+1,129)]
     # Self-contained fresh runs: algorithmic seeds and newly accepted neighbors.
     # Reusing an old ledger still requires its exact settings/source signature.
     files=[Path(__file__),*sorted((ROOT/'core').glob('*.py')),*[ROOT/'readout_workflow'/f for f in ('calculation.py','model.py','validation.py','storage.py','diagnostics.py')]]
-    policy=dict(mode='feasibility_plus_diagnosis',conditions=asdict(s.CONDITIONS),grid_ff=dict(low=36,high=128,step=1,strict_c1_gt_c2=True),diagnostic_step_ff=2,feasibility_budget=s.SEARCH_EFFORT['fast'],diagnostic_budget=diag.DIAGNOSTIC_BUDGET,diagnostic_scales=diag.SCALES,optimize_readout=False,continuation=False,source_hashes={str(p.relative_to(ROOT)):sha256(p.read_bytes()).hexdigest() for p in files})
+    policy=dict(mode='feasibility_plus_diagnosis',logical_frequency_mhz=[1000*v for v in logical_frequency_ghz],conditions=asdict(s.CONDITIONS),grid_ff=dict(low=36,high=128,step=1,strict_c1_gt_c2=True),diagnostic_step_ff=2,feasibility_budget=s.SEARCH_EFFORT['fast'],diagnostic_budget=diag.DIAGNOSTIC_BUDGET,diagnostic_scales=diag.SCALES,optimize_readout=False,continuation=False,source_hashes={str(p.relative_to(ROOT)):sha256(p.read_bytes()).hexdigest() for p in files})
     ledger=Ledger(output,policy);atomic_json(output/'settings.json',policy)
     active={r['pair_key']:r for r in ledger.rows('feasibility_normal')}
     recovered={r['pair_key']:r for r in ledger.rows('diagnostic') if r['status']=='recovered_viable'}
     diagnostic_count=len(ledger.rows('diagnostic'))
     def progress():ledger.progress(pairs_total=len(pairs),feasibility_completed=len(active),diagnostics_completed=diagnostic_count,viable_pairs=sum(r['status']=='validated_pass' for r in active.values())+len(recovered),optimize_readout=False,continuation=False)
     try:
-        with ProcessPoolExecutor(max_workers=workers,initializer=initialize) as pool:
+        with ProcessPoolExecutor(max_workers=workers,initializer=initialize,initargs=(logical_frequency_ghz,)) as pool:
             for phase,worker in (('feasibility_normal',calculate),('diagnostic',diagnose)):
                 ledger.phase=phase;progress()
                 targets=[p for p in pairs if phase!='diagnostic' or (active[key(p)]['status']!='validated_pass' and (p[0]-36)%2==0 and (p[1]-36)%2==0)]
@@ -116,12 +124,16 @@ def run(output,workers):
     finally:ledger.close()
 
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--run',action='store_true');parser.add_argument('--background',action='store_true');parser.add_argument('--output',type=Path,default=OUT);parser.add_argument('--workers',type=int,default=4);a=parser.parse_args();a.output=a.output.resolve()
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--run',action='store_true');parser.add_argument('--background',action='store_true');parser.add_argument('--output',type=Path,default=OUT);parser.add_argument('--workers',type=int,default=4);parser.add_argument('--logical-frequency-mhz',type=float,nargs=2,metavar=('LOW','HIGH'),default=(140,160),help='Accepted logical-frequency interval in MHz (default: 140 160).');a=parser.parse_args();a.output=a.output.resolve();logical_frequency_ghz=logical_range_ghz(a.logical_frequency_mhz)
     if not a.run:print(json.dumps(status(a.output),indent=2));return
-    if not a.background:run(a.output,a.workers);return
+    if not a.background:run(a.output,a.workers,logical_frequency_ghz);return
     a.output.mkdir(parents=True,exist_ok=True);launch=a.output/'launch.json'
     if launch.exists() and process_alive(json.loads(launch.read_text())['pid']):raise RuntimeError('Already running')
     with (a.output/'run.log').open('ab') as log:
-        p=subprocess.Popen([str(ROOT/'.venv/Scripts/pythonw.exe'),'-m','readout_workflow.fine_readout_feasibility','--run','--output',str(a.output),'--workers',str(a.workers)],cwd=ROOT,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,close_fds=True,creationflags=subprocess.CREATE_NO_WINDOW|subprocess.DETACHED_PROCESS|subprocess.CREATE_BREAKAWAY_FROM_JOB)
-    record=dict(pid=p.pid,started_utc=utc(),windowless=True,optimize_readout=False);atomic_json(launch,record);print(json.dumps(record))
+        command=[sys.executable,'-m','readout_workflow.fine_readout_feasibility','--run','--output',str(a.output),'--workers',str(a.workers),'--logical-frequency-mhz',*map(str,a.logical_frequency_mhz)]
+        kwargs=dict(cwd=ROOT,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,close_fds=True)
+        if os.name=='nt':kwargs['creationflags']=subprocess.CREATE_NO_WINDOW|subprocess.DETACHED_PROCESS|subprocess.CREATE_BREAKAWAY_FROM_JOB
+        else:kwargs['start_new_session']=True
+        p=subprocess.Popen(command,**kwargs)
+    record=dict(pid=p.pid,started_utc=utc(),background=True,optimize_readout=False,logical_frequency_mhz=list(map(float,a.logical_frequency_mhz)),command=command);atomic_json(launch,record);print(json.dumps(record))
 if __name__=='__main__':main()

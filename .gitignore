@@ -19,10 +19,21 @@ results/
 output/
 /data/
 /tmp/
+combined_feasibility_test/data/
+weekend_simulation/combined_runs/
+weekend_simulation/readout/
+weekend_simulation/fixed_A_anchor_runs/
+weekend_simulation/fixed_A_gate_runs/
+weekend_simulation/fixed_A_gate_test/
+weekend_simulation/physical_frequency_bounds/
+weekend_simulation/sampled_runs/
 .uv-cache/
 .ruff_cache/
 *.h5
 *.hdf5
+
+# Operating-system metadata
+.DS_Store
 
 # Secrets
 .env

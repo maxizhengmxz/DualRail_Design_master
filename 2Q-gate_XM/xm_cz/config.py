@@ -8,8 +8,8 @@ LABELS = ("A1", "A2", "B1", "B2")
 def validate_payload(payload: dict) -> None:
     """Reject malformed inputs; physical infeasibility is a separate outcome."""
     ec = payload.get("ec_GHz", [])
-    if len(ec) != 4 or not all(math.isfinite(x) and 0 < x <= 0.300 for x in ec):
-        raise ValueError("ec_GHz requires A1,A2,B1,B2 values in (0,0.300] GHz")
+    if len(ec) != 4 or not all(math.isfinite(x) and 0 < x < 0.400 for x in ec):
+        raise ValueError("ec_GHz requires ordered A1,A2,B1,B2 values in (0,0.400) GHz")
     splits = payload.get("logical_splittings_GHz", [0.150, 0.090])
     if len(splits) != 2 or not all(math.isfinite(x) and x > 0 for x in splits):
         raise ValueError("logical_splittings_GHz requires two positive targets: A,B")
@@ -18,6 +18,17 @@ def validate_payload(payload: dict) -> None:
         raise ValueError("g_GHz must be positive and finite")
     if payload.get("resonance_channel", "0020") not in ("0020", "0200"):
         raise ValueError("resonance_channel must be 0020 or 0200")
+    fixed_a=payload.get("fixed_A")
+    if fixed_a is not None:
+        required={"EJ_GHz","J_GHz","operating_frequency_GHz"}
+        if not required <= set(fixed_a):
+            raise ValueError("fixed_A requires EJ_GHz, J_GHz and operating_frequency_GHz")
+        if len(fixed_a["EJ_GHz"])!=2 or not all(math.isfinite(x) and 0<x<30 for x in fixed_a["EJ_GHz"]):
+            raise ValueError("fixed_A.EJ_GHz requires two finite values in (0,30)")
+        if not math.isfinite(fixed_a["J_GHz"]) or not 0<fixed_a["J_GHz"]<=0.25:
+            raise ValueError("fixed_A.J_GHz must be in (0,0.25]")
+        if not math.isfinite(fixed_a["operating_frequency_GHz"]):
+            raise ValueError("fixed_A.operating_frequency_GHz must be finite")
     bounds = payload.get("bare_f01_bounds_GHz", {k: [4.0, 5.0] for k in LABELS})
     if set(bounds) != set(LABELS):
         raise ValueError("bare_f01_bounds_GHz must specify all four transmons")

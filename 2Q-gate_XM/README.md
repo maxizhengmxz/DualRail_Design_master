@@ -50,14 +50,17 @@ invalid. These bounds also apply to B's final phase-calibration adjustment.
 
 1. Full-cosine transmons, ncut=30, four local levels each. Diagonalize rails
    separately; logical 0/1 are the lower/upper single-excitation eigenmodes.
-2. Solve rail charge couplings for the requested splittings. Scan A frequency
-   and solve B frequency for the selected isolated-rail collision.
+2. Solve rail charge couplings for the requested splittings. At each scanned A
+   frequency, solve the B-frequency collision with the selected physical
+   auxiliary independently for all four logical product states.
 3. Set the inter-pair charge coefficient J so the intended dressed matrix element
    is g. Transform the full n_A2 tensor n_B1 interaction; no extra propagated links.
 4. Require all unintended logical-origin |g/delta|<0.2. Rank by S1, the mean
    logical-origin sum of squared ratios. Record auxiliary-origin S2 separately.
-5. Select ONE minimum-S1 frequency position. Refine interior minima; retain and
-   flag boundary minima without extending bounds.
+5. At each A frequency, choose the logical source with the smallest
+   source-specific unintended-transition S score, then select ONE minimum-mean-S1
+   frequency position. Refine interior minima; retain and flag boundary minima
+   without extending bounds.
 6. Keep A frequency fixed, vary B frequency by +/-12 MHz and stopping time to
    obtain conditional phase pi, then maximize raw fidelity. Dependent B rail
    and inter-pair couplings are re-solved to preserve splitting targets and g.
@@ -69,8 +72,10 @@ inter-pair charge coefficient J<=20 MHz. No old 100 MHz spacing filter or S2 cut
 
 ## Channel labels and caveats
 
-- `0020`: B20-like auxiliary, linked to logical 01 (A lower, B upper).
-- `0200`: A02-like auxiliary, linked to logical 10 (A upper, B lower).
+- `0020`: B20-like physical auxiliary. The logical source is selected dynamically
+  from 00,01,10,11 by minimum source-specific S score.
+- `0200`: A02-like physical auxiliary. The logical source is selected by the same
+  four-state policy.
 
 Auxiliaries are selected by overlap with those explicit bare occupations, not
 energy ordering. The two channels are equivalent only under full device/node

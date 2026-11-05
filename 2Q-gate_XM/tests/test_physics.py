@@ -35,7 +35,20 @@ class PhysicsTests(unittest.TestCase):
         }
         result = evaluate_ec(payload)
         self.assertEqual(result["status"], "calibrated")
-        self.assertEqual(result["logical_source"], "10")
+        self.assertIn(result["logical_source"], ("00", "01", "10", "11"))
+        candidates = result["S1_position"]["logical_source_candidates"]
+        self.assertEqual([value["logical_source"] for value in candidates], ["00", "01", "10", "11"])
+        valid = [value for value in candidates if value["status"] == "valid"]
+        self.assertEqual(
+            result["logical_source"],
+            min(valid, key=lambda value: (value["intended_source_score"], value["S1"]))["logical_source"],
+        )
+        source_index = result["logical_source_index"]
+        self.assertAlmostEqual(
+            result["final"]["intended_source_score"],
+            result["final"]["S1_by_input"][source_index],
+            places=12,
+        )
         self.assertEqual(result["duration_window_ns"], [140.0, 260.0])
         self.assertLess(abs(result["final"]["phase_error_rad"]), 0.01)
 
@@ -85,6 +98,13 @@ class PhysicsTests(unittest.TestCase):
         bad["bare_f01_bounds_GHz"]["A2"] = [6.0, 7.0]
         with self.assertRaisesRegex(ValueError, "intersection"):
             validate_payload(bad)
+
+        extended = copy.deepcopy(p)
+        extended["ec_GHz"] = [0.150, 0.315, 0.315, 0.150]
+        validate_payload(extended)
+        extended["ec_GHz"][1] = 0.400
+        with self.assertRaisesRegex(ValueError, "0,0.400"):
+            validate_payload(extended)
 
         logical_cfg = json.loads((ROOT / "configs/logical_b_grid.json").read_text())
         logical_tasks = make_tasks(logical_cfg)
