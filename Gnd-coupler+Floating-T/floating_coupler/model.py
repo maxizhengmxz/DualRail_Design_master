@@ -157,7 +157,8 @@ def build_model(config):
             raise ValueError('Explicit pad transmon order must match nodes')
         circuit=build_pad_circuit(physical['pad_pairs'],physical['ground_capacitances_ff'],
              physical.get('resonator_capacitances_ff',{}),physical['physical_links'],
-             physical['pad_mutual_capacitances_ff'])
+             physical['pad_mutual_capacitances_ff'],
+             parasitic_capacitances_ff=physical.get('parasitic_capacitances_ff'))
         if circuit.resonators:raise ValueError('This five-transmon Hamiltonian cannot discard explicit resonator modes')
         achieved=np.array(list(circuit.loaded_ec_ghz.values()))
         if np.max(abs(achieved/ec-1))>1e-8:raise ValueError('Loaded EC inputs disagree with explicit physical pad circuit')

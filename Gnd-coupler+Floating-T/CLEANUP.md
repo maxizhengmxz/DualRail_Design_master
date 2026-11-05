@@ -66,3 +66,56 @@ It is a candidate for later cleanup, not authorized for deletion or compression.
 At the next project-wide results cleanup, ask the user whether to clean up this
 campaign before taking action. Preserve its final report and provenance unless
 the user explicitly directs otherwise. No scheduled reminder date was specified.
+
+
+## Parasitic study cleanup, 2026-11-05
+
+The optional study is documented in PARASITICS.md and OPTIONAL_STUDIES.md.
+Normal design does not launch it. The explicit preparation runner owns fit and
+nominal-reference stages. Quantum validation takes explicit gate/reference
+inputs, replacing hardcoded dependencies on exploratory result directories.
+Report generation uses saved data only. Static controls, physical/logical OFF
+definitions, matching masks, local optimizer status, physical probabilities and
+the unresolved residual-basis precision are annotated in source and workflow.
+The gate basis check now explicitly includes logical_survival. The old records
+already contain both survival values, and their report checks all three metrics.
+
+Retained output/parasitics holds the final 17-page PDF, exact current 24 fits,
+all quantum case records and basis checks, nominal inputs/reference, approved
+circuit assets and a checksum manifest. Historical exploratory JSON and exact
+pre-cleanup source are preserved in one historical-provenance.tar.xz. All 71
+historical JSON members were checked byte-for-byte before removal. Original
+campaign identities are preserved and are not resumable under changed source.
+
+Removed 22 superseded loose result directories containing 163 files and
+16,965,023 bytes after preservation checks. The consolidated retained study
+occupies about 6.6 MB. Superseded comparison/report builders, their unused
+calculation entry points, duplicate PDFs and parasitic-only preview folders
+were removed. Shared physics/projection/plot helpers remain where the active
+workflow calls them. Other workflows and the deferred legacy toy data remain.
+
+Verification included 134 passing workflow tests, import/CLI compilation,
+one minimum-change compensation smoke check, and rendering/inspection of all
+17 report pages. The smoke fit preserved loaded ECs below 1 Hz. The report
+was regenerated from the retained data without quantum recalculation. No Git
+staging, commit or push was performed.
+
+## Parameters-only retention, 2026-11-05
+
+The user's subsequent instruction supersedes the parasitic archive retention
+above. Preserve configs/Design_V1_20261105.json as the complete seven-mode
+nominal design with all fourteen parasitics zero. It contains intentional
+capacitors, loaded ECs, resonator L/C/frequencies, idle/gate frequencies and EJs,
+gate duration, channel definitions, asymmetric-SQUID hardware and tuning ranges.
+The known nominal OFF basis limitation remains annotated.
+
+Keep templates/report-references/parasitic-compensation-reference.pdf as the
+approved 17-page visual template. Remove all embedded calculation attachments.
+Page render checksums match the original report exactly after attachment removal.
+The template manifest records its new file checksum.
+
+Delete output/parasitics including all case records, candidates, nominal
+baseline calculations, diagrams, duplicate parameter copies and historical
+archives. The optional workflow remains executable from the named parameter
+record and a fresh output directory. Other study outputs follow their prior
+retention instructions. No additional simulation was launched for this cleanup.

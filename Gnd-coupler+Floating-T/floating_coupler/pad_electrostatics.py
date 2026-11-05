@@ -76,7 +76,7 @@ def nonnegative(value,label):
 
 def build_pad_circuit(pad_pairs:Mapping,ground_capacitances_ff:Mapping,
                       resonator_capacitances_ff:Mapping,physical_links,
-                      junction_capacitances_ff:Mapping|None=None):
+                      junction_capacitances_ff:Mapping|None=None, parasitic_capacitances_ff:Mapping|None=None):
     """Construct the complete physical matrix without fitting or retuning.
 
     Pad order fixes the differential voltage sign. Intrinsic/across-pad
@@ -107,7 +107,8 @@ def build_pad_circuit(pad_pairs:Mapping,ground_capacitances_ff:Mapping,
         i,j=index[a],index[b];c[i,i]+=value;c[j,j]+=value;c[i,j]-=value;c[j,i]-=value
     for n in names:add(*pairs[n],jj[n])
     links=[];seen=set();jj_pairs={frozenset(p) for p in pairs.values()}
-    for item in physical_links:
+    from .parasitics import with_parasitics
+    for item in with_parasitics(physical_links, parasitic_capacitances_ff, nodes):
         a,b=item['from'],item['to'];edge=frozenset((a,b))
         if edge in seen or edge in jj_pairs:raise ValueError('Duplicate or junction edge in physical-link list')
         seen.add(edge);value=nonnegative(item['capacitance_ff'],f'{a}-{b}')

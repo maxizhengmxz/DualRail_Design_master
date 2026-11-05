@@ -26,6 +26,10 @@ Confirm defaults for each new case:
 
 - Ground C2, active C1, floating rail transmons. Actual capacitors A22-C1,
   C1-B11, A22-B11 and both intra-rail links. No unspecified parasitics.
+  The fourteen explicitly named parasitic links in PARASITICS.md default to zero;
+  use actual port-to-port fF values when supplied. Keep them out of circuit
+  diagrams unless specifically requested. Defining these inputs does not launch
+  a search, retune EJs or silently compensate fixed physical hardware.
 - Loaded coupler EC 150-600 MHz. ON >7 GHz, or approximately 1 GHz above a
   supplied relevant resonator frequency. ON < OFF <10 GHz.
 - Loading <10% per coupler per rail; prefer <7%, minimize combined loading
@@ -236,6 +240,19 @@ Use current results and explicit validation status, not the reference case
 numbers. Render and inspect every page. No optimization runs during reporting.
 
 ## Optional post-design studies
+
+Parasitic compensation uses the minimum-movement policy in PARASITICS.md.
+This is an optional post-design study, enabled only on explicit request.
+Its staged commands and retained results are in OPTIONAL_STUDIES.md. Normal
+design never launches its capacitor search or quantum validation automatically.
+For comparable matrix matching, prefer the lower physical-capacitor changes.
+The default engineering target is 1 ppt relative error for each intended
+nonzero coupling and the matched-matrix norm, with exact diagonal constraints.
+Minimize the maximum fractional capacitor movement first, then combined movement.
+This target is configurable and independent of EM/fabrication uncertainty.
+Preserve the group-specific matching mask and rerun quantum validation for any
+newly selected geometry. Never inherit fidelity or OFF certification from another
+capacitor allocation, or promote a nonconverged geometry as a required correction.
 
 An explicitly requested five-transmon pulse branch is defined separately in
 [PULSED_CZ_WORKFLOW.md](PULSED_CZ_WORKFLOW.md). It propagates idle logical states

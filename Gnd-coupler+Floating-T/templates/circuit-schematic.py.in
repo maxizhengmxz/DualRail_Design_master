@@ -96,7 +96,21 @@ for rail,x,left,right,rname in ([('A',3.0,2.2,3.8,'r_1'),('B',15.0,14.2,15.8,'r_
 for x,a,b,tag in [(3.0,'A12','A21','A1A2'),(8.2,'A22','C1','A2C'),(9.8,'C1','B11','CB1'),(15.0,'B12','B21','B1B2')]:
  label(x,-.75,rf'$C_{{{tag}}}={coupling(a,b):.2f}$',11.5)
 label(C1,-1.25,rf'$C_{{A2B1}}={coupling("A22","B11"):.2f}$',12)
-label(9.0,-2.33,r'All capacitances are in fF. Readout branches are contextual; decoherence calculations exclude resonator dynamics.',11)
+if z.get('parasitics_to_draw'):
+ if show_parameters:raise ValueError('The parasitic overlay requires show_transmon_parameters=false and separate parameter tables')
+ if any('r' in name for name in z['parasitics_to_draw']) and not z.get('readouts'):raise ValueError('Draw the readout resonators before adding their parasitic links')
+ from studies.circuit_parasitics import draw_group_one_parasitics
+ fig.set_size_inches(14,8.7)
+ ax.set_ylim(-4.5,8.7)
+ draw_group_one_parasitics(ax,z['parasitics_to_draw'],z.get('parasitic_capacitances_ff',{}),show_notes=not z.get('group_two_parasitics_to_draw'))
+ if z.get('group_two_parasitics_to_draw'):
+  if not {'A11-r1','A22-r1','B22-r2','B11-r2','A21-B11','B12-A22'}<=set(z['parasitics_to_draw']):raise ValueError('The red overlay requires the original six-link group-one drawing underneath')
+  from studies.circuit_parasitics import draw_group_two_parasitics
+  fig.set_size_inches(14,10.7)
+  ax.set_ylim(-5.0,11.15)
+  draw_group_two_parasitics(ax,z['group_two_parasitics_to_draw'],z.get('parasitic_capacitances_ff',{}),group_one=z['parasitics_to_draw'])
+else:
+ label(9.0,-2.33,r'All capacitances are in fF. Readout branches are contextual; decoherence calculations exclude resonator dynamics.',11)
 fig.subplots_adjust(left=.01,right=.99,bottom=.01,top=.99);fig.savefig(p/'transmon-circuit.pdf',transparent=True);fig.savefig(p/'transmon-circuit.png',dpi=200,transparent=False);fig.savefig(p/'transmon-circuit.svg',transparent=True)
 from matplotlib import mathtext
 mathtext.math_to_image(r'$\mu\Phi_0/\sqrt{\mathrm{Hz}}$',p/'flux-unit.png',dpi=500,color='black')

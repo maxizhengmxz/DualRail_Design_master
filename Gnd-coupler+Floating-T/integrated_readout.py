@@ -20,15 +20,20 @@ def construct(request,readouts,frequencies=None,refit_intra=True):
     for name,r in readouts.items():
         p=r['physical'];grounds.update(p['ground_capacitances_ff']);links.extend(deepcopy(p['physical_links']));rn=r['case']['resonator_node'];rcaps[rn]=p['resonator_self_capacitance_ff'];lr[rn]=p['resonator_inductance_nh']
         freq.update(dict(zip(r['case']['nodes'],r['coordinates'][:2])))
+    from floating_coupler.parasitics import with_parasitics
+    nodes={pad for pair in pads.values() for pad in pair} | set(rcaps)
+    links=with_parasitics(links,request.get('parasitic_capacitances_ff'),nodes)
     freq['C']=request['idle_bare_frequencies_ghz']['C']
     if frequencies is not None:freq.update(frequencies)
+    intra_a=next(e for e in links if {e['from'],e['to']}=={'A12','A21'})
+    intra_b=next(e for e in links if {e['from'],e['to']}=={'B12','B21'})
     if refit_intra:
         nominal_ec=np.array(list(targets.values()));ejfixed=np.array([ej_for_frequency(freq[n],charging,35) for n,charging in zip(FULL,nominal_ec)])
         def residual(caps):
-            links[3]['capacitance_ff']=float(caps[0]);links[6]['capacitance_ff']=float(caps[1]);sh,cc=fit_mixed_shunts(pads,grounds,links,targets,resonator_caps_ff=rcaps);jj=8*SCALE*cc['K'][:5,:5];np.fill_diagonal(jj,0.)
+            intra_a['capacitance_ff']=float(caps[0]);intra_b['capacitance_ff']=float(caps[1]);sh,cc=fit_mixed_shunts(pads,grounds,links,targets,resonator_caps_ff=rcaps);jj=8*SCALE*cc['K'][:5,:5];np.fill_diagonal(jj,0.)
             mm=Model(FULL,nominal_ec,ejfixed,jj,Basis(ncut=35,transmon_levels=6),{})
             return [(pair_spectrum(mm,(0,1),6,35)['splitting_mhz']-150)/150,(pair_spectrum(mm,(3,4),6,35)['splitting_mhz']-90)/90]
-        fit=least_squares(residual,[links[3]['capacitance_ff'],links[6]['capacitance_ff']],bounds=([.005,.005],[40,40]),xtol=1e-11,ftol=1e-11,gtol=1e-11)
+        fit=least_squares(residual,[intra_a['capacitance_ff'],intra_b['capacitance_ff']],bounds=([.005,.005],[40,40]),xtol=1e-11,ftol=1e-11,gtol=1e-11)
         if max(abs(np.asarray(residual(fit.x))))>1e-7:raise ValueError('Integrated isolated-pair target fit failed')
     shunts,c=fit_mixed_shunts(pads,grounds,links,targets,resonator_caps_ff=rcaps)
     ec=c['loaded_ec_ghz'];j=8*SCALE*c['K'][:5,:5];np.fill_diagonal(j,0.);ej=np.array([ej_for_frequency(freq[n],charging,35) for n,charging in zip(FULL,ec)]);model=Model(FULL,ec,ej,j,Basis(ncut=35,transmon_levels=6),{})

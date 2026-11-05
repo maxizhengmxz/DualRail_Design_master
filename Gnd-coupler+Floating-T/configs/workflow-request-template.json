@@ -356,5 +356,21 @@
     "gate_frequency_ghz": null,
     "stationary_pair_controls": "fixed",
     "verified_crossings": []
+  },
+  "parasitic_capacitances_ff": {
+    "A11-r1": 0.0,
+    "A22-r1": 0.0,
+    "A11-A22": 0.0,
+    "A21-C1": 0.0,
+    "A21-B11": 0.0,
+    "B22-r2": 0.0,
+    "B11-r2": 0.0,
+    "B22-B11": 0.0,
+    "B12-C1": 0.0,
+    "B12-A22": 0.0,
+    "A12-C1": 0.0,
+    "A11-C1": 0.0,
+    "B21-C1": 0.0,
+    "B22-C1": 0.0
   }
 }

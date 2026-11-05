@@ -1,5 +1,5 @@
 {
-  "preserved_date": "2026-11-04",
+  "preserved_date": "2026-11-05",
   "references": {
     "decoherence-reference.pdf": {
       "pages": 6,
@@ -12,6 +12,12 @@
     "robustness-reference.pdf": {
       "pages": 12,
       "sha256": "40b00ef8189fd2f3dbceb535d259a21ce55c84fec834916262aafd0ee7622342"
+    },
+    "parasitic-compensation-reference.pdf": {
+      "pages": 17,
+      "sha256": "c47587be0f5da5a8e1338d106593b72ea71f0e860051d36e17361f5ba5e41d91",
+      "attachments_removed": true,
+      "scope": "Approved parasitic report pages as a visual template. Calculation records deleted."
     }
   },
   "policy": "Exact approved reference PDFs; new reports populate new data. No numerical defaults inferred from reference cases.",

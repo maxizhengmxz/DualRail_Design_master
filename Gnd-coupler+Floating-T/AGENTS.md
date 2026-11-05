@@ -151,3 +151,14 @@ The source lives in studies/; report style is STUDY_REPORT_TEMPLATES.md with exa
 latest references in templates/report-references/. No production code may import
 from a generated output directory. Preserve nominal inputs and validation flags;
 full robustness data live in one verified tar.xz archive, not loose campaign trees.
+
+The parasitic compensation study is also OPT-IN. Read PARASITICS.md and the
+parasitic section of OPTIONAL_STUDIES.md. Use explicit saved nominal inputs,
+fit each parasitic independently, then validate that exact geometry. Prefer
+minimum fractional capacitor changes at the agreed matching tolerance. Preserve
+failed fits and separate within-basis OFF acceptance from cross-basis precision.
+Use studies/validated_minimum_change_report.py for the completed 24-case report.
+Report assembly reads saved results only. On 2026-11-05 the user requested
+deletion of saved parasitic calculations and archives, retaining the report as
+a template and configs/Design_V1_20261105.json as the zero-parasitic nominal
+parameter record. New studies require fresh output and their own provenance.

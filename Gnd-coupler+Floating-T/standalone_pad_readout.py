@@ -29,6 +29,9 @@ def build_device(case,x):
     r=case['resonator_node'];cr=1/(2*np.pi*flc*1e9*50)*1e15;lr=50/(2*np.pi*flc*1e9)*1e9
     edges=[(pads[names[0]][1],pads[names[1]][0],cpair),(pads[names[0]][1],r,cread),(pads[names[1]][0],r,cread)]
     links=[{'from':a,'to':b,'capacitance_ff':float(c)} for a,b,c in edges]
+    from floating_coupler.parasitics import with_parasitics
+    links=with_parasitics(links,case.get('parasitic_capacitances_ff'),
+                          {pad for pair in pads.values() for pad in pair} | {r})
     circuit=fit_pad_mutual_capacitances(pads,ec,grounds,{r:cr},links)
     # Flip the first transmon charge coordinate: the exact modal C then has
     # the standard readout-workflow grounded-node sign convention.

@@ -199,7 +199,8 @@ def ensure_circuit(out, result):
         ph = ro["physical"]
         rn = ro["case"]["resonator_node"]
         readouts[rail] = dict(
-            links=[e for e in ph["physical_links"] if rn in [e["from"], e["to"]]],
+            links=[e for e in ph["physical_links"]
+                   if not e.get("parasitic", False) and rn in [e["from"], e["to"]]],
             capacitance_ff=ph["resonator_self_capacitance_ff"],
             inductance_nh=ph["resonator_inductance_nh"],
             target_frequency_ghz=ro["case"]["readout_target_ghz"],

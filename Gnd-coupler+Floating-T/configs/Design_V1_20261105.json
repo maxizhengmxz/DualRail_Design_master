@@ -1,0 +1,540 @@
+{
+  "request": {
+    "loaded_ec_ghz": {
+      "A1": 0.165,
+      "A2": 0.25,
+      "C": 0.45028499021480484,
+      "B1": 0.16,
+      "B2": 0.26
+    },
+    "idle_bare_frequencies_ghz": {
+      "A1": 4.6128565630518725,
+      "A2": 4.624675459305412,
+      "B1": 5.422376704944339,
+      "B2": 5.385383709690169,
+      "C": 9.89674271961544
+    },
+    "rail_ground_series_fraction": 0.5,
+    "local_levels": 5,
+    "ncut": 30,
+    "pair_cap_bounds_ff": [
+      0.001,
+      40.0
+    ],
+    "idle_isolated_splittings_mhz": [
+      150,
+      90
+    ],
+    "coupler_loading_max": 0.45,
+    "rail_loading_per_coupler_max": 0.1,
+    "channel_selection": {
+      "source_logical": "10",
+      "auxiliary": "B20",
+      "moved_pair": "B",
+      "gate_frequency_ghz": 4.830472831213531,
+      "s1": 0.0034307967838706835,
+      "intended_g_mhz": 5.0,
+      "target_g_mhz": 5.0,
+      "maximum_logical_ratio": 0.06079756017674685,
+      "score_basis_id": "xm-full-cosine-4^4",
+      "comparison_id": "05324ec29a5006196e3176f9d57b619739b4c789172c2453707b824e0f6c4c05",
+      "idle_frequency_ghz": null,
+      "stationary_frequency_ghz": 4.61,
+      "logical_ratio_limit": 0.2,
+      "definition_version": "dual-rail-cz-s1-v2",
+      "selection_rule": "minimum_S1_at_common_intended_g",
+      "score_kind": "evaluated_at_common_target_g",
+      "physical_auxiliary": "0020",
+      "logical_order": [
+        "A",
+        "B"
+      ]
+    },
+    "on_lower_exclusive_ghz": 7.0,
+    "off_upper_exclusive_ghz": 10.0,
+    "off_bracket_ghz": [
+      7.001,
+      9.99999
+    ],
+    "parasitic_capacitances_ff": {
+      "A11-r1": 0.0,
+      "A22-r1": 0.0,
+      "A11-A22": 0.0,
+      "A21-C1": 0.0,
+      "A21-B11": 0.0,
+      "A12-C1": 0.0,
+      "A11-C1": 0.0,
+      "B22-r2": 0.0,
+      "B11-r2": 0.0,
+      "B22-B11": 0.0,
+      "B12-C1": 0.0,
+      "B12-A22": 0.0,
+      "B21-C1": 0.0,
+      "B22-C1": 0.0
+    }
+  },
+  "physical": {
+    "pad_pairs": {
+      "A1": [
+        "A11",
+        "A12"
+      ],
+      "A2": [
+        "A21",
+        "A22"
+      ],
+      "C": [
+        "C1",
+        "C2"
+      ],
+      "B1": [
+        "B11",
+        "B12"
+      ],
+      "B2": [
+        "B21",
+        "B22"
+      ]
+    },
+    "ground_capacitances_ff": {
+      "C1": 0.0,
+      "C2": 0.0,
+      "A11": 23.479065848071667,
+      "A12": 23.479065848071667,
+      "A21": 131.71755940768205,
+      "A22": 131.71755940768205,
+      "B11": 24.212786655823905,
+      "B12": 24.212786655823905,
+      "B21": 126.65149943046342,
+      "B22": 126.65149943046342
+    },
+    "pad_mutual_capacitances_ff": {
+      "A1": 101.25865444423506,
+      "A2": 4.218412797628399,
+      "C": 25.549590787071846,
+      "B1": 103.59385068198593,
+      "B2": 8.682535751578383
+    },
+    "physical_links": [
+      {
+        "from": "A22",
+        "to": "C1",
+        "capacitance_ff": 6.564567541156109
+      },
+      {
+        "from": "C1",
+        "to": "B11",
+        "capacitance_ff": 14.372490585563922
+      },
+      {
+        "from": "A22",
+        "to": "B11",
+        "capacitance_ff": 0.786206626846816
+      },
+      {
+        "from": "A12",
+        "to": "A21",
+        "capacitance_ff": 21.849061562831814
+      },
+      {
+        "from": "A12",
+        "to": "r1",
+        "capacitance_ff": 9.337255705262587
+      },
+      {
+        "from": "A21",
+        "to": "r1",
+        "capacitance_ff": 9.337255705262587
+      },
+      {
+        "from": "B12",
+        "to": "B21",
+        "capacitance_ff": 6.609151464614514
+      },
+      {
+        "from": "B12",
+        "to": "r2",
+        "capacitance_ff": 4.527793627363148
+      },
+      {
+        "from": "B21",
+        "to": "r2",
+        "capacitance_ff": 4.527793627363148
+      }
+    ],
+    "resonator_self_capacitances_ff": {
+      "r1": 523.445507944787,
+      "r2": 525.5519041730017
+    },
+    "resonator_inductances_nh": {
+      "r1": 1.3086137698619673,
+      "r2": 1.313879760432504
+    },
+    "loaded_ec_ghz": {
+      "A1": 0.16499999999999998,
+      "A2": 0.2499999999999982,
+      "C": 0.45028499021480495,
+      "B1": 0.1600000000000001,
+      "B2": 0.26000000000000006
+    },
+    "bare_frequencies_ghz": {
+      "A1": 4.6128565630518725,
+      "A2": 4.624675459305412,
+      "B1": 5.422376704944339,
+      "B2": 5.385383709690169,
+      "C": 9.89674271961544
+    },
+    "K_per_ff": [
+      [
+        0.008518226461570487,
+        -0.00034100225640342125,
+        -1.6203928514455726e-06,
+        -1.2133848454754545e-07,
+        -1.5312231686829545e-08,
+        -5.193346869531438e-05,
+        -3.179538490530297e-09
+      ],
+      [
+        -0.00034100225640342136,
+        0.012906403729652162,
+        -0.0010651260277230515,
+        -7.975891645088694e-05,
+        -1.0065124946470802e-05,
+        0.00013549415545559623,
+        -2.089992682570678e-06
+      ],
+      [
+        -1.6203928514455732e-06,
+        -0.0010651260277230513,
+        0.02324623950845915,
+        0.0012909645989542208,
+        0.00016291244375098716,
+        6.438484109417772e-07,
+        3.382827507359032e-05
+      ],
+      [
+        -1.2133848454754545e-07,
+        -7.975891645088694e-05,
+        0.0012909645989542208,
+        0.008260098386977447,
+        -0.00017578674611879862,
+        4.821274692265241e-08,
+        -3.65015849316426e-05
+      ],
+      [
+        -1.5312231686829552e-08,
+        -1.0065124946470802e-05,
+        0.00016291244375098718,
+        -0.0001757867461187986,
+        0.013422659878838348,
+        6.084176458037577e-09,
+        6.051502196968883e-05
+      ],
+      [
+        -5.19334686953144e-05,
+        0.00013549415545559623,
+        6.438484109417772e-07,
+        4.8212746922652404e-08,
+        6.084176458037577e-09,
+        0.0018517671389644006,
+        1.2633607972473281e-09
+      ],
+      [
+        -3.1795384905302993e-09,
+        -2.0899926825706785e-06,
+        3.382827507359033e-05,
+        -3.65015849316426e-05,
+        6.051502196968884e-05,
+        1.2633607972473281e-09,
+        0.0018723063926239815
+      ]
+    ],
+    "budget": {
+      "A1": {
+        "loaded_ec_ghz": 0.16499999999999998,
+        "loaded_Ceff_ff": 117.39532924035835,
+        "own_capacitance_ff": 112.99818736827089,
+        "own_fraction": 0.962544149749905,
+        "all_external_fraction": 0.03745585025009501,
+        "specified_links_loading_fraction": 7.324277750964114e-08
+      },
+      "A2": {
+        "loaded_ec_ghz": 0.2499999999999982,
+        "loaded_Ceff_ff": 77.48091729863705,
+        "own_capacitance_ff": 70.07719250146943,
+        "own_fraction": 0.9044445386645176,
+        "all_external_fraction": 0.09555546133548243,
+        "specified_links_loading_fraction": 0.020459385190161328
+      },
+      "C": {
+        "loaded_ec_ghz": 0.45028499021480495,
+        "loaded_Ceff_ff": 43.017710440267415,
+        "own_capacitance_ff": 25.549590787071846,
+        "own_fraction": 0.5939319067793934,
+        "all_external_fraction": 0.40606809322060655,
+        "specified_links_loading_fraction": 0.40606809322060655
+      },
+      "B1": {
+        "loaded_ec_ghz": 0.1600000000000001,
+        "loaded_Ceff_ff": 121.06393327911947,
+        "own_capacitance_ff": 115.70024400989789,
+        "own_fraction": 0.9556953989190545,
+        "all_external_fraction": 0.04430460108094547,
+        "specified_links_loading_fraction": 0.0238482544646329
+      },
+      "B2": {
+        "loaded_ec_ghz": 0.26000000000000006,
+        "loaded_Ceff_ff": 74.5008820179197,
+        "own_capacitance_ff": 72.0082854668101,
+        "own_fraction": 0.9665427242792903,
+        "all_external_fraction": 0.03345727572070967,
+        "specified_links_loading_fraction": 0.00023936562346005275
+      }
+    },
+    "compensation_policy": "One-time self-shunt and intra-pair compensation preserves loaded EC and isolated A150/B90. The readout links and all three coupler capacitors remain fixed. Freeze all resulting components for frequency sweeps.",
+    "resonator_parameters": {
+      "r1": {
+        "fr_ghz": 5.986976799541683,
+        "effective_capacitance_ff": 540.0247034080372,
+        "q_zpf_coulomb": 1.0349601259919524e-18,
+        "gamma_ghz_per_n": [
+          -0.025992934269878913,
+          0.0678154331915023,
+          0.0003222490206375439,
+          2.4130696316148015e-05,
+          3.0451576359732716e-06
+        ]
+      },
+      "r2": {
+        "fr_ghz": 6.008011847249107,
+        "effective_capacitance_ff": 534.1006172598331,
+        "q_zpf_coulomb": 1.0310742644267432e-18,
+        "gamma_ghz_per_n": [
+          -1.585398320459111e-06,
+          -0.0010421232196395744,
+          0.016867633666153244,
+          -0.01820061358498291,
+          0.030174320732091385
+        ]
+      }
+    },
+    "channel_selection": {
+      "source_logical": "10",
+      "auxiliary": "B20",
+      "moved_pair": "B",
+      "gate_frequency_ghz": 4.830472831213531,
+      "s1": 0.0034307967838706835,
+      "intended_g_mhz": 5.0,
+      "target_g_mhz": 5.0,
+      "maximum_logical_ratio": 0.06079756017674685,
+      "score_basis_id": "xm-full-cosine-4^4",
+      "comparison_id": "05324ec29a5006196e3176f9d57b619739b4c789172c2453707b824e0f6c4c05",
+      "idle_frequency_ghz": null,
+      "stationary_frequency_ghz": 4.61,
+      "logical_ratio_limit": 0.2,
+      "definition_version": "dual-rail-cz-s1-v2",
+      "selection_rule": "minimum_S1_at_common_intended_g",
+      "score_kind": "evaluated_at_common_target_g",
+      "physical_auxiliary": "0020",
+      "logical_order": [
+        "A",
+        "B"
+      ]
+    },
+    "parasitic_capacitances_ff": {
+      "A11-r1": 0.0,
+      "A22-r1": 0.0,
+      "A11-A22": 0.0,
+      "A21-C1": 0.0,
+      "A21-B11": 0.0,
+      "A12-C1": 0.0,
+      "A11-C1": 0.0,
+      "B22-r2": 0.0,
+      "B11-r2": 0.0,
+      "B22-B11": 0.0,
+      "B12-C1": 0.0,
+      "B12-A22": 0.0,
+      "B21-C1": 0.0,
+      "B22-C1": 0.0
+    }
+  },
+  "off_ghz": 9.89674271961544,
+  "off_bracket_ghz": [
+    7.001,
+    9.99999
+  ],
+  "channel_selection": {
+    "source_logical": "10",
+    "auxiliary": "B20",
+    "moved_pair": "B",
+    "gate_frequency_ghz": 4.830472831213531,
+    "s1": 0.0034307967838706835,
+    "intended_g_mhz": 5.0,
+    "target_g_mhz": 5.0,
+    "maximum_logical_ratio": 0.06079756017674685,
+    "score_basis_id": "xm-full-cosine-4^4",
+    "comparison_id": "05324ec29a5006196e3176f9d57b619739b4c789172c2453707b824e0f6c4c05",
+    "idle_frequency_ghz": null,
+    "stationary_frequency_ghz": 4.61,
+    "logical_ratio_limit": 0.2,
+    "definition_version": "dual-rail-cz-s1-v2",
+    "selection_rule": "minimum_S1_at_common_intended_g",
+    "score_kind": "evaluated_at_common_target_g",
+    "physical_auxiliary": "0020",
+    "logical_order": [
+      "A",
+      "B"
+    ]
+  },
+  "off_ej_ghz": 29.848112578757103,
+  "off_definition": {
+    "version": "physical-single-excitation-off-v1",
+    "model": "seven",
+    "target": "physical_0100_0010_exchange_zero",
+    "source": "0100",
+    "destination": "0010",
+    "status": "temporary_open_question",
+    "controls": "fixed_idle_rails_and_capacitors;vary_coupler_EJ",
+    "frame": "canonical_four_physical_single_excitation_states;C_ground;resonators_vacuum",
+    "auxiliary_policy": "virtual_paths_included;logical_exchange_CZ_channels_and_ZZ_are_residual_diagnostics"
+  },
+  "idle_calibration": {
+    "policy": "individual_EJ_dressed_readout_idle_v1",
+    "geometry_and_loaded_EC_frozen": true,
+    "original_bare_frequencies_ghz": {
+      "A1": 4.613060962457985,
+      "A2": 4.613323398210204,
+      "B1": 5.3923002059146175,
+      "B2": 5.391125367954827,
+      "C": 9.853409357566608
+    }
+  },
+  "design_id": "Design_V1_20261105",
+  "schema": "grounded-coupler-nominal-design-v1",
+  "created_date": "2026-11-05",
+  "units": {
+    "capacitance": "fF",
+    "inductance": "nH",
+    "frequency": "GHz",
+    "charging_energy": "EC/h in GHz",
+    "josephson_energy": "EJ/h in GHz",
+    "time": "ns"
+  },
+  "topology": {
+    "rail_transmons": "floating",
+    "coupler_grounded_pad": "C2",
+    "coupler_active_pad": "C1",
+    "resonators": [
+      "r1",
+      "r2"
+    ],
+    "modal_order": [
+      "A1",
+      "A2",
+      "C",
+      "B1",
+      "B2",
+      "r1",
+      "r2"
+    ]
+  },
+  "operating_points": {
+    "idle_off": {
+      "bare_f01_ghz": {
+        "A1": 4.6128565630518725,
+        "A2": 4.624675459305412,
+        "B1": 5.422376704944339,
+        "B2": 5.385383709690169,
+        "C": 9.89674271961544
+      },
+      "ej_ghz": {
+        "A1": 17.339379872468342,
+        "A2": 11.953997387777004,
+        "B1": 24.389383639444056,
+        "B2": 15.396677307309355,
+        "C": 29.848112578757103
+      }
+    },
+    "static_gate_on": {
+      "bare_f01_ghz": {
+        "A1": 4.6128565630518725,
+        "A2": 4.624675459305412,
+        "B1": 4.871046279295242,
+        "B2": 4.871046279295242,
+        "C": 7.05
+      },
+      "ej_ghz": {
+        "A1": 17.339379872468342,
+        "A2": 11.953997387777004,
+        "B1": 19.818310567435066,
+        "B2": 12.73304320543193,
+        "C": 15.750918158231313
+      },
+      "duration_ns": 100.3,
+      "moved_pair": "B",
+      "envelope": "static dressed-ON benchmark",
+      "conditional_phase_target_rad": 3.141592653589793
+    }
+  },
+  "squid_designs": {
+    "A1": {
+      "ec_ghz": 0.16500000000000004,
+      "lower_ghz": 4.0,
+      "upper_ghz": 5.0,
+      "ej_max_ghz": 20.255164600265996,
+      "ej_min_ghz": 13.188074385615412,
+      "ej_large_ghz": 16.721619492940704,
+      "ej_small_ghz": 3.533545107325292,
+      "asymmetry": 0.6510968755811652
+    },
+    "A2": {
+      "ec_ghz": 0.25,
+      "lower_ghz": 4.0,
+      "upper_ghz": 5.0,
+      "ej_max_ghz": 13.853146748309538,
+      "ej_min_ghz": 9.105742445954927,
+      "ej_large_ghz": 11.479444597132233,
+      "ej_small_ghz": 2.373702151177305,
+      "asymmetry": 0.6573049871911648
+    },
+    "B1": {
+      "ec_mhz": 159.99999999999997,
+      "ej_max_ghz": 27.79436046659915,
+      "ej_min_ghz": 16.28920288539421,
+      "ej_large_ghz": 22.04178167599668,
+      "ej_small_ghz": 5.75257879060247,
+      "asymmetry": 0.5860614387932819,
+      "ec_ghz": 0.15999999999999998,
+      "lower_ghz": 4.4,
+      "upper_ghz": 5.8
+    },
+    "B2": {
+      "ec_mhz": 260.0,
+      "ej_max_ghz": 17.72920809044697,
+      "ej_min_ghz": 10.516969240769537,
+      "ej_large_ghz": 14.123088665608254,
+      "ej_small_ghz": 3.6061194248387167,
+      "asymmetry": 0.5932001692978265,
+      "ec_ghz": 0.26,
+      "lower_ghz": 4.4,
+      "upper_ghz": 5.8
+    },
+    "C": {
+      "ec_ghz": 0.4502849902148048,
+      "lower_ghz": 6.5,
+      "upper_ghz": 11.0,
+      "ej_large_ghz": 25.034120926003048,
+      "ej_small_ghz": 11.488068000772907,
+      "asymmetry": 0.37089926215509383
+    }
+  },
+  "parameter_notes": [
+    "All physical port capacitors are intentional. All fourteen registered parasitics are zero.",
+    "Loaded ECs include intentional coupler and resonator loading.",
+    "A SQUID tuning is 4-5 GHz, B tuning is 4.4-5.8 GHz, coupler tuning is 6.5-11 GHz.",
+    "OFF is the retained nominal physical 0100-0010 cancellation with fixed idle rail EJs.",
+    "The nominal OFF is basis dependent. A sub-1-Hz residual is not cross-basis certification.",
+    "Gate controls are the saved nominal seven-mode static gate. Pulse controls require separate calibration.",
+    "SQUID parameters assume negligible loop inductance and the stored loaded ECs."
+  ]
+}

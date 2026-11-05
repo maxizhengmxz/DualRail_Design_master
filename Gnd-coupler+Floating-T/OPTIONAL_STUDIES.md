@@ -36,6 +36,101 @@ Include it only when requested; preserve all earlier validation status. The
 retained PDF also describes measured costs, implemented search limits and further
 speed proposals. Extra approximations/basis changes require separate agreement.
 
+## Parasitic compensation and validation
+
+Run this branch only when requested, after a saved nominal seven-mode design.
+It performs no readout optimization, pulse propagation or decoherence calculation.
+Defining the fourteen zero-default parasitic inputs does not enable the study.
+
+The standard batch adds each of eight group-1 and four group-2 parasitics
+independently at 0.1 and 0.2 fF. The two remaining registered links A21-C1 and
+B12-C1 are outside these study groups. See PARASITICS.md for the port list.
+The report template expects this standard 24-case batch.
+
+### Compensation and controls
+
+Use K = P^T C_node^-1 P with floating common charges fixed to zero and C2
+grounded. Preserve all seven K diagonals, hence loaded rail/coupler ECs and
+bare resonator frequencies. Keep equal grounds on each floating rail and
+positive physical capacitors. The added parasitic and resonator inductances
+stay fixed. Twenty intentional-capacitor variables may compensate the geometry.
+
+The default engineering matching tolerance is 0.001, or 0.1%. Require it for
+each of nine intended nonzero coupling coefficients and the matched Frobenius
+norm. Group 1 matches all matrix entries. Group 2 matches seven diagonals and
+nine intended pairs, retaining twelve other offdiagonals as residuals. First
+minimize maximum fractional physical-capacitor movement, then its squared sum
+at the optimal ceiling. The +/-95% bound is a numerical guard. Local optimizer
+success and explicit matching checks are required. EM/fabrication uncertainty
+is a separate quantity. This compensated-design study differs from robustness,
+which perturbs fixed hardware without restoring loaded ECs.
+
+Quantum validation freezes each fitted geometry and all idle rail EJs. Retune
+coupler EJ alone to null physical 0100-0010, with all four physical references,
+between the saved ON and 10 GHz. Keep every failed case and its best evaluated
+allowed bias. Logical 01L-10L, 00L-11L and secular ZZ remain diagnostics. Static
+ON uses the saved coupler bias and duration, correcting moved-B frequency to
+conditional phase pi. Report raw/selected fidelity at the same controls,
+logical survival, worst-input nonlogical population and B-frequency correction.
+This stage does not repeat the full gate-duration/coupler optimization.
+
+Measure idle physical components directly from normalized dressed eigenstates.
+For a B logical state, show its absolute A1/A2 weights in 1000/0100 with C ground
+and resonators vacuum in the references. Do not renormalize four reference
+weights or replace them with a perturbative coupling/detuning estimate.
+
+### Explicit stages
+
+Commands below are run from the repository root. Substitute the supplied
+nominal paths for a new design and use a new output folder after source changes.
+The named nominal design is a complete parameters-only input. The prior
+parasitic calculations were deleted on request. Its report is retained as a
+visual template. Commands below calculate a fresh study when explicitly requested.
+
+```powershell
+.venv/Scripts/python.exe Gnd-coupler+Floating-T/studies/parasitic_study.py fit --input Gnd-coupler+Floating-T/configs/Design_V1_20261105.json --output Gnd-coupler+Floating-T/output/new-parasitics/candidates --amounts .1 .2 --match-rtol .001
+.venv/Scripts/python.exe Gnd-coupler+Floating-T/studies/parasitic_study.py reference --input Gnd-coupler+Floating-T/configs/Design_V1_20261105.json --gate Gnd-coupler+Floating-T/configs/Design_V1_20261105.json --output Gnd-coupler+Floating-T/output/new-parasitics/nominal-reference.json
+.venv/Scripts/python.exe Gnd-coupler+Floating-T/studies/minimum_change_validation.py --candidates Gnd-coupler+Floating-T/output/new-parasitics/candidates/study.json --gate Gnd-coupler+Floating-T/configs/Design_V1_20261105.json --reference Gnd-coupler+Floating-T/output/new-parasitics/nominal-reference.json --output Gnd-coupler+Floating-T/output/new-parasitics/validation --workers 2
+.venv/Scripts/python.exe Gnd-coupler+Floating-T/studies/minimum_change_postcheck.py --root Gnd-coupler+Floating-T/output/new-parasitics/validation --workers 2
+```
+
+The reference stage computes this nominal circuit's audit-basis OFF, slope,
+static gate baseline and physical participation once. Validation checks the
+reference charge matrix against its supplied nominal circuit. Two bounded
+workers and one BLAS thread per worker are the default. Checkpoints are
+source/input hashed. A numerical source change requires fresh output.
+
+After a new study completes, generate its report from saved data only. Supply
+that study's circuit drawing with the requested green/red parasitic overlay.
+The usual circuit omits parasitics unless requested. The drawing below is an
+explicit input that must be generated for the new study.
+
+```powershell
+.venv/Scripts/python.exe Gnd-coupler+Floating-T/studies/validated_minimum_change_report.py --campaign Gnd-coupler+Floating-T/output/new-parasitics/validation --candidates Gnd-coupler+Floating-T/output/new-parasitics/candidates --circuit <new-study-circuit.pdf> --output Gnd-coupler+Floating-T/output/new-parasitics/parasitic-compensation-report.pdf --temporary tmp/pdfs/parasitics
+```
+
+New result reports embed nominal inputs, complete fits, quantum records and
+solver source. The preserved reference PDF has those attachments removed and
+serves as a visual template. Deleted calculations cannot be resumed or rebuilt
+from that template. New campaigns record their own input/source identities.
+
+### Numerical qualifications and retained files
+
+Production uses local6/pair12/C5/ncut35 and audit uses local7/pair15/C6/ncut40.
+Both resonators retain states 0,1,2. Compare controls identically across bases.
+Physical OFF passes below 1 Hz within the stated basis. The completed 24-case
+study has up to 32.52 Hz physical and 10.74 Hz logical cross-basis differences,
+so absolute 1-Hz certification remains unresolved. Secular-ZZ differences are
+at most 0.37 Hz. Raw/selected gate and survival differences meet the agreed
+1e-4 absolute-probability target. Retain these limitations with future reports.
+
+The user requested deletion of all saved parasitic results and archives on
+2026-11-05. Keep configs/Design_V1_20261105.json as the complete nominal parameter
+record and templates/report-references/parasitic-compensation-reference.pdf as
+the report template. The nominal design, decoherence, robustness and pulse
+studies outside this parasitic branch retain their existing preservation policy.
+The completed 24-case validation cost about 66 minutes with two workers.
+
 ## Default policy and scope
 
 The current approved rescue ladder is the DEFAULT for an explicitly launched

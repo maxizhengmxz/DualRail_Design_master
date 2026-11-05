@@ -8,6 +8,12 @@ These are project report references, not auto-executing workflows or case defaul
   twelve-page summary. No per-record appendix and no Spearman heatmap.
 - `templates/report-references/design-reference.pdf`: detailed nominal-design
   reference; governed separately by REPORT_TEMPLATE.md.
+- `templates/report-references/parasitic-compensation-reference.pdf`: approved
+  17-page single-parasitic compensation study. Preserve the circuit, reproducible
+  minimization method, gate/OFF tables, logical residuals, physical idle admixture,
+  percent/fF maps and numerical qualifications. All embedded calculation
+  attachments were removed at the user's request. Example values remain visible
+  as template content. The underlying calculation records were deleted.
 
 Use the references' section order, typography, tables, circuit style and level
 of explanation. Populate them from the new study's actual inputs/results. Never

@@ -50,6 +50,11 @@ def varied_parts(physical,errors,five=False):
     l='links' if five else 'physical_links'
     for key,value in p[g].items():p[g][key]=value*(1+errors.get('ground:'+key,0.))
     for key,value in p[s].items():p[s][key]=value*(1+errors.get('self:'+key,0.))
+    from .parasitics import with_parasitics
+    nodes={pad for pair in p['pad_pairs'].values() for pad in pair}
+    if not five:
+        nodes.update(e[endpoint] for e in p[l] for endpoint in ('from','to'))
+    p[l]=with_parasitics(p[l],p.get('parasitic_capacitances_ff'),nodes)
     for e in p[l]:e['capacitance_ff']*=1+errors.get(edge_key(e['from'],e['to']),0.)
     return p
 

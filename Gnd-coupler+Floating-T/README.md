@@ -9,6 +9,17 @@ The temporary physical OFF target is documented in OFF_POLICY.md.
 
 ## Optional studies
 
+The opt-in parasitic study fits one actual port capacitor at a time against a
+saved nominal circuit, then evaluates static CZ, physical OFF, logical exchanges,
+ZZ and idle participation. See [PARASITICS.md](PARASITICS.md) and
+[OPTIONAL_STUDIES.md](OPTIONAL_STUDIES.md) for masks, minimum-change objectives,
+commands and numerical qualifications. It never launches during normal design.
+The complete zero-parasitic nominal parameters are saved as
+`configs/Design_V1_20261105.json`. The approved report layout is preserved in
+`templates/report-references/parasitic-compensation-reference.pdf`. At the user's
+request, the parasitic calculation records and archives were removed. Future
+studies use a fresh output folder. Report generation reads that study's saved data.
+
 The explicitly invoked five-transmon tuning-pulse study is documented in
 [PULSED_CZ_WORKFLOW.md](PULSED_CZ_WORKFLOW.md). It starts/ends in dressed idle
 logical states and is separate from static ON gate benchmarks. Use pulse_cz.py.

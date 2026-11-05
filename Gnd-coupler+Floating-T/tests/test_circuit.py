@@ -9,6 +9,56 @@ import unittest
 
 import numpy as np
 
+from floating_coupler.parasitics import (
+    DEFAULT_PARASITIC_CAPACITANCES_FF, with_parasitics,
+)
+
+
+class ParasiticCircuitTests(unittest.TestCase):
+    def test_zero_defaults_and_each_physical_matrix_stamp(self):
+        from floating_coupler.pad_electrostatics import build_pad_circuit
+        from floating_coupler.mixed_electrostatics import mixed_circuit
+        pads={'A1':['A11','A12'],'A2':['A21','A22'],'C':['C1','C2'],
+              'B1':['B11','B12'],'B2':['B21','B22']}
+        grounds={p:80. for pair in pads.values() for p in pair}
+        shunts={n:30. for n in pads};res={'r1':500.,'r2':500.}
+        plain=build_pad_circuit(pads,grounds,res,[],shunts)
+        zeros=build_pad_circuit(pads,grounds,res,[],shunts,
+                               parasitic_capacitances_ff=DEFAULT_PARASITIC_CAPACITANCES_FF)
+        np.testing.assert_array_equal(plain.nodal_capacitance_ff,zeros.nodal_capacitance_ff)
+        np.testing.assert_array_equal(plain.inverse_modal_capacitance_per_ff,
+                                      zeros.inverse_modal_capacitance_per_ff)
+        self.assertEqual(len(zeros.physical_links),14)
+        self.assertTrue(all(e['parasitic'] for e in zeros.physical_links))
+        mixed0=mixed_circuit(pads,grounds,shunts,[],resonator_caps_ff=res)
+        for name in DEFAULT_PARASITIC_CAPACITANCES_FF:
+            edges=with_parasitics([],{name:1.25},plain.nodes)
+            floating=build_pad_circuit(pads,grounds,res,edges,shunts)
+            mixed=mixed_circuit(pads,grounds,shunts,edges,resonator_caps_ff=res)
+            for nodes,delta in [(plain.nodes,floating.nodal_capacitance_ff-plain.nodal_capacitance_ff),
+                                (mixed0['node_order'],mixed['nodal_capacitance_ff']-mixed0['nodal_capacitance_ff'])]:
+                d=np.zeros(len(nodes))
+                a,b=name.split('-');d[nodes.index(a)]=1;d[nodes.index(b)]=-1
+                np.testing.assert_array_equal(delta,1.25*np.outer(d,d))
+
+    def test_projection_validation_and_single_insertion(self):
+        values=DEFAULT_PARASITIC_CAPACITANCES_FF
+        five={'A11','A12','A21','A22','C1','C2','B11','B12','B21','B22'}
+        self.assertEqual(len(with_parasitics([],values,five)),10)
+        pair={'A11','A12','A21','A22','r1'}
+        links=with_parasitics([],values,pair)
+        self.assertEqual(len(links),3)
+        self.assertEqual(with_parasitics(links,values,pair),links)
+        for bad in [-1.,float('nan'),float('inf'),True]:
+            with self.assertRaises(ValueError):
+                with_parasitics([],{'A11-r1':bad},pair)
+        with self.assertRaises(ValueError):
+            with_parasitics([],{'typo':1.},pair)
+        with self.assertRaises(ValueError):
+            with_parasitics([{'from':'A11','to':'r1','capacitance_ff':2.}],values,pair)
+        intended=[{'from':'A11','to':'r1','capacitance_ff':2.}]
+        self.assertEqual(with_parasitics(intended),intended)
+
 from floating_coupler.model import (
     FULL, PORT, SCALE, build_model, floating_inverse, port_exchange, scan_coupler,
 )

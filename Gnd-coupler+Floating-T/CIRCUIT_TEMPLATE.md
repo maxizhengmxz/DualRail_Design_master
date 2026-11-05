@@ -92,3 +92,26 @@ baseline slightly below the coupler body to provide a visible C1 vertical lead.
 Move the body and ground baseline together when lengthening this lead so the
 SQUID proportions do not collapse. Keep A22/B11 labels clear of the bypass
 branch wires, and report individual SQUID junction EJs in the coupler header.
+# Parasitic visibility
+
+The physical model supports explicitly tagged parasitic capacitors. Omit these
+from the circuit diagram, including zero-valued placeholders, unless the user
+specifically requests their display. See PARASITICS.md for the port registry.
+
+The explicitly requested group-one overlay uses `parasitics_to_draw` and
+`parasitic_capacitances_ff` in the drawing JSON. Render wires, symbols and labels
+in dark green (#145A32), with connection dots and overpass bridges. Use the
+table-based parameter layout (`show_transmon_parameters=false`). Keep numerical
+values in the lower legend, with zero defaults and two decimal places. The
+overlay routing lives in studies/circuit_parasitics.py.
+
+When explicitly requested, `group_two_parasitics_to_draw` adds A11-C1, A12-C1,
+B21-C1 and B22-C1 in red (#B22222), labelled Cp7-Cp10 above the complete green
+group-one layer. Route their common lead to the actual C1 conductor and bridge
+all unrelated crossings. Keep their zero-default values in the lower red legend.
+
+The group-one overlay also supports cross-pad A11-A22 and B22-B11, drawn in
+dark green as Cp11 and Cp12. Retain Cp1-Cp6 and the red Cp7-Cp10 numbering.
+Route the new horizontal branches above the resonator headers, with explicit
+overpass bridges at unrelated green/red vertical conductors. Eight green labels
+use two rows of four in the lower legend.
