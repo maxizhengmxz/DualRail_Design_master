@@ -67,6 +67,14 @@ At the next project-wide results cleanup, ask the user whether to clean up this
 campaign before taking action. Preserve its final report and provenance unless
 the user explicitly directs otherwise. No scheduled reminder date was specified.
 
+Superseded on 2026-11-05 by the user's explicit request to clean up that data
+and retire the package. Historical source now lives under
+`../legacy/transmon-based CZ/`. The 82,008 loose checkpoints were deleted.
+Maps, CSV summaries, inputs and calculation-source provenance are retained in
+the verified `../legacy/output/transmon-cz/historical-summary.tar.xz`.
+The documented final report was already absent before cleanup. See the archive
+index and `../legacy/transmon-based CZ/CLEANUP.md` for the preservation record.
+
 
 ## Parasitic study cleanup, 2026-11-05
 

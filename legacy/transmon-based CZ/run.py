@@ -1,4 +1,4 @@
-"""Explicit approximate CZ commands; running without arguments shows help."""
+"""Archived approximate CZ commands. New designs use 2Q-gate_XM/run.py."""
 
 import argparse
 import json
@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE.parent))
+sys.path.insert(0, str(HERE.parent.parent))
 sys.path.insert(0, str(HERE))
 
 

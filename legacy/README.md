@@ -1,5 +1,20 @@
 # Archived studies outside the three active workflows
 
+`transmon-based CZ/` holds the retired four-transmon physical-collision
+simulator and search, its original inputs and optional compatibility tests.
+New CZ work and the explicit coupler's toy stage use `../2Q-gate_XM/` and
+`core.cz_channel_policy`. Run archived tests only through the root
+`run_tests.py --legacy` option. The old runner remains explicitly callable
+under this archive for historical reproduction.
+
+The 2026-11-05 cleanup removed 82,008 bulky CZ checkpoints. The remaining maps,
+compact CSV summaries, run manifests, inputs and calculation-source snapshot
+are in the verified `output/transmon-cz/historical-summary.tar.xz`, with sizes
+and member checksums in its adjacent index.json. Generated data remain ignored
+by Git. That summary archive cannot resume the deleted checkpoint campaign.
+The old campaign README referred to a 59-page report which was already absent
+before cleanup. Available map PDFs are preserved.
+
 These files are unused by the current readout, coupler-off, and
 logical-resonance gate workflows. They are retained research code, not all
 unreferenced/dead functions. Numerical algorithms and input values are

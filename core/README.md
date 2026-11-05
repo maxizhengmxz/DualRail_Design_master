@@ -14,7 +14,7 @@ integrating it.
 | `electrostatics.py` | Loaded EC, charge coefficient J, local exchange J01 | Readout and coupler-off |
 | `cz_channel_policy.py` | Logical labels, S1/S2, selected CZ channel, physical OFF and residual extraction | Active XM and explicit coupler workflows |
 
-The legacy `transmon-based CZ` tools also use
+The archived tools under `../legacy/transmon-based CZ/` also use
 `projected_transmon_operators` and the explicitly named reduced two-node
 capacitance conversions. They preserve its effective-EC/reference-basis
 conventions; they do not reconstruct physical shunts or redefine loaded EC.

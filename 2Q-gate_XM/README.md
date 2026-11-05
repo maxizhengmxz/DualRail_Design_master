@@ -8,8 +8,10 @@ The root `run_tests.py` runs active policy, XM and coupler regression coverage;
 active calculation nor default test discovery requires the old CZ folder.
 
 Independent, cleaned implementation of the weekend dual-rail CZ search.
-The original `transmon-based CZ/` source, configurations and saved results are
-preserved. Numerical kernels use shared `core.runtime`; this package does not import
+The original source and configurations are archived in
+`../legacy/transmon-based CZ/`. Historical maps and CSV summaries are retained
+under `../legacy/output/transmon-cz/`; raw checkpoints were removed. Numerical
+kernels use shared `core.runtime`; this package does not import
 the original exploratory CZ kernels or launch readout/coupler-off optimization.
 Stable logical definitions, S1/S2 scoring and common-g selection are imported
 from `../core/cz_channel_policy.py`, the same authority

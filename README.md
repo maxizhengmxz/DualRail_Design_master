@@ -10,10 +10,30 @@ The workflows are organized separately:
   logical-transition iSWAP and controlled-phase/CZ searches and pulse studies.
 - [XM CZ](2Q-gate_XM/README.md): active four-transmon toy CZ search and maps;
   shared logical/S1 specification in [its workflow](2Q-gate_XM/WORKFLOW.md).
-- `transmon-based CZ/`: legacy tools and retained calculation results only;
-  no active design workflow depends on its simulator or search.
+- [Archived transmon CZ](<legacy/transmon-based CZ/README.md>): historical
+  simulator, search, inputs and optional compatibility tests. New toy CZ work
+  uses `2Q-gate_XM/`. Compact historical maps/summaries are under ignored
+  `legacy/output/transmon-cz/`; per-point checkpoints have been removed.
 
 Coding agents should start with [AGENTS.md](AGENTS.md).
+
+## Gate simulation ownership
+
+| Calculation | Numerical implementation |
+| --- | --- |
+| Four-transmon toy CZ search and maps, including the coupler's toy stage | `2Q-gate_XM/xm_cz/` |
+| Five-transmon explicit-coupler static CZ | `Gnd-coupler+Floating-T/floating_coupler/on_gate.py` and `pairs.py` |
+| Seven-mode CZ including readout resonators | `Gnd-coupler+Floating-T/final_seven_validation.py` and `seven_readout.py` |
+| Five-transmon tuning-pulse CZ | `Gnd-coupler+Floating-T/floating_coupler/pulsed_gate.py` and `filtered_pulse.py` |
+| Existing logical-resonance iSWAP/CZ studies | `logical-resonance gate/logical_resonance_gate/` |
+
+XM is the active toy backend. The explicit-circuit and pulse models build and
+propagate their own Hamiltonians. XM and the explicit coupler share logical
+definitions, S1/S2 and selected-channel policy through `core.cz_channel_policy`.
+The separate logical-resonance workflow owns its existing gate objectives and
+backend. Active simulations never import the archived `transmon_cz` package.
+The root import-isolation test covers these gate entry points with that package
+explicitly blocked. Archived tests are enabled only through `--legacy`.
 
 Shared physics and the dependency map are documented in [core/README.md](core/README.md).
 The Python package formerly named `dtc_dualrail` is now `core`. Readout and

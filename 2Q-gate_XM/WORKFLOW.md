@@ -80,7 +80,7 @@ objective. The physical target is temporary and uniform in five/seven modes.
 See `../Gnd-coupler+Floating-T/OFF_POLICY.md` for exact implementation/restoration
 locations. Do not change S1/CZ-source selection when revisiting OFF.
 
-The active S1 toy search is this package (`xm_cz/`); it imports the shared policy from `../core/cz_channel_policy.py`. Historical kernels under `../transmon-based CZ/` are legacy only and are not called by this workflow.
+The active S1 toy search is this package (`xm_cz/`); it imports the shared policy from `../core/cz_channel_policy.py`. Historical kernels under `../legacy/transmon-based CZ/` are legacy only and are not called by this workflow.
 
 ## Toy gate calibration and circuit handoff
 

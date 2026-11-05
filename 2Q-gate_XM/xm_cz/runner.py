@@ -191,8 +191,7 @@ def run(config_path, *, output=None, workers=None, retry_failed=False, dry_run=F
     directory = directory.resolve()
     # Worker count and output location are execution choices, not physics identity.
     source_paths = sorted(
-        list(HERE.parent.rglob("*.py"))
-        + list((HERE.parents[2] / "core").rglob("*.py"))
+        list(HERE.parent.rglob("*.py")) + list((HERE.parents[2] / "core").rglob("*.py"))
     )
     source_hash = fingerprint(
         [

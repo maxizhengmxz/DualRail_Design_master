@@ -15,6 +15,13 @@ CZ-auxiliary couplings and secular ZZ are residual diagnostics. This temporary
 physical-versus-logical choice is an open question; see Gnd-coupler+Floating-T/OFF_POLICY.md.
 
 
+Historical physical-collision CZ source is archived under
+`legacy/transmon-based CZ/`. It owns no active policy or design entry point.
+Use `2Q-gate_XM/` for all new toy CZ calculations. Archived compatibility
+tests are opt-in through root `run_tests.py --legacy`. The old loose campaign
+checkpoints were removed on 2026-11-05, with maps, compact summaries and source
+provenance retained under ignored `legacy/output/transmon-cz/`.
+
 For floating-transmon tunable-coupler design, first read
 [Gnd-coupler+Floating-T/AGENTS.md](Gnd-coupler+Floating-T/AGENTS.md) and
 [Gnd-coupler+Floating-T/WORKFLOW.md](Gnd-coupler+Floating-T/WORKFLOW.md).
