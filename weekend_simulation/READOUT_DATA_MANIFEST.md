@@ -29,3 +29,43 @@ The rail-A direct-EC map contains 1,336 targets and 769 `validated_pass`
 ordered pairs. The rail-B direct-EC map contains 4,955 ordered targets. Gate
 evaluation must use all 4,955 rail-B targets; the rail-B readout status is used
 only for the later independent overlay and reconciliation.
+
+## Regenerate instead of transferring
+
+The branch contains all source needed to regenerate the independent maps. From
+the repository root, using the `work` Conda environment:
+
+```bash
+conda run -n work python -m readout_workflow.fine_readout_feasibility --run \
+  --logical-frequency-mhz 140 160 \
+  --output weekend_simulation/readout/fine_c1_c2/rail_a_140_160 \
+  --workers 4
+
+conda run -n work python -m readout_workflow.fine_readout_feasibility --run \
+  --logical-frequency-mhz 80 100 \
+  --output weekend_simulation/readout/fine_c1_c2/rail_b_80_100 \
+  --workers 4
+
+conda run -n work python -m readout_workflow.direct_ec_feasibility --run \
+  --source weekend_simulation/readout/fine_c1_c2/rail_a_140_160/results.json \
+  --output weekend_simulation/readout/direct_ec/rail_a_step2 \
+  --domain hull --orientation-domain full --hull-scale 1.5 \
+  --ec-step-mhz 2 --logical-frequency-mhz 140 160 --workers 4
+
+conda run -n work python -m readout_workflow.direct_ec_feasibility --run \
+  --source weekend_simulation/readout/fine_c1_c2/rail_b_80_100/results.json \
+  --output weekend_simulation/readout/direct_ec/rail_b_step2 \
+  --domain hull --orientation-domain full --hull-scale 1.5 \
+  --ec-step-mhz 2 --logical-frequency-mhz 80 100 --workers 4
+```
+
+Run the fine maps first because each direct-EC map derives its scaled hull and
+warm-start witnesses from the corresponding fine C1-C2 result. All four
+commands are resumable when invoked with the same settings and source version.
+Use new output directories after changing code or parameters.
+
+Fresh optimization may not be byte-for-byte identical across machines or
+software versions, and first-feasible witnesses can differ even when the
+feasible region is equivalent. Transfer the archived files when the coworker
+must use exactly the same EC target sets and readout witnesses; regenerate
+when an independent reproduction is desired.
