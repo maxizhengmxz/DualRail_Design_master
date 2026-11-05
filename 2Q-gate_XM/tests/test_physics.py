@@ -6,6 +6,7 @@ import json
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT.parent))
@@ -20,6 +21,64 @@ from xm_cz.model import collision_residual, layout, pair_model
 
 
 class PhysicsTests(unittest.TestCase):
+    def test_clean_source_does_not_outweigh_dirty_spectator(self):
+        # Resonance 10 has the cleanest target (0.001) but contaminates 11.
+        # Resonance 01 protects all four inputs and must win aggregate S1.
+        roots = dict(zip(("00", "01", "10", "11"), (4.2, 4.4, 4.6, 4.8), strict=True))
+        by_input = {
+            "00": [0.02] * 4,
+            "01": [0.005] * 4,
+            "10": [0.001, 0.001, 0.001, 0.1],
+            "11": [0.03] * 4,
+        }
+
+        def pair(ec1, ec2, frequency, splitting, target_bare_index=8):
+            return {"frequency": frequency, "target": 1}
+
+        def residual(a, b, channel, *, logical_source):
+            return b["frequency"] - roots[logical_source]
+
+        def scores(a, b, g, channel, *, logical_source):
+            values = by_input[logical_source]
+            index = ("00", "01", "10", "11").index(logical_source)
+            return (
+                None,
+                None,
+                None,
+                None,
+                None,
+                dict(
+                    S1=float(np.mean(values)),
+                    S1_by_input=values,
+                    logical_source=logical_source,
+                    logical_source_index=index,
+                    intended_source_score=values[index],
+                    maximum_logical_ratio=0.1,
+                ),
+            )
+
+        payload = dict(
+            ec_GHz=[0.165, 0.25, 0.16, 0.26],
+            frequency_GHz=[4.5, 4.5, 0.05],
+            screening_only=True,
+        )
+        with (
+            patch("xm_cz.evaluator.pair_model", side_effect=pair),
+            patch("xm_cz.evaluator.frequency_limits", return_value=(4.0, 5.0)),
+            patch("xm_cz.evaluator.collision_residual", side_effect=residual),
+            patch("xm_cz.evaluator.layout", side_effect=scores),
+        ):
+            result = evaluate_ec(payload)
+            restricted = evaluate_ec(dict(payload, logical_sources=["10"]))
+        self.assertEqual(result["status"], "screened")
+        self.assertEqual(result["logical_source"], "01")
+        self.assertAlmostEqual(result["S1_position"]["S1"], 0.005)
+        self.assertEqual(
+            result["channel_selection"]["selection_rule"],
+            "minimum_S1_at_common_intended_g",
+        )
+        self.assertEqual(restricted["logical_source"], "10")
+
     def test_0200_calibration_and_matrix_element_time_scaling(self):
         payload = {
             "ec_GHz": [
@@ -37,6 +96,26 @@ class PhysicsTests(unittest.TestCase):
         result = evaluate_ec(payload)
         self.assertEqual(result["status"], "calibrated")
         self.assertEqual(result["logical_source"], "10")
+        candidates = result["S1_position"]["logical_source_candidates"]
+        self.assertEqual(
+            [value["logical_source"] for value in candidates], ["00", "01", "10", "11"]
+        )
+        valid = [value for value in candidates if value["status"] == "valid"]
+        self.assertEqual(
+            result["logical_source"],
+            min(valid, key=lambda value: value["S1"])["logical_source"],
+        )
+        self.assertEqual(len(valid), 1)
+        self.assertEqual(
+            result["channel_selection"]["selection_rule"],
+            "minimum_S1_at_common_intended_g",
+        )
+        source_index = result["logical_source_index"]
+        self.assertAlmostEqual(
+            result["final"]["intended_source_score"],
+            result["final"]["S1_by_input"][source_index],
+            places=12,
+        )
         self.assertEqual(result["duration_window_ns"], [140.0, 260.0])
         self.assertLess(abs(result["final"]["phase_error_rad"]), 0.01)
 
@@ -94,6 +173,41 @@ class PhysicsTests(unittest.TestCase):
         bad["bare_f01_bounds_GHz"]["A2"] = [6.0, 7.0]
         with self.assertRaisesRegex(ValueError, "intersection"):
             validate_payload(bad)
+
+        extended = copy.deepcopy(p)
+        extended["ec_GHz"] = [0.150, 0.315, 0.315, 0.150]
+        validate_payload(extended)
+        extended["ec_GHz"][1] = 0.400
+        with self.assertRaisesRegex(ValueError, "0,0.400"):
+            validate_payload(extended)
+
+        logical_cfg = json.loads((ROOT / "configs/logical_b_grid.json").read_text())
+        logical_tasks = make_tasks(logical_cfg)
+        self.assertEqual(len(logical_tasks), 4805)
+        self.assertEqual(logical_tasks[0]["payload"]["ec_GHz"][:2], [0.15, 0.21])
+        self.assertEqual(
+            sorted(
+                {task["payload"]["logical_splittings_GHz"][1] for task in logical_tasks}
+            ),
+            [0.08, 0.085, 0.09, 0.095, 0.1],
+        )
+
+        logical_a_cfg = json.loads((ROOT / "configs/logical_a_grid.json").read_text())
+        logical_a_tasks = make_tasks(logical_a_cfg)
+        self.assertEqual(len(logical_a_tasks), 4805)
+        self.assertEqual(
+            sorted(
+                {
+                    task["payload"]["logical_splittings_GHz"][0]
+                    for task in logical_a_tasks
+                }
+            ),
+            [0.14, 0.145, 0.15, 0.155, 0.16],
+        )
+        self.assertEqual(
+            {task["payload"]["logical_splittings_GHz"][1] for task in logical_a_tasks},
+            {0.09},
+        )
 
     def test_calibration_preserves_independent_frequency_bounds(self):
         p = json.loads((ROOT / "configs/smoke.json").read_text())

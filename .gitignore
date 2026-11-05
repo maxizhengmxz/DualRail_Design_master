@@ -19,10 +19,21 @@ results/
 output/
 /data/
 /tmp/
+combined_feasibility_test/data/
+Ec_tuple search workflow/combined_runs/
+Ec_tuple search workflow/readout/
+Ec_tuple search workflow/fixed_A_anchor_runs/
+Ec_tuple search workflow/fixed_A_gate_runs/
+Ec_tuple search workflow/fixed_A_gate_test/
+Ec_tuple search workflow/physical_frequency_bounds/
+Ec_tuple search workflow/sampled_runs/
 .uv-cache/
 .ruff_cache/
 *.h5
 *.hdf5
+
+# Operating-system metadata
+.DS_Store
 
 # Secrets
 .env

@@ -12,6 +12,14 @@ the single-minimum-S1 selection at common intended g and phase-pi calibration
 contract. Compare all allowed logical sources; physical 0020/0200 do not fix
 a logical bit. Keep S2 and crossing-order diagnostics separate from ranking.
 
+Explain the physical objective before quoting scores. We seek a clean target
+CZ excursion while suppressing unintended population transfer from all four
+logical inputs. The other logical states may accumulate phases. Aggregate S1
+screens that whole-gate behavior. A source-only score describes isolation of
+the targeted oscillation and can miss spectator mixing. Preserve this
+explanation in workflow annotations. Actual phase-pi calibration and fidelity
+remain necessary, including for fixed-A anchor searches.
+
 Generated calculations, caches, report artifacts and machine-specific process
 IDs belong under ignored output/. Never migrate or overwrite old checkpoints:
 source hashes deliberately separate old and new implementations. Configuration

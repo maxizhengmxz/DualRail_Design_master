@@ -34,6 +34,48 @@ def local_model(ec: float, frequency: float) -> tuple:
     return ej, energies - energies[0], vectors.T @ (charges[:, None] * vectors), vectors
 
 
+@lru_cache(maxsize=1024)
+def local_model_from_ej(ec: float, ej: float) -> tuple:
+    """Return the same local representation without re-solving a fixed EJ."""
+    if not 1 <= ej < 30:
+        raise ValueError("EJ_limit")
+    if ej / ec < 25:
+        raise ValueError("EJ_over_EC")
+    energies, vectors = eigh_tridiagonal(
+        4 * ec * charges**2,
+        np.full(60, -ej / 2),
+        select="i",
+        select_range=(0, 3),
+        eigvals_only=False,
+    )
+    return ej, energies - energies[0], vectors.T @ (charges[:, None] * vectors), vectors
+
+
+def _pair_from_locals(left, right, coupling, target_bare_index):
+    diagonal = np.diag((left[1][:, None] + right[1][None, :]).ravel())
+    interaction = np.kron(left[2], right[2])
+    energies, vectors = np.linalg.eigh(diagonal + coupling * interaction)
+    modes = list(
+        one_excitation_indices(energies, abs(vectors[1]) ** 2 + abs(vectors[4]) ** 2)
+    )
+    energies -= energies[0]
+    target = int(np.argmax(abs(vectors[target_bare_index]) ** 2))
+    return {
+        "energies": energies,
+        "vectors": vectors,
+        "modes": modes,
+        "target": target,
+        "J": coupling,
+        "EJ": [left[0], right[0]],
+        "left_charge": vectors.T @ np.kron(left[2], np.eye(4)) @ vectors,
+        "right_charge": vectors.T @ np.kron(np.eye(4), right[2]) @ vectors,
+        "local_vectors": [left[3], right[3]],
+        "target_weight": float(abs(vectors[target_bare_index, target]) ** 2),
+        "logical_splitting_GHz": float(energies[modes[1]] - energies[modes[0]]),
+        "bare_f01_GHz": [float(left[1][1]), float(right[1][1])],
+    }
+
+
 @lru_cache(maxsize=256)
 def pair_model(
     left_ec: float,
@@ -67,21 +109,19 @@ def pair_model(
         return energies[modes[1]] - energies[modes[0]] - splitting
 
     coupling = brentq(residual, 0.0001, 0.25, xtol=1e-11)
-    energies, vectors, modes = diagonalize(coupling)
-    energies -= energies[0]
-    target = int(np.argmax(abs(vectors[target_bare_index]) ** 2))
-    return {
-        "energies": energies,
-        "vectors": vectors,
-        "modes": modes,
-        "target": target,
-        "J": coupling,
-        "EJ": [left[0], right[0]],
-        "left_charge": vectors.T @ np.kron(left[2], np.eye(4)) @ vectors,
-        "right_charge": vectors.T @ np.kron(np.eye(4), right[2]) @ vectors,
-        "local_vectors": [left[3], right[3]],
-        "target_weight": float(abs(vectors[target_bare_index, target]) ** 2),
-    }
+    return _pair_from_locals(left, right, coupling, target_bare_index)
+
+
+@lru_cache(maxsize=256)
+def fixed_pair_model(
+    left_ec, right_ec, left_ej, right_ej, coupling, target_bare_index=8
+):
+    """Build a rail from fixed fabrication/bias values without retuning EJ or J."""
+    if not 0 < coupling <= 0.25:
+        raise ValueError("invalid_intra_pair_coupling")
+    left = local_model_from_ej(left_ec, left_ej)
+    right = local_model_from_ej(right_ec, right_ej)
+    return _pair_from_locals(left, right, coupling, target_bare_index)
 
 
 def target_overlap(first: dict, second: dict) -> float:
@@ -122,7 +162,13 @@ def frequency_limits(ec: float) -> tuple[float, float]:
 def layout(
     a: dict, b: dict, g: float, channel: str = "0020", *, logical_source: str
 ) -> tuple:
-    """Transform n_A2*n_B1 and score every unintended logical-origin edge."""
+    """Score unwanted transfer from all four inputs around an intended CZ excursion.
+
+    Only the selected source should make the intentional auxiliary excursion.
+    Aggregate S1 screens unwanted mixing of every logical component. The
+    source-only score measures target-transition isolation and is diagnostic.
+    Phase accumulation and finite-time return still require gate calibration.
+    """
     if channel not in ("0020", "0200"):
         raise ValueError("Unknown physical auxiliary channel")
     energies = (a["energies"][:, None] + b["energies"][None, :]).ravel()
@@ -143,6 +189,12 @@ def layout(
         intended_source,
         target,
         active_mask=abs(unit) > 1e-10,
+    )
+    source_index = LOGICAL_ORDER.index(logical_source)
+    scores.update(
+        logical_source=logical_source,
+        logical_source_index=source_index,
+        intended_source_score=scores["S1_by_input"][source_index],
     )
     return energies, unit, logical, target, coupling, scores
 

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "handler": "xm_cz.evaluator:evaluate_ec",
+  "handler_revision": 1,
+  "workers": 4,
+  "progress_interval_seconds": 15,
+  "task_timeout_seconds": 450,
+  "output_directory": "../output/logical_b_grid_A1_150_A2_210",
+  "task_defaults": {
+    "logical_splittings_GHz": [0.150, 0.080],
+    "bare_f01_bounds_GHz": {
+      "A1": [4.0, 5.0], "A2": [4.0, 5.0],
+      "B1": [4.0, 5.0], "B2": [4.0, 5.0]
+    },
+    "frequency_GHz": [4.0, 5.0, 0.050],
+    "resonance_channel": "0020",
+    "g_GHz": 0.005,
+    "point_budget_seconds": 180
+  },
+  "grid": {
+    "A1_fixed_MHz": 150,
+    "A2_fixed_MHz": 210,
+    "logical_B_GHz": {"start": 0.080, "stop": 0.100, "step": 0.005},
+    "B_MHz": {"start": 150, "stop": 300, "step": 5},
+    "upper_step_multiplier": 1
+  }
+}

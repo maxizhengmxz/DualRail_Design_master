@@ -40,6 +40,10 @@ output paths resolve relative to the config file; outputs and caches are ignored
 All energies and matrix elements are cyclic GHz; time is ns. The grid uses MHz.
 Physical order: A1,A2,B1,B2. See `configs/example_grid.json` for an executable
 template. `task_defaults` applies to every point; individual task fields override it.
+`configs/logical_b_grid.json` is the fixed-A1/A2 variant: its
+`grid.logical_B_GHz` axis replaces the A1 charging-energy axis and generates one
+B1/B2 charging-energy map per B-rail logical splitting. The splitting array
+keeps the public `[A, B]` order, so the generated tasks vary index 1.
 
 | Field | Meaning | Default |
 |---|---|---|
@@ -51,11 +55,24 @@ template. `task_defaults` applies to every point; individual task fields overrid
 | `g_GHz` | Intended dressed matrix-element magnitude | `0.005` |
 | `duration_ns` | Optional explicit calibration time window | `[0.7,1.3]/(2*g)` |
 
-The same rail's two bare f01 frequencies remain equal. Its allowed common
-frequency is the intersection of its two input bounds; empty intersections are
-invalid. These bounds also apply to B's final phase-calibration adjustment.
+In the free-frequency toy search, each rail's two bare f01 frequencies are equal.
+Its allowed common frequency is the intersection of its two input bounds.
+These bounds also apply to B's final phase-calibration adjustment. The optional
+`fixed_A` input instead preserves the supplied two A EJs and intra-pair J. Its
+bare frequencies may differ and are checked individually against their bounds.
+Its realized logical splitting must lie in the supplied interval (default
+140-160 MHz). `screening_only` returns the verified aggregate-S1 selection
+without phase/time calibration, for inexpensive anchor ranking.
 
 ## Physics and selection
+
+We seek a clean CZ gate across all four logical inputs. The target input makes
+its intended auxiliary excursion, while the remaining inputs avoid unwanted
+population transfer and may accumulate phases. Aggregate S1 screens all four
+components. The cleanest targeted oscillation alone can hide a badly mixed
+spectator. A source-specific score is therefore diagnostic. Actual phase-pi
+calibration and fidelity still determine finite-time performance. This applies
+to both free-frequency and fixed-A anchor searches.
 
 1. Full-cosine transmons, ncut=30, four local levels each. Diagonalize rails
    separately; logical 0/1 are the lower/upper single-excitation eigenmodes.
@@ -76,7 +93,7 @@ invalid. These bounds also apply to B's final phase-calibration adjustment.
 7. Report both fidelities at the SAME selected gate, with local Z corrections.
    Acceptance is Tr(M-dagger M)/4; postselected fidelity is raw/acceptance.
 
-Fixed retained limits: EC<=300 MHz, EJ<30 GHz (numerical cap 29.999), EJ/EC>=25,
+Fixed retained limits: 0<EC<400 MHz, EJ<30 GHz (numerical cap 29.999), EJ/EC>=25,
 inter-pair charge coefficient J<=20 MHz. No old 100 MHz spacing filter or S2 cutoff.
 
 ## Channel labels and caveats

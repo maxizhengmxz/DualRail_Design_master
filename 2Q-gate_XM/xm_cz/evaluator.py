@@ -21,6 +21,7 @@ from .channel_policy import (
 from .config import validate_payload
 from .model import (
     collision_residual,
+    fixed_pair_model,
     frequency_limits,
     layout,
     pair_model,
@@ -56,23 +57,58 @@ def evaluate_ec(payload: dict) -> dict:
         max(bounds[k][0] for k in ("B1", "B2")),
         min(bounds[k][1] for k in ("B1", "B2")),
     )
-    if a_low > a_high or b_bound_low > b_bound_high:
+    fixed_a = payload.get("fixed_A")
+    if (fixed_a is None and a_low > a_high) or b_bound_low > b_bound_high:
         raise ValueError("Empty within-rail bare frequency intersection")
     target_index_a = 8 if channel == "0020" else 2
 
+    ec = tuple(payload["ec_GHz"])
+    if len(ec) != 4 or not all(0 < value < 0.400 for value in ec):
+        raise ValueError("Four ordered EC values in (0,0.400) GHz required")
+    split_a, split_b = payload.get("logical_splittings_GHz", [0.15, 0.09])
+    if fixed_a:
+        fixed_model = fixed_pair_model(
+            ec[0],
+            ec[1],
+            *map(float, fixed_a["EJ_GHz"]),
+            float(fixed_a["J_GHz"]),
+            target_index_a,
+        )
+        split_a = fixed_model["logical_splitting_GHz"]
+        logical_bounds = fixed_a.get("logical_frequency_bounds_GHz", [0.14, 0.16])
+        if not logical_bounds[0] <= split_a <= logical_bounds[1]:
+            return {
+                "status": "fixed_A_logical_frequency_out_of_bounds",
+                "fixed_A_logical_splitting_GHz": split_a,
+                "fixed_A": fixed_a,
+            }
+        for name, frequency in zip(
+            ("A1", "A2"), fixed_model["bare_f01_GHz"], strict=True
+        ):
+            if not bounds[name][0] <= frequency <= bounds[name][1]:
+                return {
+                    "status": "fixed_A_bare_frequency_out_of_bounds",
+                    "fixed_A": fixed_a,
+                }
+
     def a_pair(frequency):
-        return pair_model(ec[0], ec[1], frequency, split_a, target_index_a)
+        return (
+            fixed_model
+            if fixed_a
+            else pair_model(ec[0], ec[1], frequency, split_a, target_index_a)
+        )
 
     def b_pair(frequency):
         if not b_bound_low - 1e-10 <= frequency <= b_bound_high + 1e-10:
             raise ValueError("B frequency outside configured transmon bounds")
         return pair_model(ec[2], ec[3], frequency, split_b)
 
-    ec = tuple(payload["ec_GHz"])
-    if len(ec) != 4 or not all(0 < value <= 0.300 for value in ec):
-        raise ValueError("Four EC values in (0,0.300] GHz required")
     lower, upper, step = payload.get("frequency_GHz", [a_low, a_high, 0.05])
-    if lower < a_low or upper > a_high or step <= 0 or lower > upper:
+    if (
+        step <= 0
+        or lower > upper
+        or (fixed_a is None and (lower < a_low or upper > a_high))
+    ):
         raise ValueError("A frequency scan must lie within both transmon bounds")
     g = payload.get("g_GHz", 0.005)
     if not np.isfinite(g) or g <= 0:
@@ -80,7 +116,6 @@ def evaluate_ec(payload: dict) -> dict:
     time_low, time_high = payload.get("duration_ns", [0.7 / (2 * g), 1.3 / (2 * g)])
     if not 0 < time_low < time_high:
         raise ValueError("Invalid gate duration window")
-    split_a, split_b = payload.get("logical_splittings_GHz", [0.15, 0.09])
     logical_sources = payload.get("logical_sources", list(LOGICAL_ORDER))
     comparison_id = hashlib.sha256(
         json.dumps(payload, sort_keys=True).encode()
@@ -96,6 +131,8 @@ def evaluate_ec(payload: dict) -> dict:
         return {"status": "no_feasible_B_frequency_range", "resonance_channel": channel}
 
     def rank(candidates):
+        # Protect every logical input while allowing the intentional CZ excursion.
+        # A clean source alone can conceal large spectator-state transfer.
         if not candidates:
             return None
         selected = select_channel(
@@ -128,13 +165,33 @@ def evaluate_ec(payload: dict) -> dict:
         return dict(best, channel_selection=selected.to_dict())
 
     def screening(f_a):
-        return rank(
-            [
-                row
-                for source in logical_sources
-                if (row := screening_source(f_a, source)) is not None
-            ]
-        )
+        candidates = [
+            row
+            for source in logical_sources
+            if (row := screening_source(f_a, source)) is not None
+        ]
+        chosen = rank(candidates)
+        if chosen is None:
+            return None
+        by_source = {row["logical_source"]: row for row in candidates}
+        diagnostics = []
+        for source in LOGICAL_ORDER:
+            row = by_source.get(source)
+            status = "excluded_by_logical_sources"
+            if source in logical_sources:
+                status = "valid" if row else "no_valid_collision_or_layout_in_bounds"
+            diagnostics.append(
+                dict(
+                    logical_source=source,
+                    logical_source_index=LOGICAL_ORDER.index(source),
+                    status=status,
+                    fB_GHz=row["fB_GHz"] if row else None,
+                    S1=row["S1"] if row else None,
+                    intended_source_score=row["intended_source_score"] if row else None,
+                    maximum_logical_ratio=row["maximum_logical_ratio"] if row else None,
+                )
+            )
+        return dict(chosen, logical_source_candidates=diagnostics)
 
     def screening_source(f_a, logical_source):
         guard()
@@ -182,7 +239,11 @@ def evaluate_ec(payload: dict) -> dict:
                 previous = None
         return rank(candidates)
 
-    frequencies = np.linspace(lower, upper, round((upper - lower) / step) + 1)
+    frequencies = (
+        np.array([float(fixed_a["operating_frequency_GHz"])])
+        if fixed_a
+        else np.linspace(lower, upper, round((upper - lower) / step) + 1)
+    )
     for frequency in frequencies:
         try:
             result = screening(float(frequency))
@@ -200,8 +261,10 @@ def evaluate_ec(payload: dict) -> dict:
             "failures": failures,
         }
     best = rank(valid)
-    boundary = abs(best["fA_GHz"] - lower) < 1e-7 or abs(best["fA_GHz"] - upper) < 1e-7
-    if not boundary:
+    boundary = not fixed_a and (
+        abs(best["fA_GHz"] - lower) < 1e-7 or abs(best["fA_GHz"] - upper) < 1e-7
+    )
+    if not fixed_a and not boundary:
         center = best["fA_GHz"]
         refinement = []
 
@@ -226,6 +289,22 @@ def evaluate_ec(payload: dict) -> dict:
     logical_source = best["logical_source"]
     selected_channel = best["channel_selection"]
     f_a, base_b = best["fA_GHz"], best["fB_GHz"]
+    logical_source_index = best["logical_source_index"]
+    if payload.get("screening_only", False):
+        return {
+            "status": "screened",
+            "resonance_channel": channel,
+            "fA_GHz": f_a,
+            "logical_splittings_GHz": [split_a, split_b],
+            "fixed_A": fixed_a,
+            "S1_position": best,
+            "logical_source": logical_source,
+            "logical_source_index": logical_source_index,
+            "logical_source_policy": selected_channel["selection_rule"],
+            "channel_selection": selected_channel,
+            "screening": records,
+            "calculation_seconds": time.perf_counter() - started,
+        }
     a = a_pair(f_a)
     reference_b = b_pair(base_b)
 
@@ -357,6 +436,8 @@ def evaluate_ec(payload: dict) -> dict:
         "coupler_handoff_off_target": off_target_definition("five"),
         "resonance_channel": channel,
         "logical_source": logical_source,
+        "logical_source_index": logical_source_index,
+        "logical_source_policy": selected_channel["selection_rule"],
         "channel_selection": selected_channel,
         "duration_window_ns": [time_low, time_high],
         "ec_GHz": ec,
@@ -370,6 +451,7 @@ def evaluate_ec(payload: dict) -> dict:
         "fA_GHz": f_a,
         "g_GHz": g,
         "logical_splittings_GHz": [split_a, split_b],
+        "fixed_A": fixed_a,
         "final": final,
         "screening": records,
         "calculation_seconds": time.perf_counter() - started,

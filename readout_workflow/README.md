@@ -142,6 +142,23 @@ global optimality. Neighboring pixels can have different optimized components.
 first-feasible EJ recalibration, with extra starts only for failed cases.
 There is no robustness command in this runner.
 
+## Frequency-keyed fine C1-C2 campaigns
+
+The fine-map driver accepts an explicit logical-frequency interval:
+
+~~~bash
+python -m readout_workflow.fine_readout_feasibility --run \
+  --logical-frequency-mhz 140 160 --output PATH_FOR_RAIL_A --workers 4
+python -m readout_workflow.fine_readout_feasibility --run \
+  --logical-frequency-mhz 80 100 --output PATH_FOR_RAIL_B --workers 4
+~~~
+
+Each output directory contains its own append-only `samples.sqlite` database.
+The interval is recorded in both `settings.json` and the database calculation
+signature. A campaign can be resumed with the same interval and source version;
+attempting to reuse the directory with a different interval is rejected. Do not
+mix rail-A and rail-B events in one database.
+
 ## Fresh runs and safe resumption
 
 No saved map, historical seed archive, perturbation samples or approved-device
@@ -205,6 +222,148 @@ From the project root, module entry points are
 only show usage or saved status. Calculations are performed only when requested.
 The grid and window in each file reproduce its retained campaign; inspect/edit
 those settings before preparing a different campaign.
+
+### How the direct loaded-EC campaign uses the fine capacitance map
+
+The fine map scans the physical shunt-capacitance coordinates
+`C1_shunt_fF,C2_shunt_fF` on the strict triangular grid
+`36 <= C2 < C1 <= 128` fF. At each physical grid point it searches the mean
+bare frequency, differential detuning, `C12_fF` and the equal readout
+capacitors `C1r_fF=C2r_fF`. A successful pixel retains the first fully audited
+witness found under the bounded search policy, not every feasible solution and
+not a global optimum. Its loaded EC values are outputs of the inverse of that
+witness's complete three-node capacitance matrix.
+
+The direct-EC driver reads only old records with status `validated_pass` or
+`recovered_viable` and projects each retained physical witness to
+
+```text
+(point["loaded_ec1_mhz"], point["loaded_ec2_mhz"]).
+```
+
+Thus target selection occurs in the already converted loaded-EC plane. It does
+not construct a hull in the original physical `(C1,C2)` plane. Differences in
+the witnesses' `C12`, readout capacitors and EJs have already affected their
+loaded-EC coordinates through the circuit calculation, but those additional
+coordinates are discarded by this two-dimensional projection.
+
+For a 5 MHz step, the candidate axes are
+
+```text
+EC1 = first multiple of 5 MHz >= min(observed EC1), ..., max(observed EC1)
+EC2 = first multiple of 5 MHz >= min(observed EC2), ..., max(observed EC2).
+```
+
+The driver supports two target-domain policies:
+
+- `--domain hull` is the default. It expands the convex hull of the projected
+  witnesses by a factor of 1.5 about the mean of the hull vertices, then
+  retains lattice points inside that scaled hull. SciPy triangulates the
+  expanded polygon and tests whether each lattice point belongs to it.
+- `--domain rectangle` retains every Cartesian pair from the two candidate
+  axes, including the corners excluded by the hull. It is a diagnostic for
+  feasible points that the one-witness-per-physical-pixel projection may have
+  omitted from the historical hull.
+
+The hull is a campaign-selection heuristic, not a physical feasibility
+boundary. Because only one witness is retained at each successful physical
+pixel, other feasible choices of `C12`, readout capacitance and EJ can project
+outside the observed hull. Conversely, a convex hull fills straight-line gaps
+between witnesses and can contain infeasible targets. Therefore neither
+
+```text
+inside observed hull  => feasible
+outside observed hull => infeasible
+```
+
+is valid. The rectangle mode reduces this particular geometric restriction,
+but it is still bounded by the coordinate-wise extrema of the old witnesses;
+it does not explore EC values beyond the observed min/max rectangle. The
+scaled-hull mode does explore beyond those extrema while retaining the observed
+hull shape as the campaign-selection guide.
+
+Use `--source` to provide the `results.json` exported by the fine C1-C2
+campaign for the same rail and logical-frequency interval. The source path,
+content hash, interval, and hull scale are recorded in the direct-EC settings.
+The scaled lattice is clipped to the configured 150-400 MHz loaded-EC range;
+the upper bound remains strict.
+
+The default `--orientation-domain full` uses isolated-readout label symmetry
+without forming one convex hull across both orientations. It constructs and
+scales the observed hull and its `(EC1,EC2) -> (EC2,EC1)` mirror separately,
+then takes their lattice union. Mirrored fine-map witnesses provide warm starts
+with the differential detuning sign reversed, but every ordered direct-EC
+target is rebuilt and audited normally. Downstream gate tasks must retain the
+ordered labels and must not copy fidelity from the mirrored point because the
+physical A2-B1 link breaks this symmetry.
+
+### What is recalculated at each direct-EC target
+
+The direct driver does not introduce a second Hamiltonian expressed only in EC
+values. For each fixed target `(EC1,EC2)` and each trial `(C12,Cg)`, it uses the
+Schur complement of the physical three-node capacitance matrix to solve
+analytically for physical shunts `(C1,C2)` whose inverse-matrix diagonals give
+the requested loaded ECs. It then calls the same physical-capacitance
+`point_from_x` evaluator as the fine map. That evaluator rebuilds and inverts
+the complete capacitance matrix, solves EJ from the trial local frequencies,
+diagonalizes the same multilevel Hamiltonian and calculates the same readout
+observables. The audit rejects a target error above `1e-6` MHz and shunts
+outside 36-128 fF.
+
+The direct-EC driver retains two domain capabilities. Explicit `--ec1-range`
+and `--ec2-range` values request a rectangle without a witness-contour
+restriction. Without explicit ranges, `--domain hull` or `--domain rectangle`
+derives a domain from the saved witnesses. The standalone defaults remain a
+reduced EC1<EC2 domain with hull scale 1.0. `--orientation-domain full` enables
+both ordered EC orientations. In hull mode it uses the union of separately
+constructed original and label-swapped hulls. Mirroring changes target selection
+and warm starts only. Every target is recomputed and independently validated.
+
+The EC-tuple search workflow's default regeneration recipe explicitly uses
+`--domain hull --orientation-domain full --hull-scale 1.5`, as recorded in
+`../Ec_tuple search workflow/READOUT_DATA_MANIFEST.md`. Its gate map subsequently keeps
+both EC orders distinct. Existing explicit-range searches can keep reduced mode
+or explicitly request full orientation. Fractional EC steps remain supported.
+
+Both feasibility drivers use GHz for logical-frequency calculation interfaces,
+initializers and new worker tasks. Explicitly labelled `--logical-frequency-mhz`
+inputs are converted once at entry (for example, 140--160 MHz becomes
+0.140--0.160 GHz). Display metadata retains its labelled MHz values. Direct-EC
+workers also accept legacy `logical_frequency_mhz` inputs, converting them at
+entry and rejecting conflicting GHz values. No unit is inferred from magnitude.
+Shared `capacitances` and `point` helper interfaces remain available to
+the physical-frequency scans and hardware reconciliation.
+
+For each target, the three old witnesses nearest in Euclidean loaded-EC space
+provide initial guesses for mean frequency, detuning, `C12` and `Cg`. Their old
+shunt capacitances are not reused: new shunts are reconstructed at every trial.
+The bounded local search uses at most three starts, 35 least-squares evaluations
+per start and a 25-second soft budget. Only after a screening candidate passes
+does adaptive validation recompute that fixed candidate at stronger bases and
+perform the EJ sign probes. Accordingly, `no_validated_solution_found` means
+that these warm starts and this budget found no audited witness; it is not proof
+of physical infeasibility. Outside-hull targets can be harder partly because all
+available warm starts lie on one side of the target, as well as because circuit
+constraints may genuinely become tighter there.
+
+Use a new output directory for each domain because the target-domain choice,
+target list, source-witness count and source hashes are part of the saved policy
+identity:
+
+```sh
+python -m readout_workflow.direct_ec_feasibility --run --domain rectangle \
+  --output readout_workflow/data/direct_ec_step5_rectangle
+```
+
+The default logical-frequency acceptance interval remains 140--160 MHz. A
+different independent campaign must use a new output directory and specify the
+interval explicitly, for example:
+
+```sh
+python -m readout_workflow.direct_ec_feasibility --run \
+  --logical-frequency-mhz 80 100 \
+  --output readout_workflow/data/direct_ec_80_100_step5
+```
 
 Both datasets target logical frequency 140-160 MHz and use first-feasible
 selection, without readout-strength optimization or robustness. The direct-EC

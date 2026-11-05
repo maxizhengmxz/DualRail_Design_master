@@ -162,6 +162,11 @@ def interaction_scores(energies, interaction, logical_indices, intended_source,
     separately and never participates in ranking. Caller supplies the stated
     reference basis and numerical nonzero mask; no physics truncation is hidden.
     Energies and interaction coefficients must use the same cyclic units.
+
+    Physically, allow the selected input's intentional CZ excursion while
+    suppressing unwanted transfer from every logical input. The other inputs
+    may accumulate phases. A source-only score can favor a clean target
+    oscillation while overlooking spectator mixing, so it cannot replace S1.
     """
     energies = np.asarray(energies, dtype=float)
     interaction = np.asarray(interaction)

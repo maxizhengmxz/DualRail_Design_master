@@ -8,6 +8,11 @@ Select one feasible minimum-S1 resonance at common intended coupling and in
 the same score basis; keep S2 and crossing-order diagnostics separate. Never
 infer a logical source from a physical auxiliary or reuse first-crossing-policy
 metadata as S1 certification. The selected CZ channel owns ON calibration.
+When explaining S1, start with the physical aim of a clean intended CZ excursion
+and suppressed unwanted transfer from every logical input. Other logical states
+may accumulate phases. The cleanest targeted oscillation alone can overlook
+spectator mixing. Use aggregate S1 to screen the whole gate, then calibrate
+phase pi and evaluate actual fidelity. Source-specific scores remain diagnostics.
 OFF in the explicit coupler workflow temporarily nulls physical 0100-0010
 exchange in five/seven modes, with all four physical single-excitation
 references retained. Three modes null physical A2/B1 01-10. Logical exchanges,
@@ -38,3 +43,11 @@ Readout optimization is a separate workflow in `readout_workflow/` and must
 not be launched automatically during coupler-off analysis. Preserve unrelated
 project functionality and existing user edits. Do not create upload ZIPs;
 the user will commit/push source to Git. Exclude generated results and caches.
+
+For combined dual-rail readout/XM-CZ work, especially the fixed-rail-A
+physical-frequency-anchor workflow, first read
+[Ec_tuple search workflow/DEVELOPMENT_MEMORY.md](<Ec_tuple search workflow/DEVELOPMENT_MEMORY.md>)
+and [2Q-gate_XM/AGENTS.md](2Q-gate_XM/AGENTS.md). The development-memory file
+records required independent-map semantics, reconciliation rules, known wrong
+approaches, current entry points and data-retention contracts. Update it when a
+workflow invariant changes.

@@ -35,7 +35,7 @@ def main() -> int:
     for task in tasks:
         validate_payload(task["payload"])
     if args.command == "validate":
-        print(f"Validated {len(tasks)} EC points; no calculation launched")
+        print(f"Validated {len(tasks)} grid points; no calculation launched")
         return 0
     if args.command == "plot":
         from xm_cz.plotting import plot_stage

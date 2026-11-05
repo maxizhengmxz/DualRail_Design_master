@@ -20,6 +20,30 @@ both its logical source and its auxiliary.
 
 ## Selecting the intended resonance: minimum S1 at common intended coupling
 
+The physical aim is a clean CZ gate. The selected logical input makes its
+intentional excursion into the auxiliary and returns. All four logical inputs
+should avoid unintended population transfer, while their phases may evolve.
+Aggregate S1 protects every component of a logical superposition. A resonance
+with the cleanest targeted oscillation can still disturb the other inputs.
+The selected source's own score is a diagnostic, not the resonance objective.
+The mean-S1 criterion can accept a slightly less isolated target transition to
+substantially protect the other logical states. Phase-pi calibration and actual
+gate fidelity still determine finite-time gate performance.
+
+This rule applies to continuous frequency searches and fixed-A anchor searches.
+The latter preserve each anchor's A EJs and J, rank its resonances by aggregate
+S1 using shared core policy, then rank distinct anchors by aggregate S1 before
+the explicitly requested fidelity fallback. S2 and source-specific scores do
+not break S1 ties. Old source-specific campaign results require a fresh run
+before they can be presented as aggregate-S1 selected designs.
+
+For the sampled fixed-A workflow, candidate anchors remain within the inner
+10-90% of the largest connected sampled readout-feasible frequency component,
+at requested fractions 10%,30%,50%,70%,90%. Aggregate-S1 selection and fidelity
+fallback choose among these interior designs. Gate calibration preserves each
+anchor's A EJs and J. A coarse scan with insufficient interior samples must be
+refined instead of filling the anchor list with feasible-range endpoints.
+
 Only the specified rail pair moves between idle and gate operation; the other
 pair stays fixed. Identify feasible resonances for each allowed logical source
 and the requested physical auxiliary. Do not infer a source from `0020`.
