@@ -147,7 +147,86 @@ and generate a frequency-duration image whenever an explicit full search runs.
 ## 5. Seven-mode validation
 
 First design each rail-pair plus shared resonator independently under the
-readout workflow, excluding C and the opposite pair. Integrate both resonators
+readout workflow, excluding C and the opposite pair. The standard standalone
+optimization uses the prescribed-resonator-range goal from
+`../readout_workflow/RESONATOR_ROBUST_DESIGN.md` by default. **When an actual
+design is started, prompt for all four bare resonator-frequency bounds in GHz:
+A_low, A_high, B_low, B_high.** Leave these inputs unset when updating the
+workflow itself. They are independent free parameters: different A/B centers
+are expected, and equal interval widths may be convenient but are not enforced.
+Do not infer any bound from a nominal frequency, a previous design or an example
+range. A common width may be expanded into the four bounds only when explicitly
+supplied by the user. Record both intervals before optimization starts.
+The objective is **maximum worst-case absolute signed-mean chi**,
+`min_over_range(abs((chi_plus + chi_minus)/2))`, at **H > 0.96 throughout the
+range**. A nominal-frequency chi maximum alone does not complete this step.
+Use one fixed capacitor design across all resonator scenarios; EJs can
+recalibrate within the supplied allowed bias bounds. At each scenario change
+only the resonator C/L consistently with its impedance and the EJs; do not
+re-fit transmon self capacitors to hide changes in loading. Specified loaded
+ECs refer to the nominal reference design, while scenario EC changes and all
+scenario constraints must be reported. Confirm the nominal reference and
+range with the user before numerical optimization. The independent readout
+runner's present 6 GHz reference assumption must not silently replace an
+explicit-pad case's supplied resonator reference. Use the exact equivalent
+circuit and preserve physical-versus-effective capacitor conventions.
+
+`standalone_pad_readout.py` now runs nominal feasibility and then the explicit-pad
+prescribed-range adapter in `floating_coupler/readout_range.py`. It uses the
+readout workflow's shared acceptance, physical scenario reconstruction, frequency
+grid and quantum audit; no effective-capacitor substitution is made. Nominal
+feasibility alone is an initialization, not a range-optimized result.
+The standalone CLI accepts the four bounds under
+`standalone_readout_optimization.bare_resonator_frequency_range_ghz` in the input
+request, or each `pairs.A/B.bare_resonator_frequency_range_ghz`. Both rails must
+be supplied before either design starts. The Python per-rail `design` interface
+requires that rail's range. Conflicting input locations are rejected.
+The alternative exploration
+goal (maximize resonator tolerance with chi/H as constraints only) is available
+only if explicitly selected, not the coupler-design default.
+The handoff now rejects new nominal-frequency-only optimization records,
+including earlier records identified by their nominal-chi objective. Existing
+historical designs without an optimization record remain readable and labelled
+legacy; they are not certified by the prescribed-range policy.
+
+Return the optimized **nominal physical pad model**, nominal coordinates and
+audited nominal point in the existing readout-result format, plus a
+`readout_strength_optimization.range_validation` record. This contains the
+requested interval, fitted physical LC reference, sampled per-frequency EJ/EC
+witnesses, worst chi/H, selected H floor, fallback flag and numerical basis.
+Seven-mode assembly receives this nominal model, not a scenario model or
+effective-capacitor design. Default optimization spacing is 0.05 GHz; validate
+at half steps, adjacent optimized-frequency midpoints and the nominal reference.
+Failed interior samples trigger EJ-only repair; unresolved failures become
+explicit optimization scenarios before the H fallback is attempted. Defaults
+are 60 optimizer iterations/start, at most four starts, two candidate audits and
+two refinement rounds per H tier. Per-case `readout_range_options` can set
+`frequency_step_ghz`, `maxiter`, `max_audits`, and `refinement_rounds`.
+Scenario bare-frequency coordinates default to the readout operation search
+box with 0.2 GHz numerical padding; actual operation/EJ constraints still apply.
+Supply `readout_recalibration_bare_bounds_ghz` to restrict either transmon's
+allowed EJ-recalibration frequency range explicitly.
+
+Keep supplied loaded ECs, isolated-pair splitting, idle/readout calibration
+targets, physical parameter bounds and every existing readout constraint. Added
+loading is compensated by the existing self-capacitance reconstruction. The
+minimum-readout-link fit is only an initialization, not the final objective.
+
+If the bounded search finds no audited design covering the requested interval
+at H > 0.96, rerun worst-case chi maximization over the **same interval** at
+the standard **H > 0.95**. Do not silently shrink the interval. Print a warning and retain
+`fallback_used`, the selected H floor, per-tier attempts/audits and the warning
+in the saved readout result and integrated-cell metadata. Report the fallback
+explicitly in chat and the design report. This is a best-found local maximum,
+not a global optimum or proof that H > 0.96 is impossible. If neither tier
+passes, retain the diagnostic result as rejected and stop integration; do not
+silently accept the original seed. Audit selected candidates, including chi
+sign stability, and test the strict H floor at the audited basis. The 96% goal
+is standalone design margin; the seven-mode physical H acceptance threshold
+remains 95%, and the integrated result must still be checked separately.
+No default readout-map, robustness-rescue or global readout threshold changes.
+
+Integrate both resonators
 and C, compensating self-capacitances to retain loaded rail ECs.
 
 **Standard standalone readout contrast maps (2026-11-03):** after fitting each

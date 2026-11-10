@@ -7,6 +7,23 @@ self capacitances preserves them. S1/logical definitions come from
 `../2Q-gate_XM/WORKFLOW.md` and `core.cz_channel_policy`.
 The temporary physical OFF target is documented in OFF_POLICY.md.
 
+The standard standalone readout goal is prescribed-resonator-range optimization:
+when an actual design starts, ask for four independent GHz inputs (A minimum,
+A maximum, B minimum, B maximum), then maximize the worst absolute
+mean chi across it, preferring H>96% everywhere. If no audited solution is found,
+retry H>95% over the same range and explicitly report the reduced margin. If both fail,
+integration rejects the result. Loaded ECs and existing calibration/physical
+constraints remain fixed. See WORKFLOW.md stage 5. This runs during design,
+not during report generation or ordinary frequency sweeps.
+The standalone designer now calls the physical-pad prescribed-range adapter,
+returning the winning nominal pad model and its range-validation witnesses.
+It supports independent resonator references without a 6 GHz assumption.
+Nominal feasibility is only an initialization. Workflow updates require no EC
+tuple or numerical range. Request bounds only when a concrete design starts;
+different A/B centers and equal widths are allowed but never imposed.
+Seven-mode handoff rejects newly generated nominal-only optimization records;
+historical files remain readable without being relabelled as range optimized.
+
 ## Optional studies
 
 The opt-in parasitic study fits one actual port capacitor at a time against a

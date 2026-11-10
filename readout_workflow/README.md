@@ -28,6 +28,15 @@ requested integrated diagnostic using the existing explicit-coupler Hamiltonian.
 it never launches numerical optimization. Existing generated results remain in
 their original ignored output directories.
 
+## Resonator-frequency-robust design
+
+The opt-in [robust-design workflow](RESONATOR_ROBUST_DESIGN.md) supports either
+maximum symmetric resonator tolerance around 6 GHz (chi/H are constraints only),
+or a prescribed frequency range with optimization of worst-case mean chi at
+selectable H targets.
+Shared capacitors stay fixed across the range; both EJs recalibrate. It does
+not launch with ordinary feasibility searches or perform capacitor-error Monte Carlo.
+
 ## Calculation modules
 
 | File | Purpose |

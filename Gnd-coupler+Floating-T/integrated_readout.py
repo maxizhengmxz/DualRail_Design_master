@@ -16,6 +16,10 @@ from floating_coupler.mixed_electrostatics import fit_mixed_shunts,mixed_budget
 
 
 def construct(request,readouts,frequencies=None,refit_intra=True):
+    from floating_coupler.readout_optimization import readout_handoff
+    optimization_records=readout_handoff(readouts)
+    for pair,record in optimization_records.items():
+        if record['warning']:print('WARNING',pair,record['warning'],flush=True)
     targets=request['loaded_ec_ghz'];pads={'A1':['A11','A12'],'A2':['A21','A22'],'C':['C1','C2'],'B1':['B11','B12'],'B2':['B21','B22']};grounds={'C1':0.,'C2':0.};links=deepcopy(request['seed_grounded_three_body']['physical']['physical_links']);rcaps={};lr={};freq={}
     for name,r in readouts.items():
         p=r['physical'];grounds.update(p['ground_capacitances_ff']);links.extend(deepcopy(p['physical_links']));rn=r['case']['resonator_node'];rcaps[rn]=p['resonator_self_capacitance_ff'];lr[rn]=p['resonator_inductance_nh']
@@ -44,6 +48,7 @@ def construct(request,readouts,frequencies=None,refit_intra=True):
         idx=5+k;ceff=1e-15/c['K'][idx,idx];omega=1/np.sqrt(lr[r]*1e-9*ceff);q=np.sqrt(hbar*ceff*omega/2);gammas=2*e*q/(h*1e9)*c['K'][:5,idx]*1e15
         resonators[r]={'fr_ghz':omega/(2*np.pi*1e9),'effective_capacitance_ff':ceff*1e15,'q_zpf_coulomb':q,'gamma_ghz_per_n':gammas.tolist()}
     physical['resonator_parameters']=resonators
+    physical['standalone_readout_optimization']=optimization_records
     if request.get('channel_selection') or request.get('gate_target',{}).get('channel_selection'):
         selection=selection_from_request(request).to_dict();model.electrostatics['channel_selection']=selection;physical['channel_selection']=selection
     return model,physical
