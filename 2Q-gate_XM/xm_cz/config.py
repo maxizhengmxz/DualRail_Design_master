@@ -59,6 +59,21 @@ def validate_payload(payload: dict) -> None:
             raise ValueError(
                 "fixed_A logical-frequency bounds must be positive and increasing"
             )
+    fixed_b = payload.get("fixed_B")
+    if fixed_b is not None:
+        if not isinstance(fixed_b, dict) or "J_GHz" not in fixed_b:
+            raise ValueError("fixed_B requires J_GHz")
+        if not math.isfinite(fixed_b["J_GHz"]) or not 0 < fixed_b["J_GHz"] <= 0.25:
+            raise ValueError("fixed_B.J_GHz must be in (0,0.25]")
+        interval = fixed_b.get("logical_frequency_bounds_GHz", [0.08, 0.10])
+        if (
+            len(interval) != 2
+            or not all(math.isfinite(x) for x in interval)
+            or not 0 < interval[0] < interval[1]
+        ):
+            raise ValueError(
+                "fixed_B logical-frequency bounds must be positive and increasing"
+            )
     bounds = payload.get("bare_f01_bounds_GHz", {k: [4.0, 5.0] for k in LABELS})
     if set(bounds) != set(LABELS):
         raise ValueError("bare_f01_bounds_GHz must specify all four transmons")

@@ -116,7 +116,7 @@ def logical_range_ghz(bounds_mhz):
     return tuple(float(value) / 1000 for value in bounds_mhz)
 
 
-def initialize(logical_frequency_ghz=(0.14, 0.16)):
+def initialize(logical_frequency_ghz=(0.14, 0.16), bare_resonator_ghz=6.0):
     """Configure numerical calculations with cyclic frequencies in GHz."""
     logical_frequency_ghz = tuple(map(float, logical_frequency_ghz))
     if (
@@ -131,6 +131,10 @@ def initialize(logical_frequency_ghz=(0.14, 0.16)):
         s.CONDITIONS, logical_frequency_ghz=tuple(logical_frequency_ghz)
     )
     s.BASELINE = dict(s.BASELINE, logical_frequency=tuple(logical_frequency_ghz))
+    bare_resonator_ghz = float(bare_resonator_ghz)
+    if not np.isfinite(bare_resonator_ghz) or bare_resonator_ghz <= 0:
+        raise ValueError("bare_resonator_ghz must be positive and finite")
+    s.BARE_RESONATOR_GHZ = bare_resonator_ghz
 
 
 def capacitances(ec1, ec2, c12, cg):
@@ -140,7 +144,8 @@ def capacitances(ec1, ec2, c12, cg):
     R=Cr+2Cg. If diag(A^-1)=(d1,d2), determinant D satisfies
     d1*d2*D^2-D-b^2=0. X=d2*D, Y=d1*D; subtract attached C.
     """
-    cr = s.Device().Cr_fF
+    omega = 2 * np.pi * s.BARE_RESONATOR_GHZ * 1e9
+    cr = 1 / (omega * s.MODE_IMPEDANCE_OHM) * 1e15
     r = cr + 2 * cg
     d1 = (ec1 / 1000) / s.CHARGE_CONSTANT
     d2 = (ec2 / 1000) / s.CHARGE_CONSTANT
@@ -164,7 +169,7 @@ def solve(task):
         if ghz is not None and not np.allclose(converted, ghz, rtol=0, atol=1e-12):
             raise ValueError("Conflicting MHz and GHz logical-frequency task inputs")
         ghz = converted
-    initialize((0.14, 0.16) if ghz is None else ghz)
+    initialize((0.14, 0.16) if ghz is None else ghz, task.get("bare_resonator_ghz", 6.0))
     ec1, ec2 = task["ec"]
     started = time.monotonic()
     attempts = []
@@ -265,6 +270,7 @@ def main():
     parser.add_argument(
         "--logical-frequency-mhz", type=float, nargs=2, default=(140, 160)
     )
+    parser.add_argument("--bare-resonator-ghz", type=float, default=6.0)
     parser.add_argument("--ec1-range", type=float, nargs=2)
     parser.add_argument("--ec2-range", type=float, nargs=2)
     parser.add_argument("--ec-step-mhz", type=float, default=5)
@@ -291,6 +297,8 @@ def main():
         parser.error("Step and worker count must be positive")
     if not np.isfinite(a.hull_scale) or a.hull_scale < 1:
         parser.error("Hull scale must be at least one")
+    if not np.isfinite(a.bare_resonator_ghz) or a.bare_resonator_ghz <= 0:
+        parser.error("Bare resonator frequency must be positive and finite")
     logical_frequency_ghz = logical_range_ghz(a.logical_frequency_mhz)
     if not a.run:
         print("Use --run to calculate; no automatic calculation on import.")
@@ -313,6 +321,8 @@ def main():
             str(a.workers),
             "--logical-frequency-mhz",
             *map(str, a.logical_frequency_mhz),
+            "--bare-resonator-ghz",
+            str(a.bare_resonator_ghz),
             "--ec-step-mhz",
             str(a.ec_step_mhz),
             "--domain",
@@ -353,6 +363,7 @@ def main():
             background=True,
             command=command,
             logical_frequency_mhz=a.logical_frequency_mhz,
+            bare_resonator_ghz=a.bare_resonator_ghz,
             ec_step_mhz=a.ec_step_mhz,
             optimize_readout=False,
             failure_diagnosis_enabled=False,
@@ -361,7 +372,7 @@ def main():
         print(json.dumps(record))
         return
 
-    initialize(logical_frequency_ghz)
+    initialize(logical_frequency_ghz, a.bare_resonator_ghz)
     OUT.mkdir(parents=True, exist_ok=True)
     old = json.loads(source.read_text())
     good = [
@@ -426,6 +437,7 @@ def main():
     policy = dict(
         conditions=asdict(s.CONDITIONS),
         logical_frequency_mhz=a.logical_frequency_mhz,
+        bare_resonator_ghz=a.bare_resonator_ghz,
         ec_step_mhz=a.ec_step_mhz,
         ec1_range_mhz=a.ec1_range,
         ec2_range_mhz=a.ec2_range,
@@ -527,6 +539,7 @@ def main():
                 ec=ec,
                 warm=[warm_points[i] for i in near],
                 logical_frequency_ghz=logical_frequency_ghz,
+                bare_resonator_ghz=a.bare_resonator_ghz,
             )
             futures[pool.submit(solve, task)] = (ec, membership)
         for future in as_completed(futures):

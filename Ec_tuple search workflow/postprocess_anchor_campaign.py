@@ -31,6 +31,7 @@ def scatter(ax,rows,key,title,**kwargs):
 
 def run(campaign):
     rows=load(campaign);output=campaign/"gate_output";plots=output/"plots";plots.mkdir(exist_ok=True)
+    config=json.loads((campaign/"config.json").read_text());b_results=Path(config.get("readout_sources",{}).get("rail_b_direct_ec_results",B_RESULTS))
     anchors=json.loads((campaign/"rail_A_anchors.json").read_text());ids=[a["anchor_id"] for a in anchors]
     fig,axes=plt.subplots(2,3,figsize=(16,10),layout="constrained")
     for ax,anchor_id in zip(axes.flat,ids):
@@ -40,7 +41,7 @@ def run(campaign):
         scatter(ax,local,"value",f"{anchor_id}: screening $S_1$",cmap="viridis")
     axes.flat[-1].set_axis_off();fig.savefig(plots/"anchor_screening_s1.png",dpi=220);fig.savefig(plots/"anchor_screening_s1.pdf");plt.close(fig)
     fig,axes=plt.subplots(1,3,figsize=(16,5.2),layout="constrained");scatter(axes[0],[r|{"value":100*r["raw"] if r["raw"] is not None else None} for r in rows],"value","Selected-anchor raw CZ fidelity (%)",cmap="viridis",vmin=95,vmax=100);scatter(axes[1],[r|{"value":100*r["post"] if r["post"] is not None else None} for r in rows],"value","Selected-anchor post-selected CZ fidelity (%)",cmap="viridis",vmin=99.9,vmax=99.99);index={name:i for i,name in enumerate(ids)};scatter(axes[2],[r|{"value":index.get(r["selected_anchor_id"],np.nan)} for r in rows],"value","Selected rail-A anchor",cmap="tab10",vmin=0,vmax=max(1,len(ids)-1));fig.savefig(plots/"selected_anchor_gate_maps.png",dpi=220);fig.savefig(plots/"selected_anchor_gate_maps.pdf");plt.close(fig)
-    readout_rows=json.loads(B_RESULTS.read_text());readout={(r["ec1_target_mhz"],r["ec2_target_mhz"]):r["status"]=="validated_pass" for r in readout_rows};categories={};counts=Counter()
+    readout_rows=json.loads(b_results.read_text());readout={(r["ec1_target_mhz"],r["ec2_target_mhz"]):r["status"]=="validated_pass" for r in readout_rows};categories={};counts=Counter()
     for r in rows:
         ec=(round(r["ec_b1_mhz"]),round(r["ec_b2_mhz"]));gate=r["raw"] is not None and r["raw"]>.95 and r["post"]>.999;ro=readout[ec];category=3 if gate and ro else 2 if gate else 1 if ro else 0;categories[ec]=category;counts[("neither","readout_only","gate_only","overlay")[category]]+=1
     cmap=ListedColormap(["#dedede","#8ecae6","#f4a261","#2a9d8f"]);norm=BoundaryNorm([-.5,.5,1.5,2.5,3.5],4);points=sorted(categories);fig,ax=plt.subplots(figsize=(7.4,6.4),layout="constrained");ax.scatter([p[0] for p in points],[p[1] for p in points],c=[categories[p] for p in points],s=12,marker="s",cmap=cmap,norm=norm);ax.set(title="Rail-B readout and selected-anchor gate overlay",xlabel=r"$E_{C,B1}/h$ (MHz)",ylabel=r"$E_{C,B2}/h$ (MHz)");ax.set_aspect("equal");ax.legend(handles=[Patch(color=cmap(i),label=x) for i,x in enumerate(("Neither","Readout only","Gate only","Overlay"))],fontsize=8);fig.savefig(plots/"readout_gate_overlay.png",dpi=220);fig.savefig(plots/"readout_gate_overlay.pdf");plt.close(fig)

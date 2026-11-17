@@ -124,6 +124,25 @@ def fixed_pair_model(
     return _pair_from_locals(left, right, coupling, target_bare_index)
 
 
+@lru_cache(maxsize=256)
+def frequency_tuned_fixed_coupling_pair_model(
+    left_ec, right_ec, frequency, coupling, target_bare_index=8
+):
+    """Tune the two local EJs to a common bare frequency while retaining J.
+
+    This is the rail-B counterpart needed when an idle readout witness owns the
+    fabricated capacitance network.  The logical splitting is then an output,
+    rather than a target used to re-solve the fixed intra-rail coupling.
+    """
+    if not 0 < coupling <= 0.25:
+        raise ValueError("invalid_intra_pair_coupling")
+    left = local_model(left_ec, frequency)
+    right = local_model(right_ec, frequency)
+    if min(left[0] / left_ec, right[0] / right_ec) < 25:
+        raise ValueError("EJ_over_EC")
+    return _pair_from_locals(left, right, coupling, target_bare_index)
+
+
 def target_overlap(first: dict, second: dict) -> float:
     """Compare physical states, including changes in local eigenbases."""
     transform = np.kron(

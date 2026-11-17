@@ -61,14 +61,40 @@ def plot_results(rows, output):
     plt.close(figure)
 
 
-def initialize(logical_mhz):
+def initialize(logical_mhz, bare_resonator_ghz=6.0):
     bounds = tuple(float(value) / 1000 for value in logical_mhz)
     s.CONDITIONS = replace(s.CONDITIONS, logical_frequency_ghz=bounds)
     s.BASELINE = dict(s.BASELINE, logical_frequency=bounds)
+    bare_resonator_ghz = float(bare_resonator_ghz)
+    if not np.isfinite(bare_resonator_ghz) or bare_resonator_ghz <= 0:
+        raise ValueError("bare_resonator_ghz must be positive and finite")
+    s.BARE_RESONATOR_GHZ = bare_resonator_ghz
 
 
-def solve_frequency(ec_mhz, target_ghz, warm, logical_mhz, max_nfev=55):
-    initialize(logical_mhz)
+def point_bare_resonator_ghz(point):
+    device = point["device"]
+    return float(
+        1
+        / (2 * np.pi * np.sqrt(device["Cr_fF"] * 1e-15 * device["Lr_nH"] * 1e-9))
+        / 1e9
+    )
+
+
+def require_bare_resonator(point, expected_ghz, tolerance_ghz=1e-9):
+    actual = point_bare_resonator_ghz(point)
+    if abs(actual - expected_ghz) > tolerance_ghz:
+        raise RuntimeError(
+            f"Readout witness bare resonator is {actual:.12g} GHz; "
+            f"expected {expected_ghz:.12g} GHz"
+        )
+    return actual
+
+
+def solve_frequency(
+    ec_mhz, target_ghz, warm, logical_mhz, max_nfev=55,
+    bare_resonator_ghz=6.0,
+):
+    initialize(logical_mhz, bare_resonator_ghz)
     ec1, ec2 = map(float, ec_mhz)
     lower, upper = map(np.asarray, s.nominal_search_bounds())
     cache = {}
@@ -103,6 +129,7 @@ def solve_frequency(ec_mhz, target_ghz, warm, logical_mhz, max_nfev=55):
                               x_scale=[1,1,2,5], diff_step=2e-5,
                               ftol=1e-9,xtol=1e-9,gtol=1e-9,max_nfev=max_nfev)
             candidate=audit_point(evaluate(fit.x))
+            require_bare_resonator(candidate, bare_resonator_ghz)
             frequency_error=abs(candidate["operating_frequency_ghz"]-target_ghz)
             failures=s.failures(candidate,require_sign_check=True)
             if frequency_error>s.CONDITIONS.fixed_frequency_tolerance_ghz:
@@ -122,10 +149,11 @@ def main():
     parser.add_argument("--ec-mhz",nargs=2,type=float,required=True,metavar=("EC1","EC2"))
     parser.add_argument("--frequency-ghz",nargs=3,type=float,default=(4,8,.025),metavar=("LOW","HIGH","STEP"))
     parser.add_argument("--logical-frequency-mhz",nargs=2,type=float,default=(140,160))
+    parser.add_argument("--bare-resonator-ghz",type=float,default=6.0)
     parser.add_argument("--warm-results",type=Path,required=True)
     parser.add_argument("--output",type=Path,required=True)
     parser.add_argument("--max-nfev",type=int,default=55)
-    args=parser.parse_args(); initialize(args.logical_frequency_mhz)
+    args=parser.parse_args(); initialize(args.logical_frequency_mhz,args.bare_resonator_ghz)
     low,high,step=args.frequency_ghz
     if not 4<=low<high<=8 or step<=0: raise ValueError("invalid frequency grid")
     rows=json.loads(args.warm_results.read_text())
@@ -135,6 +163,7 @@ def main():
     output=args.output.resolve(); output.mkdir(parents=True,exist_ok=True)
     settings=dict(ec_mhz=args.ec_mhz,frequency_grid_ghz=[low,high,step],
                   logical_frequency_mhz=args.logical_frequency_mhz,
+                  bare_resonator_ghz=args.bare_resonator_ghz,
                   C12_bounds_ff=s.CONDITIONS.c12_bounds_ff,
                   Cg_bounds_ff=s.CONDITIONS.readout_cap_bounds_ff,
                   validation_policy=POLICY,conditions=asdict(s.CONDITIONS))
@@ -143,7 +172,12 @@ def main():
     results=[]
     for index,target in enumerate(targets,1):
         path=output/f"frequency_{target:.6f}.json"
-        row=json.loads(path.read_text()) if path.exists() else solve_frequency(args.ec_mhz,target,warm,args.logical_frequency_mhz,args.max_nfev)
+        row=json.loads(path.read_text()) if path.exists() else solve_frequency(
+            args.ec_mhz, target, warm, args.logical_frequency_mhz, args.max_nfev,
+            args.bare_resonator_ghz,
+        )
+        if row.get("point"):
+            require_bare_resonator(row["point"], args.bare_resonator_ghz)
         if not path.exists(): atomic_json(path,row)
         results.append(row)
         atomic_json(output/"progress.json",dict(total=len(targets),completed=index,passed=sum(r["status"]=="validated_pass" for r in results),updated_utc=utc()))

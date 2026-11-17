@@ -11,7 +11,7 @@ sys.path[:0] = [str(ROOT), str(ROOT.parent)]
 from threadpoolctl import threadpool_limits
 from xm_cz.config import validate_payload
 from xm_cz.evaluator import evaluate_ec
-from xm_cz.model import fixed_pair_model
+from xm_cz.model import fixed_pair_model, frequency_tuned_fixed_coupling_pair_model
 
 
 class FixedRailATests(unittest.TestCase):
@@ -70,6 +70,34 @@ class FixedRailATests(unittest.TestCase):
         }
         validate_payload(payload)
         payload["fixed_A"].pop("J_GHz")
+        with self.assertRaises(ValueError):
+            validate_payload(payload)
+
+    def test_fixed_b_retains_readout_coupling_while_frequency_tunes(self):
+        coupling = 0.024108178469073108
+        first = frequency_tuned_fixed_coupling_pair_model(
+            0.240, 0.156, 5.30, coupling
+        )
+        second = frequency_tuned_fixed_coupling_pair_model(
+            0.240, 0.156, 5.37, coupling
+        )
+        self.assertEqual(first["J"], coupling)
+        self.assertEqual(second["J"], coupling)
+        self.assertNotEqual(first["EJ"], second["EJ"])
+        self.assertNotEqual(
+            first["logical_splitting_GHz"], second["logical_splitting_GHz"]
+        )
+
+    def test_fixed_b_ports_are_validated(self):
+        payload = {
+            "ec_GHz": [0.156, 0.254, 0.240, 0.156],
+            "fixed_B": {
+                "J_GHz": 0.024108178469073108,
+                "logical_frequency_bounds_GHz": [0.08, 0.10],
+            },
+        }
+        validate_payload(payload)
+        payload["fixed_B"]["logical_frequency_bounds_GHz"] = [0.10, 0.08]
         with self.assertRaises(ValueError):
             validate_payload(payload)
 

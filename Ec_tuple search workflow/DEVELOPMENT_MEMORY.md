@@ -149,6 +149,20 @@ For one ordered `(EC_A1, EC_A2)` repetition:
 13. Reconcile fixed hardware independently at every overlay point.
 14. Generate plots before compacting/pruning detailed point JSON.
 
+### Explicit worst-case anchor diagnostic
+
+The production defaults remain fractional interior anchors, minimum aggregate
+S1 across anchors, and ranked fidelity fallback. The current worst-case
+diagnostic uses the same deterministic fractional anchor positions
+`[0.1, 0.3, 0.5, 0.7, 0.9]`, but calibrates only the anchor with the largest
+aggregate S1. Each anchor still selects its minimum-aggregate-S1 feasible
+resonance at common intended g. The diagnostic uses no fidelity fallback.
+This replaced the earlier random-anchor diagnostic on 2026-11-13 so that the
+stress test compares the same representative frequency positions at every
+rail-A EC candidate. Retain the stopped random campaign as historical data;
+never mix it with the fractional diagnostic or describe either maximum-S1
+stress test as the production CZ selection policy.
+
 Tonight's orchestration scripts use a 25 MHz coarse physical-frequency scan.
 That is appropriate for exploration, not a final edge-precision claim. A
 fabrication candidate can receive a finer local scan later.
@@ -225,6 +239,18 @@ B idle-readout acceptance window remains 0.080--0.100 GHz.
 Rationale confirmed by the user on 2026-11-05. The implementation default is
 in `prepare_fixed_a_anchor_campaign.py`; no numerical setting changed when
 this explanation was recorded.
+
+### Optional fixed-readout-J rail-B mode
+
+For hardware-owned reconciliation studies, `evaluate_ec` accepts `fixed_B` with
+the independent readout witness's `J_GHz` and an allowed logical-frequency
+interval. In this mode the fabricated rail-B coupling remains fixed while the
+gate search tunes the rail-B EJs through its common bare frequency. The gate
+logical splitting is an output and must remain inside the supplied interval.
+This differs from the production approximation above, which re-solves J at
+every gate frequency to impose exactly 80 MHz. Changing modes requires fresh
+S1 selection, phase-pi calibration and fidelity; old gate fidelities may not be
+relabeled as fixed-hardware results.
 
 - Energies and matrix elements are cyclic GHz; time is ns.
 - Rail A is fixed when a `fixed_A` witness is supplied.
@@ -381,6 +407,39 @@ Important runner rules:
 - Never run two writers against the same output directory.
 - A completed/compacted campaign should be analyzed from SQLite rather than
   regenerated unless the physics/source changed.
+- Partition-campaign resume preserves deterministic pre-gate anchor-screening
+  outcomes (`no connected component` or fewer than five validated central-band
+  samples) as terminal failures.  Interrupted and operationally failed
+  repetitions remain pending and reuse their existing point checkpoints.
+
+### Per-rail resonator-frequency contract
+
+The independent readout design may use different designed bare cavity
+frequencies for rail A and rail B.  The frequency is therefore part of each
+readout dataset's immutable provenance, not a shared implicit 6 GHz constant.
+It must be propagated through the fine C1-C2 search, analytical EC
+reconstruction, physical-frequency anchor generation, and campaign metadata.
+Downstream gate/reconciliation stages must receive the matching rail-A and
+rail-B `results.json` paths explicitly.  Never silently combine a newly
+generated map with one of the default 6 GHz datasets.
+
+The 2026-11-09 split-cavity campaign uses 6.05 GHz for rail A and 5.95 GHz for
+rail B.  Its independent maps use the usual 1.5-scaled hull, full ordered EC
+domain, and 2 MHz EC resolution.  The local campaign covers the strict
+`EC_A1 < EC_A2` partition; the independent maps themselves remain full-domain
+maps and are not restricted by the campaign partition.
+
+On 2026-11-11 an end-to-end audit found two downstream default-frequency
+leaks in the first split-cavity campaign: `physical_frequency_bounds` reset
+rail-A anchor solves to 6.00 GHz, and `reconcile_rail` rebuilt rail B at the
+global 6.00 GHz default.  The independent fine and direct-EC maps were not
+affected.  The corrected implementation passes the requested frequency into
+every anchor solve, derives reconciliation frequency from the independent
+readout witness, records it in every anchor/reconciliation result, and raises
+on any Cr/Lr provenance mismatch.  Do not use the original split-cavity
+campaign's final reconciliation or campaign-level ranking.  Corrected gate
+results require regenerated rail-A anchors; merely rerunning reconciliation is
+insufficient.
 
 ## 11. Current reference artifacts
 
@@ -412,3 +471,30 @@ presenting them as the current selected design.
 5. Add or update a focused test for any physics/data-contract change.
 6. Use a new output directory for changed source/configuration.
 7. Update this memory file when the user changes a workflow invariant.
+
+## 13. Current promoted corrected-cavity reference (2026-11-17)
+
+The current preferred toy-model tuple is
+`EC=(158,240,158,226) MHz`.  It supersedes `(154,208,216,252) MHz` as the
+design recommendation because the selection objective now includes absolute
+required physical inter-rail coupling, not only 4D radius and relative
+`J_req` spread.  Larger `J_req` does not slow simulations performed at common
+target effective `g`, but it requires stronger fabricated coupling; at common
+fixed `J_hardware`, gate time scales approximately with `J_req`.
+
+The promoted tuple has a fresh corrected-cavity 233-point neighborhood at
+`corrected_cavity_full_neighborhood_A158_240_B158_226_2026-11-17/`.  Every
+point passes gate thresholds and fixed-hardware reconciliation.  All points
+use source `10`; `J_req/h` spans 4.2607-4.4535 MHz and calibrated hold time
+spans 98.154-100.062 ns.  The center complete witness is under
+`candidate_analysis/complete_corrected_configuration.json`.
+
+Selection/ranking implication: after satisfying the hard readout, gate,
+clearance, numerical-completeness and neighborhood requirements, report both
+absolute neighborhood median/maximum `J_req` and its relative spread.  Do not
+rank only by radius or only by relative spread.  Use orthogonal fixed-A and
+fixed-B cross-sections to diagnose local boundaries; a collapsed 2D projection
+can change hidden coordinates and create misleading apparent discontinuities.
+
+`run_corrected_cavity_neighborhood.py` now accepts
+`--center-ec-tuple-mhz A1 A2 B1 B2`; do not restore a hard-coded center.

@@ -32,8 +32,26 @@ def configure(logical_range):
     study.BASELINE = dict(study.BASELINE, logical_frequency=logical_range)
 
 
-def reconcile_rail(ec, target_j, initial, logical_range):
+def point_bare_resonator_ghz(point):
+    device = point["device"]
+    return float(
+        1
+        / (2 * np.pi * np.sqrt(device["Cr_fF"] * 1e-15 * device["Lr_nH"] * 1e-9))
+        / 1e9
+    )
+
+
+def reconcile_rail(ec, target_j, initial, logical_range, bare_resonator_ghz=None):
+    source_bare_resonator_ghz = point_bare_resonator_ghz(initial)
+    if bare_resonator_ghz is None:
+        bare_resonator_ghz = source_bare_resonator_ghz
+    if abs(source_bare_resonator_ghz - bare_resonator_ghz) > 1e-9:
+        raise RuntimeError(
+            "Initial readout witness and requested bare resonator frequency disagree: "
+            f"{source_bare_resonator_ghz:.12g} versus {bare_resonator_ghz:.12g} GHz"
+        )
     configure(logical_range)
+    study.BARE_RESONATOR_GHZ = float(bare_resonator_ghz)
     lower, upper = map(np.asarray, study.nominal_search_bounds())
     seed = np.clip(study.x_from_point(initial), lower + 1e-6, upper - 1e-6)
     cache = {}
@@ -70,6 +88,12 @@ def reconcile_rail(ec, target_j, initial, logical_range):
             max_nfev=120,
         )
     screened = point(fit.x)
+    actual_bare_resonator_ghz = point_bare_resonator_ghz(screened)
+    if abs(actual_bare_resonator_ghz - bare_resonator_ghz) > 1e-9:
+        raise RuntimeError(
+            f"Reconciled witness bare resonator is {actual_bare_resonator_ghz:.12g} "
+            f"GHz; expected {bare_resonator_ghz:.12g} GHz"
+        )
     failures = study.failures(screened)
     audited = None
     if not failures:
@@ -88,6 +112,7 @@ def reconcile_rail(ec, target_j, initial, logical_range):
         "point": audited,
         "fit_x": fit.x.tolist(),
         "nfev": int(fit.nfev),
+        "bare_resonator_ghz": actual_bare_resonator_ghz,
     }
 
 

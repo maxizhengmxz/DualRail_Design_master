@@ -52,7 +52,11 @@ def logical_range_ghz(bounds_mhz):
     return tuple(float(value) / 1000 for value in bounds_mhz)
 
 
-def initialize(logical_frequency_ghz=(0.14, 0.16)):
+def initialize(
+    logical_frequency_ghz=(0.14, 0.16),
+    abs_mean_chi_min_mhz=1.0,
+    bare_resonator_ghz=6.0,
+):
     """Worker calculation interface uses cyclic GHz, including seed scaling."""
     bounds = tuple(map(float, logical_frequency_ghz))
     if (
@@ -63,7 +67,18 @@ def initialize(logical_frequency_ghz=(0.14, 0.16)):
         raise ValueError(
             "logical_frequency_ghz requires two positive increasing values"
         )
-    s.CONDITIONS = replace(s.CONDITIONS, logical_frequency_ghz=bounds)
+    chi_min = float(abs_mean_chi_min_mhz)
+    if not np.isfinite(chi_min) or chi_min <= 0:
+        raise ValueError("abs_mean_chi_min_mhz must be positive and finite")
+    resonator = float(bare_resonator_ghz)
+    if not np.isfinite(resonator) or resonator <= 0:
+        raise ValueError("bare_resonator_ghz must be positive and finite")
+    s.BARE_RESONATOR_GHZ = resonator
+    s.CONDITIONS = replace(
+        s.CONDITIONS,
+        logical_frequency_ghz=bounds,
+        abs_mean_chi_min_mhz=chi_min,
+    )
     s.BASELINE = dict(s.BASELINE, logical_frequency=bounds)
     original = _BASE_SEEDS
     seed_scale = sum(bounds) / 2 / 0.1
@@ -138,11 +153,22 @@ def diagnose(task):
         return r
 
 
-def run(output, workers, logical_frequency_ghz=(0.14, 0.16), feasibility_only=False):
-    initialize(logical_frequency_ghz)
+def run(
+    output,
+    workers,
+    logical_frequency_ghz=(0.14, 0.16),
+    feasibility_only=False,
+    abs_mean_chi_min_mhz=1.0,
+    bare_resonator_ghz=6.0,
+    capacitance_step_ff=1,
+):
+    initialize(logical_frequency_ghz, abs_mean_chi_min_mhz, bare_resonator_ghz)
     if workers < 1:
         raise ValueError("workers must be positive")
-    pairs = [(c1, c2) for c2 in range(36, 129) for c1 in range(c2 + 1, 129)]
+    if not isinstance(capacitance_step_ff, int) or capacitance_step_ff < 1:
+        raise ValueError("capacitance_step_ff must be a positive integer")
+    values = range(36, 129, capacitance_step_ff)
+    pairs = [(c1, c2) for c2 in values for c1 in values if c1 > c2]
     # Self-contained fresh runs: algorithmic seeds and newly accepted neighbors.
     # Reusing an old ledger still requires its exact settings/source signature.
     files = [
@@ -164,8 +190,10 @@ def run(output, workers, logical_frequency_ghz=(0.14, 0.16), feasibility_only=Fa
         failure_diagnosis_enabled=not feasibility_only,
         logical_frequency_ghz=list(logical_frequency_ghz),
         logical_frequency_mhz=[1000 * value for value in logical_frequency_ghz],
+        abs_mean_chi_min_mhz=float(abs_mean_chi_min_mhz),
+        bare_resonator_ghz=float(bare_resonator_ghz),
         conditions=asdict(s.CONDITIONS),
-        grid_ff=dict(low=36, high=128, step=1, strict_c1_gt_c2=True),
+        grid_ff=dict(low=36, high=128, step=capacitance_step_ff, strict_c1_gt_c2=True),
         diagnostic_step_ff=2,
         feasibility_budget=s.SEARCH_EFFORT["fast"],
         diagnostic_budget=diag.DIAGNOSTIC_BUDGET,
@@ -201,7 +229,7 @@ def run(output, workers, logical_frequency_ghz=(0.14, 0.16), feasibility_only=Fa
         with ProcessPoolExecutor(
             max_workers=workers,
             initializer=initialize,
-            initargs=(logical_frequency_ghz,),
+            initargs=(logical_frequency_ghz, abs_mean_chi_min_mhz, bare_resonator_ghz),
         ) as pool:
             stages = [("feasibility_normal", calculate)]
             if not feasibility_only:
@@ -289,7 +317,7 @@ def run(output, workers, logical_frequency_ghz=(0.14, 0.16), feasibility_only=Fa
         final = [recovered.get(key(p), active[key(p)]) for p in pairs]
         atomic_json(output / "diagnostic_results.json", diagnostics)
         atomic_json(output / "results.json", final)
-        assert len(final) == 4278
+        assert len(final) == len(pairs)
         assert len(diagnostics) == (
             0
             if feasibility_only
@@ -319,6 +347,24 @@ def main():
     parser.add_argument(
         "--logical-frequency-mhz", nargs=2, type=float, default=(140, 160)
     )
+    parser.add_argument(
+        "--abs-mean-chi-min-mhz",
+        type=float,
+        default=1.0,
+        help="Minimum magnitude of the signed mean conditional shift in MHz.",
+    )
+    parser.add_argument(
+        "--bare-resonator-ghz",
+        type=float,
+        default=6.0,
+        help="Designed isolated bare LC resonator frequency in GHz.",
+    )
+    parser.add_argument(
+        "--capacitance-step-ff",
+        type=int,
+        default=1,
+        help="C1 and C2 lattice spacing in fF.",
+    )
     parser.add_argument("--feasibility-only", action="store_true")
     args = parser.parse_args()
     args.output = args.output.resolve()
@@ -326,11 +372,25 @@ def main():
     bounds_ghz = logical_range_ghz(args.logical_frequency_mhz)
     if args.workers < 1:
         parser.error("workers must be positive")
+    if not np.isfinite(args.abs_mean_chi_min_mhz) or args.abs_mean_chi_min_mhz <= 0:
+        parser.error("abs-mean-chi-min-mhz must be positive and finite")
+    if not np.isfinite(args.bare_resonator_ghz) or args.bare_resonator_ghz <= 0:
+        parser.error("bare-resonator-ghz must be positive and finite")
+    if args.capacitance_step_ff < 1:
+        parser.error("capacitance-step-ff must be positive")
     if not args.run:
         print(json.dumps(status(args.output), indent=2))
         return
     if not args.background:
-        run(args.output, args.workers, bounds_ghz, args.feasibility_only)
+        run(
+            args.output,
+            args.workers,
+            bounds_ghz,
+            args.feasibility_only,
+            args.abs_mean_chi_min_mhz,
+            args.bare_resonator_ghz,
+            args.capacitance_step_ff,
+        )
         return
     args.output.mkdir(parents=True, exist_ok=True)
     launch = args.output / "launch.json"
@@ -347,6 +407,12 @@ def main():
         str(args.workers),
         "--logical-frequency-mhz",
         *map(str, args.logical_frequency_mhz),
+        "--abs-mean-chi-min-mhz",
+        str(args.abs_mean_chi_min_mhz),
+        "--bare-resonator-ghz",
+        str(args.bare_resonator_ghz),
+        "--capacitance-step-ff",
+        str(args.capacitance_step_ff),
     ]
     if args.feasibility_only:
         command.append("--feasibility-only")
@@ -370,6 +436,9 @@ def main():
         command=command,
         logical_frequency_ghz=bounds_ghz,
         logical_frequency_mhz=args.logical_frequency_mhz,
+        abs_mean_chi_min_mhz=args.abs_mean_chi_min_mhz,
+        bare_resonator_ghz=args.bare_resonator_ghz,
+        capacitance_step_ff=args.capacitance_step_ff,
         optimize_readout=False,
         failure_diagnosis_enabled=not args.feasibility_only,
     )

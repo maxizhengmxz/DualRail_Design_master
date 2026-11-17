@@ -176,9 +176,10 @@ def plot_readout_map(rows: list[dict], output: Path) -> None:
                 c=[r[key] * scale for r in subset], cmap=cmap, norm=norm, s=115, marker=marker,
                 edgecolors="black", linewidths=.8, zorder=4,
             )
-        for r in rows:
-            x, y = r["ec_a_mhz"]
-            ax.annotate(r["selection_id"], (x, y), xytext=(4, 5), textcoords="offset points", fontsize=7.5, fontweight="bold")
+        if len(rows) <= 50:
+            for r in rows:
+                x, y = r["ec_a_mhz"]
+                ax.annotate(r["selection_id"], (x, y), xytext=(4, 5), textcoords="offset points", fontsize=7.5, fontweight="bold")
         fig.colorbar(image, ax=ax, label=unit, shrink=.82)
         ax.legend(handles=[
             Line2D([], [], marker="o", ls="", color="black", markerfacecolor="white", label="Same-anchor margin ≥5 MHz"),

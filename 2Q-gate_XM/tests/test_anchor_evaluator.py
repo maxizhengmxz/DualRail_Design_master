@@ -109,6 +109,67 @@ class AnchorEvaluatorTests(unittest.TestCase):
         self.assertEqual(result["selected_anchor"]["anchor_id"], "a")
         self.assertEqual(result["selected_anchor_rank"], 2)
 
+    def test_worst_case_mode_calibrates_only_largest_s1_anchor(self):
+        anchors = [
+            {
+                "anchor_id": name,
+                "anchor_hash": name,
+                "readout_operating_frequency_GHz": frequency,
+                "gate_logical_frequency_GHz": 0.145,
+                "fixed_A": {},
+            }
+            for name, frequency in (("better", 4.8), ("worst", 4.9))
+        ]
+        screening = [
+            {
+                "status": "screened",
+                "S1_position": {
+                    "S1": value,
+                    "intended_source_score": value,
+                    "maximum_logical_ratio": 0.1,
+                },
+            }
+            for value in (0.01, 0.04)
+        ]
+        calibrated = {
+            "status": "calibrated",
+            "final": {"raw_fidelity": 0.96, "postselected_fidelity": 0.9995},
+        }
+        with patch(
+            "xm_cz.anchor_evaluator.evaluate_ec",
+            side_effect=[*screening, calibrated],
+        ) as evaluate:
+            result = evaluate_anchor_set(
+                {
+                    "rail_A_anchors": anchors,
+                    "logical_splittings_GHz": [0.145, 0.08],
+                    "anchor_ranking": "maximum_S1_worst_case",
+                    "fidelity_fallback_count": 1,
+                }
+            )
+        self.assertEqual(result["selected_anchor"]["anchor_id"], "worst")
+        self.assertEqual(result["anchor_ranking"], "maximum_S1_worst_case")
+        self.assertEqual(evaluate.call_count, 3)
+
+    def test_worst_case_mode_rejects_fallback(self):
+        with self.assertRaisesRegex(ValueError, "requires fidelity_fallback_count=1"):
+            evaluate_anchor_set(
+                {
+                    "rail_A_anchors": [
+                        {
+                            "anchor_id": "a",
+                            "anchor_hash": "a",
+                            "readout_operating_frequency_GHz": 4.8,
+                            "gate_logical_frequency_GHz": 0.145,
+                            "fixed_A": {},
+                        }
+                    ],
+                    "logical_splittings_GHz": [0.145, 0.08],
+                    "anchor_ranking": "maximum_S1_worst_case",
+                    "fidelity_fallback_count": 2,
+                }
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

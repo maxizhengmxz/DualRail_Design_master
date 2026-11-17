@@ -19,7 +19,7 @@ def one(task):
 def run(campaign,workers):
     manifest=json.loads((campaign/"gate_output/manifest.json").read_text());
     if manifest["status"]!="complete":raise RuntimeError("Gate campaign is not complete")
-    b_rows=json.loads(B_RESULTS.read_text());b_valid={(r["ec1_target_mhz"],r["ec2_target_mhz"]):r for r in b_rows if r["status"]=="validated_pass"};out=campaign/"fixed_hardware_reconciliation";points=out/"points";points.mkdir(parents=True,exist_ok=True);results=[];tasks=[]
+    config=json.loads((campaign/"config.json").read_text());b_results=Path(config.get("readout_sources",{}).get("rail_b_direct_ec_results",B_RESULTS));b_rows=json.loads(b_results.read_text());b_valid={(r["ec1_target_mhz"],r["ec2_target_mhz"]):r for r in b_rows if r["status"]=="validated_pass"};out=campaign/"fixed_hardware_reconciliation";points=out/"points";points.mkdir(parents=True,exist_ok=True);results=[];tasks=[]
     for p in (campaign/"gate_output/points").glob("*.json"):
         record=json.loads(p.read_text());r=record["result"];f=r.get("final") or {};ec=tuple(round(1000*x) for x in record["payload"]["ec_GHz"][2:])
         if ec not in b_valid or r.get("status")!="calibrated" or f.get("raw_fidelity",0)<=.95 or f.get("postselected_fidelity",0)<=.999 or not r.get("selected_anchor"):continue

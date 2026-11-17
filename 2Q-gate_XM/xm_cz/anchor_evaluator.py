@@ -18,8 +18,15 @@ def evaluate_anchor_set(payload: dict) -> dict:
     maximum_s1 = float(payload.get("maximum_S1", float("inf")))
     maximum_source = float(payload.get("maximum_source_score", float("inf")))
     fallback = int(payload.get("fidelity_fallback_count", len(anchors)))
+    ranking = payload.get("anchor_ranking", "minimum_S1")
+    if ranking not in {"minimum_S1", "maximum_S1_worst_case"}:
+        raise ValueError(
+            "anchor_ranking must be minimum_S1 or maximum_S1_worst_case"
+        )
     if fallback < 1:
         raise ValueError("fidelity_fallback_count must be positive")
+    if ranking == "maximum_S1_worst_case" and fallback != 1:
+        raise ValueError("Worst-case anchor ranking requires fidelity_fallback_count=1")
     base = {
         k: v
         for k, v in payload.items()
@@ -29,6 +36,7 @@ def evaluate_anchor_set(payload: dict) -> dict:
             "maximum_S1",
             "maximum_source_score",
             "fidelity_fallback_count",
+            "anchor_ranking",
         }
     }
     screening = []
@@ -72,7 +80,10 @@ def evaluate_anchor_set(payload: dict) -> dict:
             "anchor_screening": screening,
             "anchors_considered": len(anchors),
         }
-    passing.sort(key=lambda item: item[0]["S1"])
+    passing.sort(
+        key=lambda item: item[0]["S1"],
+        reverse=ranking == "maximum_S1_worst_case",
+    )
     attempts = []
     best_failure = None
     for rank, (_screen, anchor) in enumerate(passing[:fallback], 1):
@@ -108,11 +119,13 @@ def evaluate_anchor_set(payload: dict) -> dict:
             return result | {
                 "selected_anchor": anchor,
                 "selected_anchor_rank": rank,
+                "anchor_ranking": ranking,
                 "anchor_screening": screening,
                 "fidelity_attempts": attempts,
             }
     return (best_failure or {"status": "no_anchor_calibrated"}) | {
         "workflow_status": "no_ranked_anchor_passed_fidelity",
+        "anchor_ranking": ranking,
         "anchor_screening": screening,
         "fidelity_attempts": attempts,
     }

@@ -22,6 +22,7 @@ from .config import validate_payload
 from .model import (
     collision_residual,
     fixed_pair_model,
+    frequency_tuned_fixed_coupling_pair_model,
     frequency_limits,
     layout,
     pair_model,
@@ -58,6 +59,7 @@ def evaluate_ec(payload: dict) -> dict:
         min(bounds[k][1] for k in ("B1", "B2")),
     )
     fixed_a = payload.get("fixed_A")
+    fixed_b = payload.get("fixed_B")
     if (fixed_a is None and a_low > a_high) or b_bound_low > b_bound_high:
         raise ValueError("Empty within-rail bare frequency intersection")
     target_index_a = 8 if channel == "0020" else 2
@@ -101,6 +103,20 @@ def evaluate_ec(payload: dict) -> dict:
     def b_pair(frequency):
         if not b_bound_low - 1e-10 <= frequency <= b_bound_high + 1e-10:
             raise ValueError("B frequency outside configured transmon bounds")
+        if fixed_b:
+            model = frequency_tuned_fixed_coupling_pair_model(
+                ec[2], ec[3], frequency, float(fixed_b["J_GHz"])
+            )
+            logical_bounds = fixed_b.get(
+                "logical_frequency_bounds_GHz", [0.08, 0.10]
+            )
+            if not (
+                logical_bounds[0]
+                <= model["logical_splitting_GHz"]
+                <= logical_bounds[1]
+            ):
+                raise ValueError("fixed_B_logical_frequency_out_of_bounds")
+            return model
         return pair_model(ec[2], ec[3], frequency, split_b)
 
     lower, upper, step = payload.get("frequency_GHz", [a_low, a_high, 0.05])
@@ -297,6 +313,7 @@ def evaluate_ec(payload: dict) -> dict:
             "fA_GHz": f_a,
             "logical_splittings_GHz": [split_a, split_b],
             "fixed_A": fixed_a,
+            "fixed_B": fixed_b,
             "S1_position": best,
             "logical_source": logical_source,
             "logical_source_index": logical_source_index,
@@ -385,6 +402,10 @@ def evaluate_ec(payload: dict) -> dict:
                             "B1_B2": b["J"],
                             "A2_B1": coupling,
                         },
+                        "logical_splittings_GHz": [
+                            a["logical_splitting_GHz"],
+                            b["logical_splitting_GHz"],
+                        ],
                         "auxiliary_bare_weight": b["target_weight"]
                         if channel == "0020"
                         else a["target_weight"],
@@ -452,6 +473,7 @@ def evaluate_ec(payload: dict) -> dict:
         "g_GHz": g,
         "logical_splittings_GHz": [split_a, split_b],
         "fixed_A": fixed_a,
+        "fixed_B": fixed_b,
         "final": final,
         "screening": records,
         "calculation_seconds": time.perf_counter() - started,
