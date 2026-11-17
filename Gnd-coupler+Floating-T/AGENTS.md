@@ -62,6 +62,22 @@ with coupler EJ only after rail calibration, then recheck both pairs at one comm
 OFF bias. Freeze the calibrated differential settings for common-frequency maps.
 Do not compare a retuned historical design with unretuned current controls as an
 intrinsic hardware comparison. See WORKFLOW.md stage 5.
+Before seven-mode integration, default to prescribed-resonator-range readout
+optimization (readout_workflow/RESONATOR_ROBUST_DESIGN.md). When starting an actual
+design, ask for four independent GHz bounds A_low,A_high,B_low,B_high; keep all
+four unset during workflow-only updates. Allow different centers and widths;
+equal widths are a possible user choice, not a constraint. Never inherit bounds
+from examples or past designs. Maximize the worst
+absolute signed-mean chi over that interval at strict H>0.96 everywhere, with
+one shared capacitor design and allowed EJ recalibration. Nominal-frequency
+optimization is an initialization, not range certification. Do not silently
+replace the explicit-pad reference with the shared backend's 6 GHz assumption.
+Only if no audited point is found, retry at H>0.95 and explicitly warn in chat,
+saved results and the design report. Keep the same requested frequency range.
+Preserve nominal loaded EC and supplied rail/readout
+calibration targets. Retain per-tier attempts; search failure is not proof of
+infeasibility. Reject integration if both tiers fail. Seven-mode acceptance stays
+H>=0.95; recheck the frozen optimized design after integrated idle calibration.
 Run A/B integrated readout sweeps concurrently with two spawned processes and
 one BLAS thread per worker; use the explicit-input readout_common_sweep runner.
 Keep the calibrated centers and differential settings fixed. Record parent wall

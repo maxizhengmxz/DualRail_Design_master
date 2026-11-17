@@ -1,5 +1,5 @@
 {
-  "schema": "coupler-design-request-v5",
+  "schema": "coupler-design-request-v6",
   "case_id": null,
   "rail_pairs": {
     "A": {
@@ -292,6 +292,37 @@
     ],
     "stop_on_first_converged_fixed_control_check": true,
     "exhaustion_policy": "Report unconverged; do not silently allocate larger bases or relax physical constraints"
+  },
+  "standalone_readout_optimization": {
+    "required": true,
+    "entrypoint": "standalone_pad_readout.py",
+    "stage": "after_standalone_feasibility_before_seven_mode_integration",
+    "mode": "prescribed_resonator_range",
+    "owner_workflow": "readout_workflow/RESONATOR_ROBUST_DESIGN.md",
+    "objective": "maximize_worst_absolute_signed_mean_chi_over_prescribed_range",
+    "bare_resonator_frequency_range_ghz": {"A": [null, null], "B": [null, null]},
+    "range_input_policy": "prompt_for_all_four_bounds_when_an_actual_design_is_started; leave_unset_during_workflow_updates",
+    "range_units": "GHz",
+    "range_parameter_policy": "A_low,A_high,B_low,B_high_are_independent_free_inputs",
+    "equal_center_required": false,
+    "equal_width_required": false,
+    "range_defaults": "none; do_not_inherit_nominal_design_or_example_values",
+    "nominal_reference_policy": "use_supplied_case_reference; do_not_silently_assume_6_GHz",
+    "shared_hardware_policy": "fixed_capacitors_across_range; EJ_recalibration_only_at_each_scenario",
+    "loaded_EC_policy": "preserve_nominal_reference_EC; report_uncompensated_loading_changes_at_swept_resonator_frequencies",
+    "preferred_H_strict_min": 0.96,
+    "fallback_H_strict_min": 0.95,
+    "fallback_policy": "only_if_no_audited_preferred_design_covers_entire_requested_range; keep_same_range",
+    "fallback_warning_required": true,
+    "preserve": ["loaded_EC", "supplied_rail_and_readout_calibration_targets", "existing_physical_bounds", "all_other_readout_constraints"],
+    "both_tiers_fail": "save_rejected_diagnostic_and_stop_integration",
+    "global_optimum_certified": false,
+    "numerical_defaults": {
+      "frequency_step_ghz": 0.05,
+      "maxiter": 60,
+      "max_audits": 2,
+      "refinement_rounds": 2
+    }
   },
   "standalone_readout_contrast_maps": {
     "owner_package": "readout_workflow",

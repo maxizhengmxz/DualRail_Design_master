@@ -69,8 +69,19 @@ below follows this hardware cover; do not discard the confirmed-input section.
    static dressed-reference scope and excluded pulse/decoherence physics.
 7. **Standalone readout design and coupler/resonator diagnostics.** Each actual
    equal resonator link, intra-pair link, resonator self C/L, bare LC and dressed
-   readout frequency; every readout constraint. Coupler/resonator transition
-   couplings, detunings and dispersive ratios at the final ON point.
+   readout frequency; every readout constraint.
+   Report both prescribed bare resonator intervals in GHz (four independently
+   supplied bounds; do not impose equal centers or widths), the nominal
+   reference, shared hardware and per-frequency EJ recourse. Maximize worst
+   absolute mean chi across the range, not nominal/peak chi. Report preferred
+   H>96% everywhere versus fallback H>95% over the same unchanged interval,
+   selected H floor, achieved H/chi, audited status and optimization time.
+   Explicitly flag any 95% fallback and absence of the requested extra margin;
+   distinguish a bounded search miss from proven infeasibility. Preserve the
+   fallback flag when presenting seven-mode validation. Historical designs with
+   no optimization record must not be described as optimized by this policy.
+   Coupler/resonator transition couplings, detunings and dispersive ratios at
+   the final ON point.
    Include the standard standalone A1-r1-A2 and B1-r2-B2 2D contrast maps over
    supplied tuning ranges: bare-f01 axes, nominal stars, absolute 01-10/01-00/
    10-00 cavity contrasts with 0.5/1/2 MHz contours, shared orange >0.5 MHz and
