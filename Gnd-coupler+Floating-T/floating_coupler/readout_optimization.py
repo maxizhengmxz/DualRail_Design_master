@@ -31,6 +31,7 @@ def maximize_chi(
     scope="nominal_frequency_initialization_only",
     h_floors=H_FLOORS,
     audit_with_floor=False,
+    max_starts=4,
 ):
     """Maximize absolute signed-mean chi, preferring H>96% over any H>95% point.
 
@@ -46,7 +47,9 @@ def maximize_chi(
         x = np.clip(np.asarray(start, dtype=float), lower, upper)
         if not any(np.linalg.norm(x - old) < 1e-8 for old in seeds):
             seeds.append(x)
-    seeds = seeds[:4]
+    if not isinstance(max_starts, int) or max_starts < 1:
+        raise ValueError("max_starts must be a positive integer")
+    seeds = seeds[:max_starts]
     tiers = []
     for floor in h_floors:
         candidates, attempts = [], []

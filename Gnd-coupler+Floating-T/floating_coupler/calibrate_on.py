@@ -173,14 +173,23 @@ class PhaseCalibration:
 
     def optimize_time(self, time_bounds, points=21):
         """Maximize raw fidelity along the phase-pi constraint, locally in time."""
-        grid = [self.phase_root(float(t)) for t in np.linspace(*time_bounds, points)]
+        grid=[];failed_times=[]
+        for time in np.linspace(*time_bounds,points):
+            try:grid.append(self.phase_root(float(time)))
+            except ValueError:failed_times.append(float(time))
+        if not grid:raise ValueError('No reliable phase-pi root anywhere in the duration window')
         best_index = int(np.argmax([row["raw_cz_fidelity"] for row in grid]))
         left = grid[max(0, best_index - 1)]["time_ns"]
-        right = grid[min(points - 1, best_index + 1)]["time_ns"]
-        refinement = refine_gate_scalar(self.phase_root,(left,right),
-                                        grid[best_index]['time_ns'],xatol=.02)
+        right = grid[min(len(grid) - 1, best_index + 1)]["time_ns"]
+        if left==right:
+            refinement={'best':grid[best_index],'optimizer_success':False,
+                        'stop_reason':'single feasible duration; no scalar bracket'}
+        else:
+            refinement = refine_gate_scalar(self.phase_root,(left,right),
+                                            grid[best_index]['time_ns'],xatol=.02)
         endpoint = refinement['best']
         return {"grid": grid, "best": max(grid + [endpoint], key=lambda row: row["raw_cz_fidelity"]),
+                "failed_duration_samples_ns":failed_times,
                 "optimizer_success": refinement['optimizer_success'],
                 "refinement":refinement}
 

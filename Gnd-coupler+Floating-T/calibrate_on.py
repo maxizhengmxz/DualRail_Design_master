@@ -29,15 +29,20 @@ def main():
         args.output.write_text(json.dumps(result, indent=2, allow_nan=False) + "\n", encoding="utf-8")
 
     with threadpool_limits(limits=1):
-        cal = PhaseCalibration(model, spec["fc_ghz"], spec["search_basis"], spec["fb_bounds_ghz"])
+        cal = PhaseCalibration(model, spec["fc_ghz"], spec["search_basis"], spec["fb_bounds_ghz"],
+                               phase_samples=spec.get("phase_samples", 9))
         result["original"] = cal.at(spec["initial_fb_ghz"], spec["initial_time_ns"])
-        result["phase_only"] = cal.phase_root(spec["initial_time_ns"])
+        try:
+            result["phase_only"] = cal.phase_root(spec["initial_time_ns"])
+        except ValueError as error:
+            result["phase_only"] = {"status": "no_reliable_root_at_seed_time", "error": str(error)}
         result["time_refinement"] = cal.optimize_time(spec["time_bounds_ns"], spec.get("time_samples", 21))
         best = result["time_refinement"]["best"]
         print(json.dumps({"stage": "search", "phase_only": result["phase_only"], "best": best}), flush=True)
         save()
         def fixed_controls(basis):
-            audit=PhaseCalibration(model,spec['fc_ghz'],basis,spec['fb_bounds_ghz'])
+            audit=PhaseCalibration(model,spec['fc_ghz'],basis,spec['fb_bounds_ghz'],
+                                   phase_samples=spec.get('phase_samples',9))
             point=audit.at(best['fb_ghz'],best['time_ns'])
             result['audits'].append(dict(basis=basis,fixed_search_endpoint=point))
             save()
@@ -47,7 +52,8 @@ def main():
         result['precision_validation']=verify_fixed_controls(fixed_controls,bases,'gate')
         if result['precision_validation']['converged']:
             basis=result['precision_validation']['final_basis']
-            final=PhaseCalibration(model,spec['fc_ghz'],basis,spec['fb_bounds_ghz'])
+            final=PhaseCalibration(model,spec['fc_ghz'],basis,spec['fb_bounds_ghz'],
+                                   phase_samples=spec.get('phase_samples',9))
             result['phase_recalibrated_endpoint']=correct_gate_phase(
                 lambda fb:final.at(fb,best['time_ns']),best,spec['fb_bounds_ghz'])
         result['gate_error_accuracy_absolute']=GATE_ERROR_ABS

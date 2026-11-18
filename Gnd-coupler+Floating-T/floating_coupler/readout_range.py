@@ -409,9 +409,10 @@ def _optimize_pad_range(
     maxiter = int(options.get("maxiter", 60))
     max_audits = int(options.get("max_audits", 2))
     refinement_rounds = int(options.get("refinement_rounds", 2))
-    if maxiter < 1 or max_audits < 1 or refinement_rounds < 1:
+    max_starts = int(options.get("max_starts", 4))
+    if maxiter < 1 or max_audits < 1 or refinement_rounds < 1 or max_starts < 1:
         raise ValueError(
-            "Positive readout maxiter, max_audits and refinement_rounds required"
+            "Positive readout maxiter, max_audits, refinement_rounds and max_starts required"
         )
     from .readout_optimization import H_FLOORS
 
@@ -451,6 +452,7 @@ def _optimize_pad_range(
                 scope="prescribed_range_validated",
                 h_floors=(floor,),
                 audit_with_floor=True,
+                max_starts=max_starts,
             )
             total_seconds += result["seconds"]
             total_hardware += model.hardware_builds
@@ -482,7 +484,8 @@ def _optimize_pad_range(
         scenario_basis=asdict(basis),
         frequency_step_ghz=model.step,
         optimizer_budget=dict(
-            maxiter=maxiter, max_audits=max_audits, refinement_rounds=refinement_rounds
+            maxiter=maxiter, max_audits=max_audits, refinement_rounds=refinement_rounds,
+            max_starts=max_starts
         ),
         hardware_builds=total_hardware,
         scenario_evaluations=total_evaluations,

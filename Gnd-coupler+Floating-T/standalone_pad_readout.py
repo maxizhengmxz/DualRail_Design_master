@@ -172,7 +172,13 @@ def design(case, output):
 
     starts = []
     cguess = 13 if target == 150 else 6.5
-    for detune in [-0.005, 0.005, -0.015, 0.015]:
+    detunings = case.get(
+        "readout_start_detunings_ghz", [-0.005, 0.005, -0.015, 0.015]
+    )
+    collect_all_starts = bool(case.get("readout_collect_all_starts", False))
+    if not detunings or not all(np.isfinite(detunings)):
+        raise ValueError("readout_start_detunings_ghz must contain finite values")
+    for detune in detunings:
         x0 = [
             guide + detune / 2,
             guide - detune / 2,
@@ -215,7 +221,7 @@ def design(case, output):
         }
         starts.append(row)
         print(case["name"], "FIT", json.dumps(row), flush=True)
-        if max(abs(residual(fit.x))) < 1e-4:
+        if max(abs(residual(fit.x))) < 1e-4 and not collect_all_starts:
             break
     best = min(starts, key=lambda r: r["cost"])
     x = best["x"]

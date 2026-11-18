@@ -72,6 +72,50 @@ class ReadoutStrengthOptimizationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "rejected standalone"):
             readout_handoff({"B": {"readout_strength_optimization": result}})
 
+    def test_configured_start_budget_is_not_hard_capped_at_four(self):
+        starts = [[float(i), 0.0] for i in range(1, 8)]
+
+        def failed_minimize(*args, **kwargs):
+            return SimpleNamespace(
+                x=np.asarray(args[1], dtype=float),
+                success=False,
+                message="controlled failure",
+            )
+
+        with patch(
+            "floating_coupler.readout_optimization.minimize",
+            side_effect=failed_minimize,
+        ):
+            result = maximize_chi(
+                [0.0, 0.0],
+                starts,
+                ([-10.0, -1.0], [10.0, 1.0]),
+                lambda x: dict(hybridization=0.94, chi=0.0),
+                lambda x: np.array([x[1]]),
+                lambda x, floor: np.array([-1.0]),
+                lambda x: dict(point=dict(hybridization=0.94, chi=0.0)),
+                lambda point: [],
+                lambda point: 0.0,
+                max_starts=6,
+            )
+
+        self.assertEqual([len(tier["attempts"]) for tier in result["tiers"]], [6, 6])
+
+    def test_start_budget_must_be_positive(self):
+        with self.assertRaisesRegex(ValueError, "positive integer"):
+            maximize_chi(
+                [0.0],
+                [],
+                ([-1.0], [1.0]),
+                lambda x: {},
+                lambda x: np.array([]),
+                lambda x, floor: np.array([]),
+                lambda x: {},
+                lambda point: [],
+                lambda point: 0.0,
+                max_starts=0,
+            )
+
     def test_integration_retains_fallback_and_labels_legacy(self):
         result = dict(
             status="validated_pass",

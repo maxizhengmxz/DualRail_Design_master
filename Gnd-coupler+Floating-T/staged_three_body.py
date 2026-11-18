@@ -135,7 +135,10 @@ def run(request,output):
                 def inequalities(z):
                     try:
                         p,idle,on,_,loads,_=evaluate(z)
-                        return np.r_[np.array([.1,.45,.1])-loads,(p[6]-p[7]-.0001),idle['minimum_overlap']-.8,on['minimum_overlap']-.8]
+                        limits=np.array([request.get('rail_loading_max',.1),
+                                         request.get('coupler_loading_max',.45),
+                                         request.get('rail_loading_max',.1)])
+                        return np.r_[limits-loads,(p[6]-p[7]-.0001),idle['minimum_overlap']-.8,on['minimum_overlap']-.8]
                     except ValueError:return np.ones(6)*-100
                 fit=minimize(objective,z0,method='SLSQP',bounds=bounds,constraints=[{'type':'eq','fun':equalities},{'type':'ineq','fun':inequalities}],options={'maxiter':request['maxiter'],'ftol':1e-10,'eps':2e-6})
                 try:

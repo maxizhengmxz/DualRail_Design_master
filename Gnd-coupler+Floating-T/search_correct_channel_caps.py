@@ -136,9 +136,10 @@ def run(request,selection,output,stage='coarse',mode='cancel',off_upper_ghz=10.,
     if (folder/'inputs.json').exists():
         require_off_definition(json.loads((folder/'inputs.json').read_text()).get('off_definition'))
     base=request_data['seed_grounded_three_body']['parameters']
-    starts=[[*base[:4],7.65,9.9,4.862],
-            [base[0]*.8,base[1]*.8,base[2]*.64,base[3],7.08,9.95,4.862],
-            [base[0]*.8*.8,base[1]*.8/ .8,base[2]*.64,.35,7.08,9.95,4.862]]
+    gate_seed=float(selected['gate_frequency_ghz'])
+    starts=[[*base[:4],7.65,9.9,gate_seed],
+            [base[0]*.8,base[1]*.8,base[2]*.64,base[3],7.08,9.95,gate_seed],
+            [base[0]*.8*.8,base[1]*.8/ .8,base[2]*.64,.35,7.08,9.95,gate_seed]]
     provenance=dict(source_signature=source_signature(),off_definition=off_target_definition('five'),seed=request_data['seed_grounded_three_body'],selection=selected,
                     off_upper_ghz=off_upper_ghz,ec_lower_ghz=ec_lower_ghz,
                     request=request_data,basis=COARSE if stage=='coarse' else FINE,
