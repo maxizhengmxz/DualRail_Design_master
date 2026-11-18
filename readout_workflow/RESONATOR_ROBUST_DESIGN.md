@@ -1,5 +1,9 @@
 # Resonator-frequency readout design
 
+This is the optional capacitor-design/range optimization workflow. For the
+distinct fixed-design tolerance study and its entry points, see
+[RESONATOR_FREQUENCY_STUDIES.md](RESONATOR_FREQUENCY_STUDIES.md).
+
 The standard opt-in entry point is `resonator_robust_design.py`. Opening or
 importing the module never launches work. Existing numerical datasets and
 reports are historical records; changing this policy does not relabel them.
@@ -25,7 +29,7 @@ flag --quick-tolerance is accepted, but this is now the default tolerance
 algorithm. The width ceiling is explicitly censored if reached. Only a
 validated sampled interval is reported; endpoints alone do not certify it.
 
-`resonator_design_campaign.py` schedules the strict EC1>EC2 B half-plane with
+`resonator_design_campaign.py` schedules one strict half-plane (default EC2>EC1) with
 four workers and resumable per-point checkpoints. --ec-step-mhz accepts
 multiples of 2 MHz. An 8 MHz lattice anchored at 150 MHz has 100 source-feasible
 points. Start with the coarse lattice; add finer original-grid points later.
@@ -128,3 +132,61 @@ conditions file, not hardcoded by the campaign.
 The default range-search halfwidth ceiling is 1 GHz and is explicitly censored
 if reached. These numerical budgets are configurable; the physical acceptance
 limits come from the supplied conditions file.
+
+## Coarse-to-fine refinement
+
+Use --refine-from COARSE_OUTPUT with a different --output directory and a
+smaller --boundary-resolution-ghz. This applies to tolerance mode only.
+The original run must be complete. Nominal EC tuple, physical acceptance,
+50 Ohm/6 GHz reference, frequency-validation grid and range ceiling must
+match. Changes to recorded physical equations are rejected; formatting-only
+changes and optimizer-code updates do not invalidate an otherwise compatible
+certificate. Historical runs that did not snapshot some extra, inactive core
+modules record that provenance limitation explicitly.
+
+The implementation reads the saved passing halfwidth, failed-search bracket,
+validated capacitor design and calibrated EJs. It performs only midpoint
+trials inside that bracket, warm-started from the saved design. Any newly
+accepted range receives the normal full sampled validation. If trials fail,
+the old certified range is retained. Interrupted refinement trials are also
+checkpointed. If the bracket already meets the requested precision, no new
+optimization or quantum validation is run. A ceiling-censored source remains
+censored; extending the search ceiling is a new search, not refinement.
+
+Source coarse files are read-only. Refined outputs record their hashes,
+physics compatibility checks, reused witnesses, and new/cached trial counts.
+25 to 6.25 MHz normally requires only two extra bisection levels, plus
+validation of any newly accepted design. It does not repeat the full width
+expansion. Search non-discovery remains a numerical bound, not a proof.
+
+```powershell
+python -m readout_workflow.resonator_robust_design --run --mode tolerance --ec 238 198 --input NOMINAL.json --conditions SETTINGS.json --refine-from COARSE_POINT_OUTPUT --boundary-resolution-ghz 0.00625 --output NEW_REFINED_POINT_OUTPUT
+python -m readout_workflow.resonator_design_campaign --run --workers 4 --ec-step-mhz 2 --source SOURCE_RESULTS.json --conditions SETTINGS.json --refine-from COARSE_CAMPAIGN_OUTPUT --boundary-resolution-ghz 0.00625 --output NEW_REFINED_CAMPAIGN_OUTPUT
+```
+
+For a campaign, only matching completed coarse tuples are refined. Missing
+EC tuples receive a fresh normal search. Thus upgrading both the EC grid and
+the boundary precision does require full searches at newly added EC points;
+only the already-computed tuples avoid the coarse-search cost. The source
+campaign fingerprints are included in resume identity.
+
+## Sequential full B / A run
+
+`resonator_pair_sequence.py` runs B at 6.25 MHz boundary resolution, then A
+at 25 MHz, then refines those A results to 6.25 MHz. All stages use the 2 MHz
+EC lattice, EC2>EC1, four workers and exploration-only objectives. Rail-specific
+conditions are snapshotted independently: B logical 80-100 MHz, A 140-160 MHz.
+Current source data provide 1,488 unique B pairs and 385 unique A pairs.
+A label-swapped starting seed fills one missing orientation per source; all
+final results and certificates are recalculated, never copied by symmetry.
+
+The sequence saves immutable input copies, source snapshots, stage commands,
+source/input fingerprints, a duplicate-scheduler lock, live progress, stage
+exit records and all per-tuple checkpoints. It will not advance past errors
+or changed source. A completed stage is skipped safely on resume.
+
+Creating PAUSE_REQUESTED in the sequence output stops further scheduling;
+active tuples finish their checkpoints before the pipeline pauses. On explicit
+resume, remove that file and restart the same sequence command. After a forced
+restart, stale locks are checked against live process IDs before reuse. Source
+changes require the saved exact version or a new output, never silent mixing.

@@ -28,7 +28,22 @@ requested integrated diagnostic using the existing explicit-coupler Hamiltonian.
 it never launches numerical optimization. Existing generated results remain in
 their original ignored output directories.
 
-## Resonator-frequency-robust design
+## Optional resonator-frequency studies
+
+These are two distinct opt-in workflows, documented in
+[RESONATOR_FREQUENCY_STUDIES.md](RESONATOR_FREQUENCY_STUDIES.md):
+
+- **Fixed-design tolerance:** hold the saved physical capacitor network fixed,
+  vary resonator frequency at fixed impedance, and recalibrate EJs. Report the
+  acceptable frequency/operation region and active constraint failures.
+- **Maximum range for an EC tuple:** optimize one capacitor design to support
+  the widest validated symmetric resonator interval, with EJ recalibration
+  throughout that interval. Chi and H remain constraints in tolerance mode.
+
+Neither starts during ordinary readout feasibility, coupler synthesis or import.
+Numerical launchers require explicit `--run`; no gate calculations are included.
+
+### Maximum-range design and prescribed-range alternative
 
 The opt-in [robust-design workflow](RESONATOR_ROBUST_DESIGN.md) supports either
 maximum symmetric resonator tolerance around 6 GHz (chi/H are constraints only),
@@ -36,6 +51,8 @@ or a prescribed frequency range with optimization of worst-case mean chi at
 selectable H targets.
 Shared capacitors stay fixed across the range; both EJs recalibrate. It does
 not launch with ordinary feasibility searches or perform capacitor-error Monte Carlo.
+Completed coarse runs can be upgraded with `--refine-from`, reusing their
+validated designs and refining only the saved boundary brackets.
 
 ## Calculation modules
 

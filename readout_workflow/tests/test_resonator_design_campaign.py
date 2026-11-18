@@ -1,7 +1,9 @@
 """Campaign launch arguments must preserve the production half-plane policy."""
 
+import json
 import unittest
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from readout_workflow.resonator_design_campaign import command_for
 
@@ -37,6 +39,21 @@ class CampaignCommandTests(unittest.TestCase):
             [238, 200], Path("out"), 3, 50, 1.0, boundary_resolution=0.00625
         )
         self.assertEqual(cmd[cmd.index("--boundary-resolution-ghz") + 1], "0.00625")
+
+    def test_campaign_refines_only_available_completed_coarse_tuples(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            coarse = root / "ec_238_200"
+            coarse.mkdir()
+            (coarse / "completion.json").write_text(json.dumps({"phase": "complete"}))
+            existing = command_for(
+                [238, 200], Path("new-output"), 3, 50, 1.0, refine_from=root
+            )
+            missing = command_for(
+                [240, 200], Path("new-output"), 3, 50, 1.0, refine_from=root
+            )
+        self.assertEqual(existing[existing.index("--refine-from") + 1], str(coarse))
+        self.assertNotIn("--refine-from", missing)
 
 
 if __name__ == "__main__":
