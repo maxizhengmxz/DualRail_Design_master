@@ -63,15 +63,21 @@ OFF bias. Freeze the calibrated differential settings for common-frequency maps.
 Do not compare a retuned historical design with unretuned current controls as an
 intrinsic hardware comparison. See WORKFLOW.md stage 5.
 Before seven-mode integration, default to prescribed-resonator-range readout
-optimization (readout_workflow/RESONATOR_ROBUST_DESIGN.md). When starting an actual
+optimization (readout_workflow/RESONATOR_ROBUST_DESIGN.md), minimizing the physical
+intra-pair capacitor by default for BOTH rails, subject to all range/readout
+constraints. Multiple-layout search is specified in WORKFLOW.md.
+Retain the best feasible evaluated point across failed optimizer endpoints.
+When starting an actual
 design, ask for four independent GHz bounds A_low,A_high,B_low,B_high; keep all
 four unset during workflow-only updates. Allow different centers and widths;
 equal widths are a possible user choice, not a constraint. Never inherit bounds
-from examples or past designs. Maximize the worst
-absolute signed-mean chi over that interval at strict H>0.96 everywhere, with
+from examples or past designs. Require the prescribed worst-case chi floor
+(normally 1 MHz) and minimize intra-pair C at strict H>0.96 everywhere, with
 one shared capacitor design and allowed EJ recalibration. Nominal-frequency
 optimization is an initialization, not range certification. Do not silently
 replace the explicit-pad reference with the shared backend's 6 GHz assumption.
+Report readout-link C alongside intra-pair C; they can trade off. Chi maximization
+and readout-link minimization are explicit alternatives, never silent defaults.
 Only if no audited point is found, retry at H>0.95 and explicitly warn in chat,
 saved results and the design report. Keep the same requested frequency range.
 Preserve nominal loaded EC and supplied rail/readout

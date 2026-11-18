@@ -1,4 +1,4 @@
-"""Bounded standalone chi maximization with an audited H-margin fallback.
+"""Bounded readout optimization with an audited H-margin fallback.
 
 This operates on the explicit-pad designer's coordinates and constraints. It
 does not retune a coupler, change loaded ECs, or modify global readout policy.
@@ -32,7 +32,11 @@ def maximize_chi(
     h_floors=H_FLOORS,
     audit_with_floor=False,
 ):
-    """Maximize absolute signed-mean chi, preferring H>96% over any H>95% point.
+    """Optimize the supplied objective, preferring H>96% over any H>95% point.
+
+    The historical function name and no-callback chi objective are retained for
+    explicit callers. The coupler's prescribed-range adapter supplies its own
+    objective; new coupler synthesis defaults to intra-pair C minimization.
 
     Callbacks keep all topology-specific calibration constraints in the caller.
     The screening H buffer is numerical; acceptance uses the requested strict H
@@ -85,6 +89,8 @@ def maximize_chi(
                             fun=lambda x, floor=floor: inequalities(x, floor),
                         ),
                     ],
+                    # Keep feasible major iterates if the endpoint later fails.
+                    callback=consider,
                     options=dict(maxiter=maxiter, ftol=1e-8, eps=1e-6),
                 )
                 attempts.append(
@@ -99,7 +105,7 @@ def maximize_chi(
                 attempts.append(dict(error=str(error)))
 
         audited, accepted = [], []
-        candidates.sort(key=lambda x: strength(evaluate(x)), reverse=True)
+        candidates.sort(key=lambda x: -objective(x) if objective is not None else strength(evaluate(x)), reverse=True)
         for x in candidates[:max_audits]:
             try:
                 result = audit(x, floor) if audit_with_floor else audit(x)
@@ -116,7 +122,7 @@ def maximize_chi(
                     )
                 )
                 if not rejected:
-                    accepted.append((strength(point), x, result))
+                    accepted.append((-objective(x) if objective is not None else strength(point), x, result))
             except (ValueError, FloatingPointError, np.linalg.LinAlgError) as error:
                 audited.append(dict(x=x.tolist(), error=str(error)))
         tiers.append(dict(H_floor=floor, attempts=attempts, audits=audited))
@@ -190,6 +196,8 @@ def readout_handoff(readouts):
                     f"{pair}: prescribed range has no passing validation record"
                 )
         summaries[pair] = dict(
+            objective=optimization.get("objective") if optimization else None,
+            capacitor_summary_ff=optimization.get("capacitor_summary_ff") if optimization else None,
             optimization_status=(
                 optimization["status"]
                 if optimization

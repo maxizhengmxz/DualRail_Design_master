@@ -22,6 +22,7 @@ from floating_coupler.readout_range import (
     case_for_pair,
     optimize_pad_range,
     required_range,
+    with_readout_defaults,
 )
 
 from core.transmon import Basis
@@ -132,6 +133,7 @@ def evaluate(case, x, basis=FAST, device=None, model=None):
 
 def design(case, output):
     required_range(case)  # Fail before any feasibility calculation if unspecified.
+    case = with_readout_defaults(case)
     policy(case)
     guide = case["bare_frequency_guide_ghz"]
     fR = case["readout_target_ghz"]

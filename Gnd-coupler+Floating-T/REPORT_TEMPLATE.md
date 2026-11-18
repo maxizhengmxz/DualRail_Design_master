@@ -72,8 +72,10 @@ below follows this hardware cover; do not discard the confirmed-input section.
    readout frequency; every readout constraint.
    Report both prescribed bare resonator intervals in GHz (four independently
    supplied bounds; do not impose equal centers or widths), the nominal
-   reference, shared hardware and per-frequency EJ recourse. Maximize worst
-   absolute mean chi across the range, not nominal/peak chi. Report preferred
+   reference, shared hardware and per-frequency EJ recourse. Record the actual
+   objective: default minimum physical intra-pair capacitance subject to range
+   feasibility and the chi floor. Report pair C and each readout-link C together;
+   excess chi is not optimized unless explicitly requested. Report preferred
    H>96% everywhere versus fallback H>95% over the same unchanged interval,
    selected H floor, achieved H/chi, audited status and optimization time.
    Explicitly flag any 95% fallback and absence of the requested extra margin;
