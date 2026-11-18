@@ -293,3 +293,15 @@ output/decoherence/participation.json. To calculate them for a new nominal case,
 add `--participation` to the explicit decoherence command. This optional diagnostic
 uses the full five-mode OFF model; it is not silently substituted for the
 independent-rail dephasing calculation.
+
+### Optional self/ground-capacitance allocation
+
+See [CAPACITANCE_ALLOCATION.md](CAPACITANCE_ALLOCATION.md). This runs only on
+request using saved physical hardware; it is separate from B-detuning.
+`studies/capacitance_allocation.py` supports A, B, A2 or all-rail scope, matches
+all ECs and nine intended coefficients, and minimizes all unwanted residual
+exchanges subject to loading/positivity constraints. Nonselected rail ratios
+retain nominal values. `studies/allocation_off.py` provides separately requested
+five-body physical OFF and logical/ZZ diagnostics of accepted matched circuits.
+No gate/readout optimization starts automatically. Historical report helpers
+read saved results only and do not launch calculations.

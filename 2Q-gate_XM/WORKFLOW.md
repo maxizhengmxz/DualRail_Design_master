@@ -148,3 +148,14 @@ on agreement; exhaustive large-basis gate audits are not mandatory. This does
 not change the toy's S1/common-g policy, phase-pi requirement, physical acceptance
 limits or saved results. The readout workflow retains its own adaptive checks
 and physical thresholds. See ../Gnd-coupler+Floating-T/SPEED_PROPOSALS.md.
+
+## Optional self/ground-capacitance allocation
+
+On explicit request, redistribute physical self/ground capacitances while
+matching all loaded ECs, resonator charging diagonals and nine intended charge
+coefficients. Minimize the absolute RMS across all twelve unwanted exchange
+channels; use smaller component changes to distinguish comparable matches.
+The study and separately requested OFF checks use saved physical circuits.
+See [the allocation protocol](../Gnd-coupler+Floating-T/CAPACITANCE_ALLOCATION.md) for scope, commands, constraints and
+historical report helpers. It does not run during standard design or import.
+B-detuning is a separate optional study and is not a dependency.

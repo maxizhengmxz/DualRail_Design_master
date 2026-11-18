@@ -393,3 +393,14 @@ solution. Neither runs by default or on import. Use study.py with explicit input
 and output folders; see OPTIONAL_STUDIES.md. Current approved report references
 are in templates/report-references/ and governed by STUDY_REPORT_TEMPLATES.md.
 Normal three -> five -> ON -> seven design/validation is unchanged.
+
+## Optional self/ground-capacitance allocation
+
+On explicit request, redistribute physical self/ground capacitances while
+matching all loaded ECs, resonator charging diagonals and nine intended charge
+coefficients. Minimize the absolute RMS across all twelve unwanted exchange
+channels; use smaller component changes to distinguish comparable matches.
+The study and separately requested OFF checks use saved physical circuits.
+See [the allocation protocol](CAPACITANCE_ALLOCATION.md) for scope, commands, constraints and
+historical report helpers. It does not run during standard design or import.
+B-detuning is a separate optional study and is not a dependency.
