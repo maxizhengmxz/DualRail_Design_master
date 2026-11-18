@@ -5,11 +5,11 @@ replace the standard three -> five -> ON -> seven design sequence. No sweep
 runs during import, normal design, reporting or toy-gate search. Source lives
 in `studies/` and uses the existing circuit reconstruction and OFF evaluator.
 Use a supplied saved physical circuit and a fresh output directory. Generated
-results remain ignored. B-detuning is a separate initiative and is not required.
+results remain ignored.
 
 Commands below run from `Gnd-coupler+Floating-T/` with the project Python.
 
-## Matched self/ground redistribution with the intended circuit matched
+## Matching constraints and residual minimization
 
 `python studies/capacitance_allocation.py --input CIRCUIT.json --output NEW_DIR
 --scope A --self-fractions 0.1 0.3 0.5 0.7 0.9`
@@ -31,8 +31,8 @@ Require positive physical capacitors and the supplied loading bounds. Among
 feasible matches minimize absolute RMS of the twelve unintended local exchange
 coefficients at the same reference controls; within 1 Hz in residual RMS, prefer
 smaller maximum fractional capacitor movement, then its squared sum. Include
-pad-ground capacitors in that movement report. Report absolute residuals AND changes from nominal, the largest
-residual, compensation values, full matrices and Jacobian rank. A rank-16 match
+pad-ground capacitors in that movement report. Report absolute residuals and
+changes from nominal, the largest residual, compensation values, full matrices and Jacobian rank. A rank-16 match
 with sixteen variables has no remaining continuous freedom at fixed p.
 Finite search failure is not proof that a physical design is impossible.
 
@@ -69,4 +69,4 @@ renderers for the historical allocation and circuit-target report layouts.
 They require the saved datasets named in their source and use Windows Arial
 fonts. They do not launch physics searches and are not generic fresh-run report
 entry points. Numerical allocation/OFF studies do not depend on PDF packages
-or historical results. Reports/data are not staged with source.
+or historical results. Generated reports and data are excluded from Git.

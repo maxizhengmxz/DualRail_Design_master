@@ -1,7 +1,8 @@
 """Five-transmon OFF validation of the matched common-allocation circuits.
 
 Freeze all four nominal rail EJs and the synthesized EC/J coefficients. Compare
-the original OFF bias with coupler-only recalibration in 7--10 GHz. Resonators
+the original OFF bias with coupler-only recalibration inside the saved request
+bounds (7--10 GHz when absent). Resonators
 are excluded dynamically; their synthesized charging-matrix coefficients remain
 in the five-mode model. Physical four-reference OFF is the optimization target;
 logical exchange and secular ZZ are diagnostics, never substitute targets.

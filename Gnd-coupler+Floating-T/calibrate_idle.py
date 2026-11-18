@@ -29,6 +29,27 @@ SEARCH = dict(local_levels=6, pair_states=10, coupler_levels=4, ncut=25)
 AUDIT = dict(local_levels=6, pair_states=12, coupler_levels=5, ncut=35)
 
 
+def retune_off(exchange,seed,allowed):
+    """Try the local branch, then the full authorized interval before failure."""
+    low,high=map(float,allowed)
+    if not np.isfinite([low,high,seed]).all() or not 0<low<high:
+        raise ValueError('OFF interval must be finite, positive and increasing')
+    center=float(np.clip(seed,low,high))
+    local=(max(low,center-.15),min(high,center+.15))
+    if exchange(local[0])*exchange(local[1])<0:
+        return brentq(exchange,*local,xtol=1e-9),dict(scope='local',bracket=list(local))
+    grid=np.linspace(low,high,17);values=[exchange(float(f)) for f in grid]
+    roots=[]
+    for a,b,ga,gb in zip(grid[:-1],grid[1:],values[:-1],values[1:]):
+        if ga*gb<0:roots.append(brentq(exchange,float(a),float(b),xtol=1e-9))
+    if not roots:
+        from floating_coupler.off_search import exchange_roots
+        roots=exchange_roots(exchange,grid,tolerance=1e-6)
+    if not roots:raise ValueError('No physical OFF root in the full authorized interval after idle calibration')
+    return min(roots,key=lambda f:abs(f-seed)),dict(scope='full_authorized_interval',
+               grid=[[float(f),float(g)] for f,g in zip(grid,values)],roots=roots)
+
+
 def calibrate(cell, cases, output, cycles=3):
     began = time.perf_counter()
     folder = Path(output)
@@ -50,6 +71,7 @@ def calibrate(cell, cases, output, cycles=3):
         for pair, idx in [('A', [0, 1]), ('B', [3, 4])]:
             target = cases[pair]['bare_frequency_guide_ghz']
             count = 0
+            evaluated = {}
 
             @lru_cache(maxsize=64)
             def at(key):
@@ -60,7 +82,9 @@ def calibrate(cell, cases, output, cycles=3):
                 system = SevenReadout(model, cell['physical'], fc, basis=basis).solve()
                 rows = system.readout(pair)
                 count += 1
-                return rows, constraint_values(rows, model, pair, cases[pair])
+                values = constraint_values(rows, model, pair, cases[pair])
+                evaluated[key] = float(min(values))
+                return rows, values
 
             def residual(fs):
                 rows, _ = at(tuple(map(float, fs)))
@@ -103,6 +127,11 @@ def calibrate(cell, cases, output, cycles=3):
                 except FeasibleIdle as stop:
                     fit = SimpleNamespace(x=stop.fs, success=True)
                 rows, constraints = at(tuple(map(float, fit.x)))
+            # A failed final iterate must not discard a better evaluated bias.
+            best_key = max(evaluated, key=evaluated.get)
+            if evaluated[best_key] > float(min(constraints)):
+                fit = SimpleNamespace(x=np.array(best_key), success=evaluated[best_key]>=0)
+                rows, constraints = at(best_key)
             frequencies[idx] = fit.x
             pair_results[pair] = dict(bare_frequencies_ghz=fit.x.tolist(),
                                      target_dressed_mean_ghz=target, rows=rows,
@@ -111,19 +140,22 @@ def calibrate(cell, cases, output, cycles=3):
             print('IDLE', cycle, pair, json.dumps(pair_results[pair]), flush=True)
 
         model = model_at(frequencies)
+        @lru_cache(maxsize=128)
         def exchange(f):
             return SevenReadout(model, cell['physical'], float(f), basis=basis,
                                 off_only=True).solve().physical_off_detail()['physical_exchange']['g_mhz']
         request = cell.get('request', {})
-        lower = max(request.get('on_lower_exclusive_ghz', 7.)+1e-5, fc-.15)
-        upper = min(request.get('off_upper_exclusive_ghz', 10.)-1e-5, fc+.15)
-        fc = brentq(exchange, lower, upper, xtol=1e-9)
+        lower = request.get('on_lower_exclusive_ghz', 7.)+1e-5
+        upper = request.get('off_upper_exclusive_ghz', 10.)-1e-5
+        (folder/f'cycle-{cycle}-rail-calibration.json').write_text(json.dumps(pair_results,indent=2))
+        fc,off_search = retune_off(exchange,fc,(lower,upper))
         system = SevenReadout(model, cell['physical'], fc, basis=basis).solve()
         checked = {pair: dict(rows=system.readout(pair),
                              minimum_constraint_slack=float(min(constraint_values(
                                  system.readout(pair), model, pair, cases[pair]))))
                    for pair in ['A', 'B']}
         history.append(dict(cycle=cycle, basis=basis, before_off_retune=pair_results,
+                            off_search=off_search,
                             off_ghz=fc, joint_readout=checked,
                             physical_exchange=system.physical_off_detail()['physical_exchange']))
         (folder/'progress.json').write_text(json.dumps(history, indent=2))
@@ -143,6 +175,7 @@ def calibrate(cell, cases, output, cycles=3):
         cell['physical']['bare_frequencies_ghz'])
     cell['idle_calibration'] = dict(policy='individual_EJ_dressed_readout_idle_v1',
                                     geometry_and_loaded_EC_frozen=True,
+                                    target_guides_ghz={p:cases[p]['bare_frequency_guide_ghz'] for p in ('A','B')},
                                     original_bare_frequencies_ghz=original['physical']['bare_frequencies_ghz'])
     result = dict(original_idle_frequencies_ghz=original['physical']['bare_frequencies_ghz'],
                   calibrated_cell=cell, history=history,

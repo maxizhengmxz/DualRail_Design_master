@@ -1,0 +1,1282 @@
+{
+  "schema": "matched-capacitance-design-snapshot-v1",
+  "design_id": "Design_V1_tied_p010_20261118",
+  "created_date": "2026-11-18",
+  "units": {
+    "capacitance": "fF",
+    "inductance": "nH",
+    "frequency": "GHz",
+    "charging_energy": "EC/h in GHz",
+    "josephson_energy": "EJ/h in GHz",
+    "time": "ns"
+  },
+  "topology": {
+    "rail_transmons": "floating",
+    "coupler_grounded_pad": "C2",
+    "coupler_active_pad": "C1",
+    "resonators": [
+      "r1",
+      "r2"
+    ],
+    "modal_order": [
+      "A1",
+      "A2",
+      "C",
+      "B1",
+      "B2",
+      "r1",
+      "r2"
+    ]
+  },
+  "provenance": {
+    "parent_design_id": "Design_V1_20261105",
+    "sources": {
+      "Gnd-coupler+Floating-T\\configs\\Design_V1_20261105.json": "c82e96403e63239b4f418d377a5fb528f8cab7cbdb0e1df2b8185bc7c54c161b",
+      "Gnd-coupler+Floating-T\\output\\common-rail-allocation-20261118\\result.json": "9c3871000562ac462529287b18a88467e4b3ca2b5e16e591b2326b1fdb577d40",
+      "Gnd-coupler+Floating-T\\output\\common-allocation-off-20261118\\result.json": "a1ffc702594d651f117191c347fb6b7217cacb369fa7791fe0865554e7f0465b"
+    }
+  },
+  "allocation": {
+    "definition": "p=Cs/(Cs+Cg1*Cg2/(Cg1+Cg2)); equal pad grounds",
+    "rail_self_fractions": {
+      "A1": 0.09999999999999999,
+      "A2": 0.09999999999999999,
+      "B1": 0.1,
+      "B2": 0.10000000000000002
+    },
+    "coupler_ratio_constrained": false,
+    "intended_pairs": [
+      [
+        "A1",
+        "A2"
+      ],
+      [
+        "A2",
+        "C"
+      ],
+      [
+        "C",
+        "B1"
+      ],
+      [
+        "A2",
+        "B1"
+      ],
+      [
+        "B1",
+        "B2"
+      ],
+      [
+        "A1",
+        "r1"
+      ],
+      [
+        "A2",
+        "r1"
+      ],
+      [
+        "B1",
+        "r2"
+      ],
+      [
+        "B2",
+        "r2"
+      ]
+    ],
+    "objective": "Minimum absolute RMS of all twelve unintended local exchange channels among matched candidates",
+    "maximum_relative_K_constraint_error_recomputed": 4.769186209736588e-16
+  },
+  "physical": {
+    "pad_pairs": {
+      "A1": [
+        "A11",
+        "A12"
+      ],
+      "A2": [
+        "A21",
+        "A22"
+      ],
+      "C": [
+        "C1",
+        "C2"
+      ],
+      "B1": [
+        "B11",
+        "B12"
+      ],
+      "B2": [
+        "B21",
+        "B22"
+      ]
+    },
+    "ground_capacitances_ff": {
+      "C1": 0.0,
+      "C2": 0.0,
+      "A11": 203.40378809794277,
+      "A12": 203.40378809794277,
+      "A21": 126.09131057622633,
+      "A22": 126.09131057622633,
+      "B11": 208.5191914740271,
+      "B12": 208.5191914740271,
+      "B21": 129.24704273632815,
+      "B22": 129.24704273632815
+    },
+    "pad_mutual_capacitances_ff": {
+      "A1": 11.300210449885709,
+      "A2": 7.005072809790351,
+      "C": 23.815535457781642,
+      "B1": 11.58439952633484,
+      "B2": 7.1803912631293425
+    },
+    "physical_links": [
+      {
+        "from": "A22",
+        "to": "C1",
+        "capacitance_ff": 6.679584197423356
+      },
+      {
+        "from": "C1",
+        "to": "B11",
+        "capacitance_ff": 13.640409681009443
+      },
+      {
+        "from": "A22",
+        "to": "B11",
+        "capacitance_ff": 0.74464465364033
+      },
+      {
+        "from": "A12",
+        "to": "A21",
+        "capacitance_ff": 13.799537883381305
+      },
+      {
+        "from": "A12",
+        "to": "r1",
+        "capacitance_ff": 5.857165492529071
+      },
+      {
+        "from": "A21",
+        "to": "r1",
+        "capacitance_ff": 11.789413615940934
+      },
+      {
+        "from": "B12",
+        "to": "B21",
+        "capacitance_ff": 6.59531858996539
+      },
+      {
+        "from": "B12",
+        "to": "r2",
+        "capacitance_ff": 4.5093836007468395
+      },
+      {
+        "from": "B21",
+        "to": "r2",
+        "capacitance_ff": 4.898296916774179
+      }
+    ],
+    "resonator_self_capacitances_ff": {
+      "r1": 523.4597664996636,
+      "r2": 524.9526215132057
+    },
+    "resonator_inductances_nh": {
+      "r1": 1.3086137698619673,
+      "r2": 1.313879760432504
+    },
+    "loaded_ec_ghz": {
+      "A1": 0.16499999999999998,
+      "A2": 0.24999999999999814,
+      "C": 0.45028499021480506,
+      "B1": 0.16000000000000006,
+      "B2": 0.26000000000000006
+    },
+    "bare_frequencies_ghz": {
+      "A1": 4.6128565630518725,
+      "A2": 4.624675459305412,
+      "B1": 5.422376704944339,
+      "B2": 5.385383709690169,
+      "C": 9.89674271961544
+    },
+    "K_per_ff": [
+      [
+        0.008518226461570487,
+        -0.0003410022564034211,
+        -2.7972119107913688e-06,
+        -2.0946121424256904e-07,
+        -4.716774476435776e-10,
+        -5.193346869531436e-05,
+        -9.794239210655298e-11
+      ],
+      [
+        -0.0003410022564034211,
+        0.012906403729652158,
+        -0.0010651260277230513,
+        -7.975891645088692e-05,
+        -1.7960595843202196e-07,
+        0.0001354941554555962,
+        -3.7294632790489044e-08
+      ],
+      [
+        -2.797211910791369e-06,
+        -0.0010651260277230513,
+        0.023246239508459155,
+        0.0012909645989542208,
+        2.9070722674593874e-06,
+        1.1114467965121909e-06,
+        6.036447435085891e-07
+      ],
+      [
+        -2.0946121424256904e-07,
+        -7.975891645088694e-05,
+        0.0012909645989542208,
+        0.008260098386977445,
+        -0.00017578674611879862,
+        8.32275147497114e-08,
+        -3.650158493164261e-05
+      ],
+      [
+        -4.716774476435775e-10,
+        -1.7960595843202194e-07,
+        2.9070722674593866e-06,
+        -0.00017578674611879862,
+        0.01342265987883835,
+        1.8741675814693105e-10,
+        6.051502196968885e-05
+      ],
+      [
+        -5.1933468695314356e-05,
+        0.0001354941554555962,
+        1.1114467965121909e-06,
+        8.32275147497114e-08,
+        1.8741675814693107e-10,
+        0.001851767138964401,
+        3.8916521672743725e-11
+      ],
+      [
+        -9.794239210655297e-11,
+        -3.729463279048905e-08,
+        6.03644743508589e-07,
+        -3.65015849316426e-05,
+        6.051502196968884e-05,
+        3.8916521672743725e-11,
+        0.001872306392623982
+      ]
+    ],
+    "budget": {
+      "A1": {
+        "loaded_ec_ghz": 0.16499999999999998,
+        "loaded_Ceff_ff": 117.39532924035835,
+        "own_capacitance_ff": 113.0021044988571,
+        "own_fraction": 0.9625775167553179,
+        "all_external_fraction": 0.037422483244682114,
+        "specified_links_loading_fraction": 2.552007746237095e-07
+      },
+      "A2": {
+        "loaded_ec_ghz": 0.24999999999999814,
+        "loaded_Ceff_ff": 77.48091729863708,
+        "own_capacitance_ff": 70.05072809790352,
+        "own_fraction": 0.9041029783876311,
+        "all_external_fraction": 0.0958970216123689,
+        "specified_links_loading_fraction": 0.023839573925631297
+      },
+      "C": {
+        "loaded_ec_ghz": 0.45028499021480506,
+        "loaded_Ceff_ff": 43.0177104402674,
+        "own_capacitance_ff": 23.815535457781642,
+        "own_fraction": 0.5536216412737935,
+        "all_external_fraction": 0.44637835872620646,
+        "specified_links_loading_fraction": 0.44637835872620657
+      },
+      "B1": {
+        "loaded_ec_ghz": 0.16000000000000006,
+        "loaded_Ceff_ff": 121.06393327911948,
+        "own_capacitance_ff": 115.84399526334839,
+        "own_fraction": 0.9568827984158069,
+        "all_external_fraction": 0.04311720158419308,
+        "specified_links_loading_fraction": 0.02144064221811348
+      },
+      "B2": {
+        "loaded_ec_ghz": 0.26000000000000006,
+        "loaded_Ceff_ff": 74.5008820179197,
+        "own_capacitance_ff": 71.80391263129341,
+        "own_fraction": 0.9637994972196762,
+        "all_external_fraction": 0.03620050278032383,
+        "specified_links_loading_fraction": 6.837230337453093e-08
+      }
+    },
+    "compensation_policy": "One-time self-shunt and intra-pair compensation preserves loaded EC and isolated A150/B90. The readout links and all three coupler capacitors remain fixed. Freeze all resulting components for frequency sweeps.",
+    "resonator_parameters": {
+      "r1": {
+        "fr_ghz": 5.986976799541683,
+        "effective_capacitance_ff": 540.0247034080371,
+        "q_zpf_coulomb": 1.0349601259919524e-18,
+        "gamma_ghz_per_n": [
+          -0.025992934269878906,
+          0.0678154331915023,
+          0.0005562841121917088,
+          4.1655744834348204e-05,
+          9.38029289775997e-08
+        ]
+      },
+      "r2": {
+        "fr_ghz": 6.008011847249107,
+        "effective_capacitance_ff": 534.100617259833,
+        "q_zpf_coulomb": 1.0310742644267432e-18,
+        "gamma_ghz_per_n": [
+          -4.883655423890746e-08,
+          -1.859604730821145e-05,
+          0.00030099253881115073,
+          -0.018200613584982914,
+          0.030174320732091395
+        ]
+      }
+    },
+    "channel_selection": {
+      "source_logical": "10",
+      "auxiliary": "B20",
+      "moved_pair": "B",
+      "gate_frequency_ghz": 4.830472831213531,
+      "s1": 0.0034307967838706835,
+      "intended_g_mhz": 5.0,
+      "target_g_mhz": 5.0,
+      "maximum_logical_ratio": 0.06079756017674685,
+      "score_basis_id": "xm-full-cosine-4^4",
+      "comparison_id": "05324ec29a5006196e3176f9d57b619739b4c789172c2453707b824e0f6c4c05",
+      "idle_frequency_ghz": null,
+      "stationary_frequency_ghz": 4.61,
+      "logical_ratio_limit": 0.2,
+      "definition_version": "dual-rail-cz-s1-v2",
+      "selection_rule": "minimum_S1_at_common_intended_g",
+      "score_kind": "evaluated_at_common_target_g",
+      "physical_auxiliary": "0020",
+      "logical_order": [
+        "A",
+        "B"
+      ]
+    },
+    "parasitic_capacitances_ff": {
+      "A11-r1": 0.0,
+      "A22-r1": 0.0,
+      "A11-A22": 0.0,
+      "A21-C1": 0.0,
+      "A21-B11": 0.0,
+      "A12-C1": 0.0,
+      "A11-C1": 0.0,
+      "B22-r2": 0.0,
+      "B11-r2": 0.0,
+      "B22-B11": 0.0,
+      "B12-C1": 0.0,
+      "B12-A22": 0.0,
+      "B21-C1": 0.0,
+      "B22-C1": 0.0
+    },
+    "budget_definition": "Complete three-link branch removal; derived fields rebuilt from the listed physical components"
+  },
+  "nominal_request_reference": {
+    "loaded_ec_ghz": {
+      "A1": 0.165,
+      "A2": 0.25,
+      "C": 0.45028499021480484,
+      "B1": 0.16,
+      "B2": 0.26
+    },
+    "idle_bare_frequencies_ghz": {
+      "A1": 4.6128565630518725,
+      "A2": 4.624675459305412,
+      "B1": 5.422376704944339,
+      "B2": 5.385383709690169,
+      "C": 9.89674271961544
+    },
+    "rail_ground_series_fraction": 0.5,
+    "local_levels": 5,
+    "ncut": 30,
+    "pair_cap_bounds_ff": [
+      0.001,
+      40.0
+    ],
+    "idle_isolated_splittings_mhz": [
+      150,
+      90
+    ],
+    "coupler_loading_max": 0.45,
+    "rail_loading_per_coupler_max": 0.1,
+    "channel_selection": {
+      "source_logical": "10",
+      "auxiliary": "B20",
+      "moved_pair": "B",
+      "gate_frequency_ghz": 4.830472831213531,
+      "s1": 0.0034307967838706835,
+      "intended_g_mhz": 5.0,
+      "target_g_mhz": 5.0,
+      "maximum_logical_ratio": 0.06079756017674685,
+      "score_basis_id": "xm-full-cosine-4^4",
+      "comparison_id": "05324ec29a5006196e3176f9d57b619739b4c789172c2453707b824e0f6c4c05",
+      "idle_frequency_ghz": null,
+      "stationary_frequency_ghz": 4.61,
+      "logical_ratio_limit": 0.2,
+      "definition_version": "dual-rail-cz-s1-v2",
+      "selection_rule": "minimum_S1_at_common_intended_g",
+      "score_kind": "evaluated_at_common_target_g",
+      "physical_auxiliary": "0020",
+      "logical_order": [
+        "A",
+        "B"
+      ]
+    },
+    "on_lower_exclusive_ghz": 7.0,
+    "off_upper_exclusive_ghz": 10.0,
+    "off_bracket_ghz": [
+      7.001,
+      9.99999
+    ],
+    "parasitic_capacitances_ff": {
+      "A11-r1": 0.0,
+      "A22-r1": 0.0,
+      "A11-A22": 0.0,
+      "A21-C1": 0.0,
+      "A21-B11": 0.0,
+      "A12-C1": 0.0,
+      "A11-C1": 0.0,
+      "B22-r2": 0.0,
+      "B11-r2": 0.0,
+      "B22-B11": 0.0,
+      "B12-C1": 0.0,
+      "B12-A22": 0.0,
+      "B21-C1": 0.0,
+      "B22-C1": 0.0
+    }
+  },
+  "reference_operating_points": {
+    "idle_off": {
+      "bare_f01_ghz": {
+        "A1": 4.6128565630518725,
+        "A2": 4.624675459305412,
+        "B1": 5.422376704944339,
+        "B2": 5.385383709690169,
+        "C": 9.89674271961544
+      },
+      "ej_ghz": {
+        "A1": 17.339379872468342,
+        "A2": 11.953997387777004,
+        "B1": 24.389383639444056,
+        "B2": 15.396677307309355,
+        "C": 29.848112578757103
+      }
+    },
+    "static_gate_on": {
+      "bare_f01_ghz": {
+        "A1": 4.6128565630518725,
+        "A2": 4.624675459305412,
+        "B1": 4.871046279295242,
+        "B2": 4.871046279295242,
+        "C": 7.05
+      },
+      "ej_ghz": {
+        "A1": 17.339379872468342,
+        "A2": 11.953997387777004,
+        "B1": 19.818310567435066,
+        "B2": 12.73304320543193,
+        "C": 15.750918158231313
+      },
+      "duration_ns": 100.3,
+      "moved_pair": "B",
+      "envelope": "static dressed-ON benchmark",
+      "conditional_phase_target_rad": 3.141592653589793
+    }
+  },
+  "reference_channel_selection": {
+    "source_logical": "10",
+    "auxiliary": "B20",
+    "moved_pair": "B",
+    "gate_frequency_ghz": 4.830472831213531,
+    "s1": 0.0034307967838706835,
+    "intended_g_mhz": 5.0,
+    "target_g_mhz": 5.0,
+    "maximum_logical_ratio": 0.06079756017674685,
+    "score_basis_id": "xm-full-cosine-4^4",
+    "comparison_id": "05324ec29a5006196e3176f9d57b619739b4c789172c2453707b824e0f6c4c05",
+    "idle_frequency_ghz": null,
+    "stationary_frequency_ghz": 4.61,
+    "logical_ratio_limit": 0.2,
+    "definition_version": "dual-rail-cz-s1-v2",
+    "selection_rule": "minimum_S1_at_common_intended_g",
+    "score_kind": "evaluated_at_common_target_g",
+    "physical_auxiliary": "0020",
+    "logical_order": [
+      "A",
+      "B"
+    ]
+  },
+  "validation": {
+    "electrostatic_match": {
+      "self_fraction": 0.1,
+      "ground_fraction": 0.9,
+      "status": "matched",
+      "rank": 16,
+      "remaining_continuous_degrees_of_freedom": 0,
+      "independent_roots": 1,
+      "max_relative_constraint_error": 4.2002489430675675e-16,
+      "rms_unintended_exchange_mhz": 0.3378667323091012,
+      "maximum_unintended_exchange_mhz": 0.6713682704841386,
+      "rms_unintended_exchange_change_mhz": 11.083944354446514,
+      "K_relative_frobenius_pct": 0.7177246998993043,
+      "max_component_change_pct": 88.84025221161819,
+      "attempts": [
+        {
+          "max_relative_mismatch": 4.2002489430675675e-16,
+          "loaded_EC_error_hz": 1.1102230246251565e-07,
+          "loading": {
+            "coupler_own_fraction": 0.5536216412737935,
+            "A2_full_branch_loading": 0.023839573925631075,
+            "B1_full_branch_loading": 0.021440642218113815
+          },
+          "valid": true,
+          "evaluations": 5
+        },
+        {
+          "max_relative_mismatch": 7.252093259257331e-12,
+          "loaded_EC_error_hz": 0.003265498982329973,
+          "loading": {
+            "coupler_own_fraction": 0.5536216412767333,
+            "A2_full_branch_loading": 0.023839573925738544,
+            "B1_full_branch_loading": 0.02144064221823916
+          },
+          "valid": true,
+          "evaluations": 9
+        }
+      ],
+      "seconds": 0.008313000085763633,
+      "EC_A1_mhz": 164.99999999999997,
+      "J_A1_A2_mhz": -52.84233525408382,
+      "g01_A1_A2_mhz": -75.08009574053764,
+      "J_A1_C_mhz": -0.4334610894535742,
+      "g01_A1_C_mhz": -0.6713682704841385,
+      "J_A1_B1_mhz": -0.03245849403600095,
+      "g01_A1_B1_mhz": -0.06243330786643193,
+      "J_A1_B2_mhz": -7.309200262500798e-05,
+      "g01_A1_B2_mhz": -0.00010989784272565461,
+      "EC_A2_mhz": 249.9999999999982,
+      "J_A2_C_mhz": -165.05388333326994,
+      "g01_A2_C_mhz": -207.92066157333238,
+      "J_A2_B1_mhz": -12.359588018720057,
+      "g01_A2_B1_mhz": -19.335400921522627,
+      "J_A2_B2_mhz": -0.027832068823227675,
+      "g01_A2_B2_mhz": -0.03403501948121926,
+      "EC_C_mhz": 450.2849902148051,
+      "J_C_B1_mhz": 200.05024265407883,
+      "g01_C_B1_mhz": 341.15846194591575,
+      "J_C_B2_mhz": 0.4504852518723608,
+      "g01_C_B2_mhz": 0.6005220654921734,
+      "EC_B1_mhz": 160.0,
+      "J_B1_B2_mhz": -27.240236676454085,
+      "g01_B1_B2_mhz": -45.09584760173606,
+      "EC_B2_mhz": 260.00000000000006,
+      "f_r1_ghz": 5.986976799541683,
+      "g01_A1_r1_mhz": -34.355487269221264,
+      "g01_A2_r1_mhz": 72.90050754061181,
+      "g01_C_r1_mhz": 0.6518783331616193,
+      "g01_B1_r1_mhz": 0.06062085811172901,
+      "g01_B2_r1_mhz": 0.00010670748929257005,
+      "f_r2_ghz": 6.008011847249107,
+      "g01_A1_r2_mhz": -6.454844997517995e-05,
+      "g01_A2_r2_mhz": -0.01999045384241114,
+      "g01_C_r2_mhz": 0.3527163731519227,
+      "g01_B1_r2_mhz": -26.487026413026083,
+      "g01_B2_r2_mhz": 34.32543142868295,
+      "g01_r1_r2_mhz": 6.267459727824682e-05,
+      "coupler_own_fraction": 0.5536216412737935,
+      "A2_full_branch_loading": 0.023839573925631075,
+      "B1_full_branch_loading": 0.021440642218113815,
+      "delta_EC_A1_mhz": 0.0,
+      "delta_J_A1_A2_mhz": 2.1316282072803006e-14,
+      "delta_g01_A1_A2_mhz": 2.842170943040401e-14,
+      "delta_J_A1_C_mhz": -0.18236204042526183,
+      "delta_g01_A1_C_mhz": -0.28245231385498937,
+      "delta_J_A1_B1_mhz": -0.013655659863260446,
+      "delta_g01_A1_B1_mhz": -0.026266407043302797,
+      "delta_J_A1_B2_mhz": 0.0022997195113445943,
+      "delta_g01_A1_B2_mhz": 0.0034577546666425037,
+      "delta_EC_A2_mhz": 0.0,
+      "delta_J_A2_C_mhz": 0.0,
+      "delta_g01_A2_C_mhz": 0.0,
+      "delta_J_A2_B1_mhz": 1.7763568394002505e-15,
+      "delta_g01_A2_B1_mhz": 0.0,
+      "delta_J_A2_B2_mhz": 1.531878158332667,
+      "delta_g01_A2_B2_mhz": 1.8732888055448633,
+      "delta_EC_C_mhz": 1.1368683772161603e-13,
+      "delta_J_C_B1_mhz": 0.0,
+      "delta_g01_C_B1_mhz": 0.0,
+      "delta_J_C_B2_mhz": -24.79472591050565,
+      "delta_g01_C_B2_mhz": -33.05275800972945,
+      "delta_EC_B1_mhz": -8.526512829121202e-14,
+      "delta_J_B1_B2_mhz": 7.105427357601002e-15,
+      "delta_g01_B1_B2_mhz": 7.105427357601002e-15,
+      "delta_EC_B2_mhz": 0.0,
+      "delta_f_r1_ghz": 0.0,
+      "delta_g01_A1_r1_mhz": 7.105427357601002e-15,
+      "delta_g01_A2_r1_mhz": 0.0,
+      "delta_g01_C_r1_mhz": 0.2742526742001926,
+      "delta_g01_B1_r1_mhz": 0.02550388869164976,
+      "delta_g01_B2_r1_mhz": -0.0033573754490174067,
+      "delta_f_r2_ghz": 0.0,
+      "delta_g01_A1_r2_mhz": 0.002030910694793069,
+      "delta_g01_A2_r2_mhz": 1.1002753625986337,
+      "delta_g01_C_r2_mhz": -19.413522995703936,
+      "delta_g01_B1_r2_mhz": 3.552713678800501e-15,
+      "delta_g01_B2_r2_mhz": 7.105427357601002e-15,
+      "delta_g01_r1_r2_mhz": -0.001971953005117614,
+      "capacitors_ff": {
+        "self:A1": 11.300210449885709,
+        "self:A2": 7.005072809790351,
+        "self:C": 23.815535457781642,
+        "self:B1": 11.58439952633484,
+        "self:B2": 7.1803912631293425,
+        "link:0": 6.679584197423356,
+        "link:1": 13.640409681009443,
+        "link:2": 0.74464465364033,
+        "link:3": 13.799537883381305,
+        "link:4": 5.857165492529071,
+        "link:5": 11.789413615940934,
+        "link:6": 6.59531858996539,
+        "link:7": 4.5093836007468395,
+        "link:8": 4.898296916774179,
+        "resonator:r1": 523.4597664996636,
+        "resonator:r2": 524.9526215132057
+      },
+      "ground_each_ff": {
+        "A1": 203.40378809794277,
+        "A2": 126.09131057622633,
+        "B1": 208.5191914740271,
+        "B2": 129.24704273632815
+      },
+      "loaded_budget_ground_fraction": {
+        "A1": 0.866319765079786,
+        "A2": 0.8136926805488683,
+        "B1": 0.8611945185742264,
+        "B2": 0.8674195474977087
+      },
+      "Cmodal_relative_frobenius_pct": 0.16580823585874852
+    },
+    "five_mode_OFF": {
+      "label": "0.1",
+      "search_status": "root",
+      "roots_ghz": [
+        9.907916961079188
+      ],
+      "scan_fc_ghz": [
+        7.0,
+        7.125,
+        7.25,
+        7.375,
+        7.5,
+        7.625,
+        7.75,
+        7.875,
+        8.0,
+        8.125,
+        8.25,
+        8.375,
+        8.5,
+        8.625,
+        8.75,
+        8.875,
+        9.0,
+        9.125,
+        9.25,
+        9.375,
+        9.5,
+        9.625,
+        9.75,
+        9.875,
+        10.0
+      ],
+      "scan_physical_g_hz": [
+        10626436.496332653,
+        9519535.067031406,
+        8542921.98466239,
+        7675347.796138603,
+        6899897.227858013,
+        6202949.776106313,
+        5573421.893643269,
+        5002206.95454263,
+        4481756.026369058,
+        4005760.2250955445,
+        3568907.291924667,
+        3166693.059331271,
+        2795273.9751409306,
+        2451350.670591802,
+        2132075.239286422,
+        1834976.798982141,
+        1557901.2772527102,
+        1298962.3563783956,
+        1056501.242577494,
+        829053.4651689049,
+        615321.3156148002,
+        414150.84113537695,
+        224512.53954523106,
+        45485.07948124882,
+        -123758.49230196016
+      ],
+      "production": {
+        "original": {
+          "fc_ghz": 9.89674271961544,
+          "physical_g_hz": 15365.576781390548,
+          "logical_01_10_g_hz": 864.8959689945646,
+          "logical_00_11_g_hz": 853.117010254465,
+          "logical_01_10_detuning_mhz": -59.90484086790282,
+          "logical_00_11_detuning_mhz": -240.78155255197765,
+          "secular": {
+            "logical_eigenenergies_ghz": [
+              9.868797836423218,
+              9.959236196681388,
+              10.019141037574377,
+              10.109579388981343
+            ],
+            "assignment_weights": [
+              0.9999998106922664,
+              0.999999831521065,
+              0.9999999019329615,
+              0.999999890639072
+            ],
+            "secular_zz_hz": -8.851204214010977,
+            "well_identified": true
+          },
+          "physical": {
+            "off_definition": {
+              "version": "physical-single-excitation-off-v1",
+              "model": "five",
+              "target": "physical_0100_0010_exchange_zero",
+              "source": "0100",
+              "destination": "0010",
+              "status": "temporary_open_question",
+              "controls": "fixed_idle_rails_and_capacitors;vary_coupler_EJ",
+              "frame": "canonical_four_physical_single_excitation_states;C_ground;resonators_vacuum",
+              "auxiliary_policy": "virtual_paths_included;logical_exchange_CZ_channels_and_ZZ_are_residual_diagnostics"
+            },
+            "g_mhz": 0.015365576781390548,
+            "detuning_mhz": -775.7851579190902,
+            "reference_order": [
+              "1000",
+              "0100",
+              "0010",
+              "0001"
+            ],
+            "effective_hamiltonian_ghz": [
+              [
+                4.60165494224041,
+                -0.07517025789275654,
+                -7.975471216707514e-05,
+                -1.6406020253012933e-06
+              ],
+              [
+                -0.0751702578927565,
+                4.602557356190227,
+                1.536557678139055e-05,
+                -7.353321667107875e-05
+              ],
+              [
+                -7.975471216707516e-05,
+                1.5365576781390535e-05,
+                5.378342514109317,
+                -0.045180363080158416
+              ],
+              [
+                -1.6406020253013083e-06,
+                -7.353321667107879e-05,
+                -0.0451803630801585,
+                5.374592005451626
+              ]
+            ],
+            "minimum_subspace_overlap": 0.9912405517727143,
+            "valid": true,
+            "selected_eigenstate_indices": [
+              0,
+              1,
+              3,
+              2
+            ]
+          }
+        },
+        "retuned": {
+          "fc_ghz": 9.907916961079188,
+          "physical_g_hz": 6.696905487879609e-07,
+          "logical_01_10_g_hz": 855.4299246853311,
+          "logical_00_11_g_hz": 843.274825792631,
+          "logical_01_10_detuning_mhz": -59.90315219353626,
+          "logical_00_11_detuning_mhz": -240.78372792989455,
+          "secular": {
+            "logical_eigenenergies_ghz": [
+              9.8688121967327,
+              9.959252489048641,
+              10.019155641266705,
+              10.109595924668625
+            ],
+            "assignment_weights": [
+              0.9999997940531695,
+              0.9999998187807488,
+              0.9999998896289392,
+              0.9999998822921169
+            ],
+            "secular_zz_hz": -8.914021520922688,
+            "well_identified": true
+          },
+          "physical": {
+            "off_definition": {
+              "version": "physical-single-excitation-off-v1",
+              "model": "five",
+              "target": "physical_0100_0010_exchange_zero",
+              "source": "0100",
+              "destination": "0010",
+              "status": "temporary_open_question",
+              "controls": "fixed_idle_rails_and_capacitors;vary_coupler_EJ",
+              "frame": "canonical_four_physical_single_excitation_states;C_ground;resonators_vacuum",
+              "auxiliary_policy": "virtual_paths_included;logical_exchange_CZ_channels_and_ZZ_are_residual_diagnostics"
+            },
+            "g_mhz": 6.696905487879609e-13,
+            "detuning_mhz": -775.8099868938393,
+            "reference_order": [
+              "1000",
+              "0100",
+              "0010",
+              "0001"
+            ],
+            "effective_hamiltonian_ghz": [
+              [
+                4.601650831477284,
+                -0.0751703563161902,
+                -7.964141209897415e-05,
+                -1.6364600012125222e-06
+              ],
+              [
+                -0.07517035631618965,
+                4.602560382643688,
+                6.696905487879609e-16,
+                -7.332725822506295e-05
+              ],
+              [
+                -7.964141209897413e-05,
+                6.696999725210398e-16,
+                5.378370369537527,
+                -0.045180664503417234
+              ],
+              [
+                -1.6364600012125288e-06,
+                -7.332725822506298e-05,
+                -0.04518066450341708,
+                5.374587892939449
+              ]
+            ],
+            "minimum_subspace_overlap": 0.9912673249951238,
+            "valid": true,
+            "selected_eigenstate_indices": [
+              0,
+              1,
+              3,
+              2
+            ]
+          }
+        }
+      },
+      "audit": {
+        "original": {
+          "fc_ghz": 9.89674271961544,
+          "physical_g_hz": 15397.28736838211,
+          "logical_01_10_g_hz": 875.3707074567559,
+          "logical_00_11_g_hz": 863.601509502646,
+          "logical_01_10_detuning_mhz": -59.90476971522263,
+          "logical_00_11_detuning_mhz": -240.7785565154299,
+          "secular": {
+            "logical_eigenenergies_ghz": [
+              9.868796490310292,
+              9.959233388095692,
+              10.019138157836593,
+              10.109575046832038
+            ],
+            "assignment_weights": [
+              0.999999810754694,
+              0.9999998315597418,
+              0.9999999019724972,
+              0.999999890688419
+            ],
+            "secular_zz_hz": -8.789955430188456,
+            "well_identified": true
+          },
+          "physical": {
+            "off_definition": {
+              "version": "physical-single-excitation-off-v1",
+              "model": "five",
+              "target": "physical_0100_0010_exchange_zero",
+              "source": "0100",
+              "destination": "0010",
+              "status": "temporary_open_question",
+              "controls": "fixed_idle_rails_and_capacitors;vary_coupler_EJ",
+              "frame": "canonical_four_physical_single_excitation_states;C_ground;resonators_vacuum",
+              "auxiliary_policy": "virtual_paths_included;logical_exchange_CZ_channels_and_ZZ_are_residual_diagnostics"
+            },
+            "g_mhz": 0.01539728736838211,
+            "detuning_mhz": -775.7850459270363,
+            "reference_order": [
+              "1000",
+              "0100",
+              "0010",
+              "0001"
+            ],
+            "effective_hamiltonian_ghz": [
+              [
+                4.6016521408578965,
+                -0.0751694833878106,
+                -7.975212086985295e-05,
+                -1.6406492294000204e-06
+              ],
+              [
+                -0.07516948338781063,
+                4.602557053281867,
+                1.539728736838211e-05,
+                -7.353202575287958e-05
+              ],
+              [
+                -7.975212086985294e-05,
+                1.539728736838213e-05,
+                5.378342099208903,
+                -0.04517959478011183
+              ],
+              [
+                -1.6406492294000185e-06,
+                -7.353202575287959e-05,
+                -0.045179594780111805,
+                5.374589815888312
+              ]
+            ],
+            "minimum_subspace_overlap": 0.9912405875015519,
+            "valid": true,
+            "selected_eigenstate_indices": [
+              0,
+              1,
+              3,
+              2
+            ]
+          }
+        },
+        "retuned": {
+          "fc_ghz": 9.907916961079188,
+          "physical_g_hz": 31.52543259829474,
+          "logical_01_10_g_hz": 865.8309198340129,
+          "logical_00_11_g_hz": 853.6854817263834,
+          "logical_01_10_detuning_mhz": -59.90308056063576,
+          "logical_00_11_detuning_mhz": -240.78073064974248,
+          "secular": {
+            "logical_eigenenergies_ghz": [
+              9.868810849771906,
+              9.959249679232864,
+              10.019152759818615,
+              10.109591580427814
+            ],
+            "assignment_weights": [
+              0.999999794118258,
+              0.9999998188202819,
+              0.9999998896722108,
+              0.999999882343693
+            ],
+            "secular_zz_hz": -8.85175843734487,
+            "well_identified": true
+          },
+          "physical": {
+            "off_definition": {
+              "version": "physical-single-excitation-off-v1",
+              "model": "five",
+              "target": "physical_0100_0010_exchange_zero",
+              "source": "0100",
+              "destination": "0010",
+              "status": "temporary_open_question",
+              "controls": "fixed_idle_rails_and_capacitors;vary_coupler_EJ",
+              "frame": "canonical_four_physical_single_excitation_states;C_ground;resonators_vacuum",
+              "auxiliary_policy": "virtual_paths_included;logical_exchange_CZ_channels_and_ZZ_are_residual_diagnostics"
+            },
+            "g_mhz": 3.152543259829474e-05,
+            "detuning_mhz": -775.8098750116008,
+            "reference_order": [
+              "1000",
+              "0100",
+              "0010",
+              "0001"
+            ],
+            "effective_hamiltonian_ghz": [
+              [
+                4.601648028418439,
+                -0.0751695813153702,
+                -7.963882285425516e-05,
+                -1.6365073024069364e-06
+              ],
+              [
+                -0.07516958131537005,
+                4.602560079799705,
+                3.152543259829474e-08,
+                -7.332606974040129e-05
+              ],
+              [
+                -7.963882285425518e-05,
+                3.152543259827774e-08,
+                5.378369954811306,
+                -0.045179895655576424
+              ],
+              [
+                -1.6365073024068938e-06,
+                -7.332606974040133e-05,
+                -0.04517989565557645,
+                5.374585701934411
+              ]
+            ],
+            "minimum_subspace_overlap": 0.9912673608536177,
+            "valid": true,
+            "selected_eigenstate_indices": [
+              0,
+              1,
+              3,
+              2
+            ]
+          }
+        },
+        "recalibrated": {
+          "fc_ghz": 9.90793994437597,
+          "physical_g_hz": 2.3447281777235277e-06,
+          "logical_01_10_g_hz": 865.8115829071195,
+          "logical_00_11_g_hz": 853.6654021438999,
+          "logical_01_10_detuning_mhz": -59.90307708531617,
+          "logical_00_11_detuning_mhz": -240.78073511999776,
+          "secular": {
+            "logical_eigenenergies_ghz": [
+              9.868810879211155,
+              9.95924971264494,
+              10.019152789755392,
+              10.109591614337305
+            ],
+            "assignment_weights": [
+              0.9999997940831572,
+              0.9999998187931805,
+              0.999999889645547,
+              0.9999998823251474
+            ],
+            "secular_zz_hz": -8.851872124182592,
+            "well_identified": true
+          },
+          "physical": {
+            "off_definition": {
+              "version": "physical-single-excitation-off-v1",
+              "model": "five",
+              "target": "physical_0100_0010_exchange_zero",
+              "source": "0100",
+              "destination": "0010",
+              "status": "temporary_open_question",
+              "controls": "fixed_idle_rails_and_capacitors;vary_coupler_EJ",
+              "frame": "canonical_four_physical_single_excitation_states;C_ground;resonators_vacuum",
+              "auxiliary_policy": "virtual_paths_included;logical_exchange_CZ_channels_and_ZZ_are_residual_diagnostics"
+            },
+            "g_mhz": 2.3447281777235277e-12,
+            "detuning_mhz": -775.8099259421814,
+            "reference_order": [
+              "1000",
+              "0100",
+              "0010",
+              "0001"
+            ],
+            "effective_hamiltonian_ghz": [
+              [
+                4.601648019966218,
+                -0.07516958151614897,
+                -7.963859059585763e-05,
+                -1.6364988108636029e-06
+              ],
+              [
+                -0.07516958151614898,
+                4.602560085997811,
+                2.3447281777235278e-15,
+                -7.332564769897001e-05
+              ],
+              [
+                -7.963859059585758e-05,
+                2.3447510269496286e-15,
+                5.378370011939992,
+                -0.045179896272083804
+              ],
+              [
+                -1.6364988108636067e-06,
+                -7.332564769896997e-05,
+                -0.04517989627208372,
+                5.374585693479072
+              ]
+            ],
+            "minimum_subspace_overlap": 0.991267415748263,
+            "valid": true,
+            "selected_eigenstate_indices": [
+              0,
+              1,
+              3,
+              2
+            ]
+          }
+        },
+        "common_nominal_five_mode_off": {
+          "fc_ghz": 9.902532974460842,
+          "physical_g_hz": 7425.491153325904,
+          "logical_01_10_g_hz": 870.3924301915771,
+          "logical_00_11_g_hz": 858.4262176677239,
+          "logical_01_10_detuning_mhz": -59.90389455917011,
+          "logical_00_11_detuning_mhz": -240.77968328747266,
+          "secular": {
+            "logical_eigenenergies_ghz": [
+              9.868803942657136,
+              9.959241841422582,
+              10.019145736007156,
+              10.109583625950837
+            ],
+            "assignment_weights": [
+              0.9999998022412386,
+              0.999999825067612,
+              0.9999998957644374,
+              0.9999998865321763
+            ],
+            "secular_zz_hz": -8.821764652111597,
+            "well_identified": true
+          },
+          "physical": {
+            "off_definition": {
+              "version": "physical-single-excitation-off-v1",
+              "model": "five",
+              "target": "physical_0100_0010_exchange_zero",
+              "source": "0100",
+              "destination": "0010",
+              "status": "temporary_open_question",
+              "controls": "fixed_idle_rails_and_capacitors;vary_coupler_EJ",
+              "frame": "canonical_four_physical_single_excitation_states;C_ground;resonators_vacuum",
+              "auxiliary_policy": "virtual_paths_included;logical_exchange_CZ_channels_and_ZZ_are_residual_diagnostics"
+            },
+            "g_mhz": 0.007425491153325903,
+            "detuning_mhz": -775.7979285862095,
+            "reference_order": [
+              "1000",
+              "0100",
+              "0010",
+              "0001"
+            ],
+            "effective_hamiltonian_ghz": [
+              [
+                4.601650009119327,
+                -0.07516953420981828,
+                -7.969331828868993e-05,
+                -1.638499625259782e-06
+              ],
+              [
+                -0.07516953420981763,
+                4.6025586248193004,
+                7.4254911533259034e-06,
+                -7.342511302918774e-05
+              ],
+              [
+                -7.969331828868997e-05,
+                7.425491153325857e-06,
+                5.37835655340551,
+                -0.045179750972199846
+              ],
+              [
+                -1.6384996252597243e-06,
+                -7.34251130291878e-05,
+                -0.04517975097219976,
+                5.374587683363191
+              ]
+            ],
+            "minimum_subspace_overlap": 0.9912544818799248,
+            "valid": true,
+            "selected_eigenstate_indices": [
+              0,
+              1,
+              3,
+              2
+            ]
+          }
+        }
+      },
+      "larger_fixed_audit_root": {
+        "fc_ghz": 9.90793994437597,
+        "physical_g_hz": 2.4673571586861263,
+        "logical_01_10_g_hz": 867.2629775402021,
+        "logical_00_11_g_hz": 855.1166141708451,
+        "logical_01_10_detuning_mhz": -59.90306893096431,
+        "logical_00_11_detuning_mhz": -240.78074506753745,
+        "secular": {
+          "logical_eigenenergies_ghz": [
+            9.86881073866102,
+            9.959249581146175,
+            10.019152650102335,
+            10.109591483734734
+          ],
+          "assignment_weights": [
+            0.9999997940403558,
+            0.9999998187468906,
+            0.9999998896148249,
+            0.999999882287378
+          ],
+          "secular_zz_hz": -8.852754973531773,
+          "well_identified": true
+        },
+        "physical": {
+          "off_definition": {
+            "version": "physical-single-excitation-off-v1",
+            "model": "five",
+            "target": "physical_0100_0010_exchange_zero",
+            "source": "0100",
+            "destination": "0010",
+            "status": "temporary_open_question",
+            "controls": "fixed_idle_rails_and_capacitors;vary_coupler_EJ",
+            "frame": "canonical_four_physical_single_excitation_states;C_ground;resonators_vacuum",
+            "auxiliary_policy": "virtual_paths_included;logical_exchange_CZ_channels_and_ZZ_are_residual_diagnostics"
+          },
+          "g_mhz": 2.4673571586861264e-06,
+          "detuning_mhz": -775.809873185052,
+          "reference_order": [
+            "1000",
+            "0100",
+            "0010",
+            "0001"
+          ],
+          "effective_hamiltonian_ghz": [
+            [
+              4.601648000037353,
+              -0.075169582218411,
+              -7.963860706844042e-05,
+              -1.6365011869413202e-06
+            ],
+            [
+              -0.07516958221841105,
+              4.602559976862209,
+              2.4673571586861264e-09,
+              -7.332570362582469e-05
+            ],
+            [
+              -7.963860706844042e-05,
+              2.467357158650612e-09,
+              5.378369850047261,
+              -0.04517990387996239
+            ],
+            [
+              -1.636501186941309e-06,
+              -7.332570362582471e-05,
+              -0.04517990387996247,
+              5.374585676095459
+            ]
+          ],
+          "minimum_subspace_overlap": 0.9912673885660723,
+          "valid": true,
+          "selected_eigenstate_indices": [
+            0,
+            1,
+            3,
+            2
+          ]
+        }
+      }
+    },
+    "status": "Matched electrostatics and saved five-mode OFF diagnostics; gate and seven-mode readout not recalibrated for this geometry",
+    "inherited_controls": "Reference operating points belong to parent V1; they are not calibrated operating points for this redistributed circuit",
+    "numerical_scope": "Root residual within a basis is separate from fixed-control cross-basis drift; retain all saved comparisons"
+  }
+}

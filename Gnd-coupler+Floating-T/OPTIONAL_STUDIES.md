@@ -188,8 +188,9 @@ For maximum-deviation strata, use `--sampling max-bins --bin-width-percent .25
 and credits their finite gate results toward each bin. A dry run validates the
 input without launching numerical work: add `--dry-run`.
 
-Twenty-two physical capacitor errors plus two resonator frequencies vary in new runs; no fabrication-time EC compensation
-is made. The same signed fractional error is shared across the independently
+New runs vary the physical capacitor parameters returned by `parameter_names`
+(excluding resonator self capacitors), plus two resonator frequencies. No
+fabrication-time EC compensation is made. The same signed fractional error is shared across the independently
 synthesized five-body/readout representations. Readout-derived individual bare
 frequency shifts transfer relative to each subsystem's nominal calibration.
 Only EJs and gate duration recover performance. Resonator Cr/Lr co-vary at
@@ -197,7 +198,7 @@ Only EJs and gate duration recover performance. Resonator Cr/Lr co-vary at
 
 New runs of this same robustness workflow use frequency variation through
 `resonator_frequency_study` in the nominal study input, with independent
-`ranges_ghz.A/B` and `impedance_ohm: 50`. It REPLACES both resonator-self-capacitor
+`ranges_ghz.A/B` and `impedance_ohm: 50`. It replaces both resonator-self-capacitor
 errors; other capacitor errors and the recovery ladder remain unchanged.
 Each draw samples the two bare frequencies independently and uniformly, then
 sets physical Cr=1/(2*pi*f*Z), Lr=Z/(2*pi*f). No pad/shunt compensation is made.
@@ -208,7 +209,8 @@ there is no inherited numerical interval. Historical fixed-L capacitor-only
 records remain readable and retain their original interpretation. This is a
 replacement of the resonator perturbation coordinate, not a separate workflow.
 
-Independent sampling draws every deviation uniformly in the requested interval.
+Independent sampling draws capacitor deviations uniformly within the requested
+percentage budget and cavity frequencies uniformly within their supplied ranges.
 Max-stratified sampling draws the observed maximum uniformly within a bin, chooses
 a random signed limiting component, and draws the other capacitor errors uniformly
 inside that maximum. These distributions differ. Structured/targeted/stratified

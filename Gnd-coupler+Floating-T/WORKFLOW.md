@@ -18,6 +18,13 @@ A physical null does not certify a logical null or isolation of every channel.
 
 ## 1. Confirm request and constraints
 
+Candidate names must identify the final integrated physical component values.
+Standalone precursor capacitances may change during explicitly recorded synthesis
+compensation. Record before/after pair capacitances and use the final physical
+links for selection, component tables and robustness input. Once selected, freeze
+the entire integrated geometry. A precursor readout map must be labeled as such
+and cannot certify the selected integrated hardware.
+
 Obtain immutable **loaded** EC tuples for all four rails; idle/gate bare
 frequencies; isolated-pair logical splittings and their reference positions;
 moved rail and tuning path; target gate speed; desired CZ auxiliary; coupler
@@ -224,13 +231,9 @@ For capacitance objectives the chi epigraph is fixed at the prescribed floor;
 only explicit chi maximization optimizes it. No physical acceptance limit is
 changed by selecting an objective.
 
-Verified provenance (2026-11-18): in the saved (154,208,216,252) MHz case,
-the initial chi-maximizing A precursor used Cpair=40.000 fF; readout-link
-minimization gave Cpair=31.460 fF. The retained pair-minimizing A precursor
-used Cpair=20.373454 fF at H>96%, then became 19.166422 fF after integrated
-synthesis compensation (`Selected_integrated_19p166422`). Its B precursor
-still used chi maximization. These historical values/labels are preserved;
-the unified pair-minimization default applies to NEW designs on both rails.
+Historical designs can use different objectives on their two rails, and
+integrated compensation can change precursor capacitor values. Preserve those
+records without relabeling them as results under the unified new-design default.
 
 Search multiple pad ground-capacitance distributions, including V1-like layouts,
 and progressively tighter capacitor bounds. A single local optimizer endpoint

@@ -149,21 +149,11 @@ not change the toy's S1/common-g policy, phase-pi requirement, physical acceptan
 limits or saved results. The readout workflow retains its own adaptive checks
 and physical thresholds. See ../Gnd-coupler+Floating-T/SPEED_PROPOSALS.md.
 
-## Optional self/ground-capacitance allocation
 
-On explicit request, redistribute physical self/ground capacitances while
-matching all loaded ECs, resonator charging diagonals and nine intended charge
-coefficients. Minimize the absolute RMS across all twelve unwanted exchange
-channels; use smaller component changes to distinguish comparable matches.
-The study and separately requested OFF checks use saved physical circuits.
-See [the allocation protocol](../Gnd-coupler+Floating-T/CAPACITANCE_ALLOCATION.md) for scope, commands, constraints and
-historical report helpers. It does not run during standard design or import.
-B-detuning is a separate optional study and is not a dependency.
+## Optional explicit-circuit studies
 
-## Optional B differential-detuning sensitivity
-
-On explicit request, compare a B-detuning sweep with frozen gate controls
-against B-mean phase recovery. This uses saved explicit-circuit hardware and
-static gate references, not a pulse or noise calculation. See
-[the B-detuning specification](../Gnd-coupler+Floating-T/GATE_SENSITIVITY_STUDIES.md).
-It does not run during normal design, import or the allocation study.
+Self/ground allocation and B-rail detuning are owned by the explicit-coupler
+workflow, not this four-transmon toy. See its
+[allocation protocol](../Gnd-coupler+Floating-T/CAPACITANCE_ALLOCATION.md) and
+[B-detuning protocol](../Gnd-coupler+Floating-T/GATE_SENSITIVITY_STUDIES.md).
+They run only on request and do not change this workflow's selection policy.

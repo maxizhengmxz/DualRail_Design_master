@@ -148,6 +148,24 @@ class PhaseCalibrationTests(unittest.TestCase):
         self.assertGreater(result['best']['raw_cz_fidelity'],1-1e-8)
         self.assertLess(abs(result['best']['phase_error_rad']),1e-7)
 
+    def test_warm_phase_bracket_recovers_shift_beyond_newton_travel(self):
+        from floating_coupler.calibrate_on import warm_start_gate
+        cal=ResonantCycleCalibration()
+        seed=cal.at(5.,100.)
+        class Backend:
+            selection=cal.selection
+            def at(self,fc,fb,t):
+                if fb>5.01:raise ValueError('Rejected physical-control proposal')
+                row=dict(seed,fc_ghz=fc,fb_ghz=fb,time_ns=t)
+                row['phase_error_rad']=100*(fb-4.9907)
+                return row
+            def duration_evaluator(self,fc,fb):
+                return lambda times:[self.at(fc,fb,float(t)) for t in times]
+        result=warm_start_gate(Backend(),seed,[7.,9.9],[95.,105.])
+        self.assertAlmostEqual(result['best']['fb_ghz'],4.9907,places=8)
+        self.assertLess(abs(result['best']['phase_error_rad']),1e-7)
+        self.assertEqual(result['attempts'][-1]['method'],'bracketed local five-body phase transfer')
+
     def test_warm_start_tries_five_body_bias_before_any_frequency_grid(self):
         from floating_coupler.calibrate_on import warm_start_gate
         cal=ResonantCycleCalibration()

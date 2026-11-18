@@ -65,7 +65,13 @@ def warm_start_gate(cal,seed,fc_bounds,time_bounds,max_biases=9):
     for offset in offsets[:max_biases]:
         fb=float(seed['fb_ghz']+offset)
         if fb<=0:continue
-        search=cached_duration_search(cal.duration_evaluator(fc,fb),time_bounds,seed['time_ns'])
+        # A rejected physical-control proposal must not abort remaining starts.
+        try:
+            evaluate_times=cal.duration_evaluator(fc,fb)
+            search=cached_duration_search(evaluate_times,time_bounds,seed['time_ns'])
+        except ValueError as error:
+            attempts.append(dict(fc_ghz=fc,fb_ghz=fb,phase_pi_found=False,error=str(error)))
+            continue
         attempts.append(dict(fc_ghz=fc,fb_ghz=fb,phase_pi_found=search['best'] is not None))
         if search['best'] is not None:
             return dict(best=search['best'],attempts=attempts,
@@ -92,6 +98,36 @@ def warm_start_gate(cal,seed,fc_bounds,time_bounds,max_biases=9):
             except ValueError:
                 attempts.append(dict(fc_ghz=fc,fb_ghz=fb,phase_pi_found=False,
                                      method='local phase transfer exhausted finite budget'))
+                # A modest integration shift can exceed the clipped Newton
+                # travel while remaining inside the authorized local start.
+                # Bracket the signed phase at the SAME duration and coupler;
+                # this is not a high-basis frequency/time optimization.
+                samples=[]
+                for delta in (-.016,-.008,0.,.008,.016):
+                    frequency=seed['fb_ghz']+delta
+                    if frequency<=0:continue
+                    try:
+                        point=cal.at(fc,frequency,seed['time_ns'])
+                    except ValueError as error:
+                        attempts.append(dict(fc_ghz=fc,fb_ghz=frequency,phase_pi_found=False,
+                                             method='rejected local phase probe',error=str(error)))
+                        # Keep a gap so roots are not bracketed across rejected controls.
+                        samples.append((frequency,np.nan))
+                        continue
+                    samples.append((frequency,point['phase_error_rad']))
+                for (left,a),(right,b) in zip(samples[:-1],samples[1:]):
+                    if not np.isfinite(a+b) or a*b>0 or abs(a-b)>np.pi:continue
+                    try:
+                        root=brentq(lambda frequency:cal.at(fc,frequency,seed['time_ns'])['phase_error_rad'],
+                                    left,right,xtol=1e-11,maxiter=12)
+                        transferred=cached_duration_search(cal.duration_evaluator(fc,root),time_bounds,seed['time_ns'])
+                        attempts.append(dict(fc_ghz=fc,fb_ghz=root,phase_pi_found=transferred['best'] is not None,
+                                             method='bracketed local five-body phase transfer'))
+                        if transferred['best'] is not None:
+                            return dict(best=transferred['best'],attempts=attempts,
+                                        frequency_policy='Fixed-duration local phase bracket after clipped-Newton exhaustion',
+                                        previous_five_body_gate=seed)
+                    except (ValueError,RuntimeError):continue
     raise ValueError('No reliable phase-pi return in finite five-body warm-start neighborhood')
 
 

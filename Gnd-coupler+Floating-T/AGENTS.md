@@ -67,8 +67,7 @@ optimization (readout_workflow/RESONATOR_ROBUST_DESIGN.md), minimizing the physi
 intra-pair capacitor by default for BOTH rails, subject to all range/readout
 constraints. Multiple-layout search is specified in WORKFLOW.md.
 Retain the best feasible evaluated point across failed optimizer endpoints.
-When starting an actual
-design, ask for four independent GHz bounds A_low,A_high,B_low,B_high; keep all
+When starting an actual design, ask for four independent GHz bounds A_low,A_high,B_low,B_high; keep all
 four unset during workflow-only updates. Allow different centers and widths;
 equal widths are a possible user choice, not a constraint. Never inherit bounds
 from examples or past designs. Require the prescribed worst-case chi floor

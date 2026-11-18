@@ -1,21 +1,10 @@
-# Optional static-gate sensitivity studies
+# Optional B-rail detuning study
 
-These are potential post-design studies, invoked only on request. They do not
-extend or replace the prescribed three -> five -> ON -> seven design sequence.
-No study runs during normal design, import, reporting or a toy-gate search.
-Source lives in `studies/`; calculations use the existing explicit-circuit
-gate evaluator and the shared logical/channel policy. The four-transmon toy
-under `../2Q-gate_XM/` has no explicit coupler or resonators and cannot reproduce
-coupler-path diagnostics by itself. Do not move these kernels into that toy.
-
-Use a supplied saved circuit and a fresh output folder. Keep loaded ECs fixed.
-Retain the selected source/auxiliary, consistently dressed static references
-and local-Z correction. This is static ON sensitivity, not pulse propagation,
-idle-referenced ramp fidelity, unknown-noise immunity or decoherence. Report raw
-and postselected fidelity together with survival and conditional-phase error.
-Fixed-control basis differences precede any phase-only audit correction.
-Target probability accuracy is 1e-4; residual precision target is 1 Hz, with
-unresolved drift reported rather than hidden by a numerical root.
+This optional post-design study uses a saved physical circuit and the existing
+static gate evaluator. It does not run during normal design or import. Keep
+loaded ECs, capacitor geometry, the selected CZ channel and the consistently
+ON-dressed logical references fixed. Report raw/postselected fidelity, survival,
+conditional-phase error and basis changes at the agreed 1e-4 probability target.
 
 Commands below run from `Gnd-coupler+Floating-T/` with the project Python.
 No numerical values in a historical example become requirements for a new case.
@@ -56,6 +45,4 @@ provenance, controls, matrices, failures and numerical qualifications. A
 `selected_static_point.json` sensitivity snapshot nests the circuit provenance
 and stores the unchanged charge matrix explicitly; it is not an ordinary capacitor
 config and must not be passed to an unmodified circuit loader.
-The saved allocation and circuit-target PDFs remain report references. Their
-renderers read historical records only; no report generation runs these studies.
 Never transfer gate fidelity or OFF certification between distinct matrices.
