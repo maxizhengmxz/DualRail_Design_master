@@ -27,11 +27,38 @@ import pymupdf
 WF = Path(__file__).resolve().parents[1]
 
 
+def rail_tuning_metadata(result, rail):
+    """Describe saved hardware; missing legacy fields are not design defaults."""
+    assumptions = result["assumptions"]
+    bounds = assumptions.get("a_rail_tuning" if rail == "A" else "rail_tuning")
+    designs = result.get("a_squid_designs" if rail == "A" else "b_squid_designs", [])
+    if bounds is None and len(designs) == 2:
+        ranges = [(d.get("lower_ghz"), d.get("upper_ghz")) for d in designs]
+        if ranges[0] == ranges[1] and None not in ranges[0]:
+            bounds = ranges[0]
+    asymmetries = [d.get("asymmetry") for d in designs]
+    if len(asymmetries) == 2 and all(v is not None for v in asymmetries):
+        kind = ("symmetric SQUIDs" if all(abs(v) < 1e-12 for v in asymmetries)
+                else "asymmetric SQUIDs" if all(abs(v) >= 1e-12 for v in asymmetries)
+                else "mixed symmetric/asymmetric SQUIDs")
+    else:
+        kind = "SQUID symmetry not recorded"
+    return bounds, kind
+
+
+def tuning_description(result, rail):
+    bounds, kind = rail_tuning_metadata(result, rail)
+    interval = (f"each {bounds[0]:g}-{bounds[1]:g} GHz"
+                if bounds is not None else "tuning range not recorded")
+    return f"{rail}1/{rail}2: {interval}; {kind}"
+
+
 def figures(out, r):
     plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 10})
     folder = out / "figures"
     folder.mkdir(exist_ok=True)
     iso = r["isolated"]
+    a_tuning_label = tuning_description(r, "A") + "\n" + tuning_description(r, "B")
     x = np.array([q["amplitude_microphi0"] for q in iso["gate"]["rows"]])
     fig, axs = plt.subplots(1, 2, figsize=(14, 6.2))
     palette = {"logical_B": "#2266aa", "B20_B0": "#c34740", "B1_01": "#585858"}
@@ -82,7 +109,7 @@ def figures(out, r):
     axs[1].set(
         yscale="log",
         ylabel="Decoherence error (1 - fidelity)",
-        title=f"B | {r['assumptions']['gate_time_ns']:g} ns CZ: A idle + B gate noise",
+        title=f"B | {r['assumptions']['gate_time_ns']:g} ns CZ: A idle + B gate noise\n{a_tuning_label}",
     )
     axs[1].legend()
     for ax in axs:
@@ -95,6 +122,29 @@ def figures(out, r):
     fig.tight_layout()
     fig.savefig(folder / "isolated-B-dephasing-and-CZ.png", dpi=200)
     fig.savefig(folder / "isolated-B-dephasing-and-CZ.svg")
+    plt.close(fig)
+    # A dedicated gate plot keeps the four coherence-limited error curves
+    # readable outside the combined coherence/infidelity figure.
+    fig, ax = plt.subplots(figsize=(8.2, 5.4))
+    for kind, color in [("echo", "#2266aa"), ("ramsey", "#c34740")]:
+        for key, line, label in [
+            ("raw_fidelity", "--", "raw"),
+            ("postselected_fidelity", "-", "postselected"),
+        ]:
+            errors = [1 - q["fidelity"][kind][key] for q in iso["gate"]["rows"]]
+            ax.plot(x, errors, color=color, linestyle=line, linewidth=2,
+                    label=f"{kind.capitalize()}, {label}")
+    ax.set(
+        xscale="log", yscale="log", xlim=(1, 100),
+        xlabel=r"Independent flux noise per SQUID ($\mu\Phi_0/\sqrt{\mathrm{Hz}}$ at 1 Hz)",
+        ylabel=r"Coherence-limited CZ infidelity $1-F$",
+        title=f"{r['assumptions']['gate_time_ns']:g} ns CZ: A-idle + B-gate exponential dephasing\n{a_tuning_label}",
+    )
+    ax.grid(alpha=0.2, which="both")
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(folder / "coherence-limited-CZ-infidelity.png", dpi=200)
+    fig.savefig(folder / "coherence-limited-CZ-infidelity.svg")
     plt.close(fig)
     fig, axs = plt.subplots(2, 2, figsize=(11.5, 8))
     for ax, key in zip(axs.ravel()[:3], ["A_idle", "B_idle", "B_gate"]):
@@ -244,12 +294,13 @@ def generate(folder, design_report=None):
     model, _ = five_model(r["input"], {}, {})
     # Hardware range is distinct from adding intrinsic A-rail noise to the
     # established B-only gate-dephasing calculation.
-    a_range = r["assumptions"].get("a_rail_tuning", [4.0, 5.0])
-    b_range = r["assumptions"]["rail_tuning"]
-    rail_designs = {
-        name: squid_design(float(model.ec[i]), *(a_range if i < 2 else b_range))
-        for i, name in ((0, "A1"), (1, "A2"), (3, "B1"), (4, "B2"))
-    }
+    rail_designs = {}
+    for rail, indices in (("A", (0, 1)), ("B", (3, 4))):
+        bounds, _ = rail_tuning_metadata(r, rail)
+        saved = r.get("a_squid_designs" if rail == "A" else "b_squid_designs", [])
+        for j, i in enumerate(indices):
+            rail_designs[model.names[i]] = (saved[j] if len(saved) == 2 else
+                squid_design(float(model.ec[i]), *bounds) if bounds is not None else None)
     (out / "rail-squid-designs.json").write_text(json.dumps(rail_designs, indent=2))
     ensure_circuit(out, r)
     all_designs = dict(
@@ -320,6 +371,13 @@ def generate(folder, design_report=None):
 
     iso = r["isolated"]
     a = r["assumptions"]
+    duration = f"{a['gate_time_ns']:g} ns"
+    a_tuning_statement = (
+        f"Saved hardware: {tuning_description(r, 'A')}. {tuning_description(r, 'B')}. "
+        "These gate infidelities include A-rail dephasing at idle. "
+        "Independent intrinsic flux noise acts on all four rail SQUIDs, "
+        "with A at idle and B at the gate point."
+    )
     selected = [
         min(iso["gate"]["rows"], key=lambda q: abs(q["amplitude_microphi0"] - amp))
         for amp in [1, 10, 100]
@@ -328,21 +386,22 @@ def generate(folder, design_report=None):
     title("1 | Isolated rails and CZ decoherence error")
     image("isolated-B-dephasing-and-CZ.png")
     txt(
-        "Panel A: logical A at idle; logical B at idle/gate; B20-B0 and isolated B1 only at gate. Panel B: log-scale error for the ideal 100 ns B20-inclusive CZ, with independent A-idle and B-gate noise. The auxiliary has A in its pair ground. No coupler noise is added."
+        f"Panel A: logical A at idle; logical B at idle/gate; B20-B0 and isolated B1 only at gate. Panel B: log-scale error for the ideal {duration} B20-inclusive CZ, with independent A-idle and B-gate noise. The auxiliary has A in its pair ground. No coupler noise is added."
     )
+    txt(a_tuning_statement)
     table(
         [
             "Noise per loop",
-            "Echo raw",
-            "Echo selected",
-            "Ramsey raw",
-            "Ramsey selected",
+            "Echo raw 1-F",
+            "Echo selected 1-F",
+            "Ramsey raw 1-F",
+            "Ramsey selected 1-F",
         ],
         [
             [
                 f"{q['amplitude_microphi0']:g}",
                 *[
-                    f"{100 * q['fidelity'][k][field]:.4f}%"
+                    f"{1 - q['fidelity'][k][field]:.4g}"
                     for k in ["echo", "ramsey"]
                     for field in ["raw_fidelity", "postselected_fidelity"]
                 ],
@@ -351,6 +410,24 @@ def generate(folder, design_report=None):
         ],
     )
     txt(a["gate_model"])
+    page()
+    title(f"{duration} CZ coherence-limited infidelity")
+    txt(f"<b>{a_tuning_statement}</b>")
+    image("coherence-limited-CZ-infidelity.png")
+    txt(
+        "The vertical axis is dimensionless infidelity 1-F on a logarithmic "
+        "scale. Raw and postselected curves use Ramsey- and echo-based "
+        "exponential dephasing rates. Independent intrinsic flux-noise "
+        "generators from A at idle and B at its gate point are included, "
+        "with the B20 auxiliary retained. A value of 0.001 corresponds to "
+        "0.1% infidelity and 99.9% fidelity."
+    )
+    txt(
+        f"This figure uses the saved {duration} ideal coherent CZ calculation. "
+        "The separate coupler-induced dephasing results appear later in this "
+        "report. The gate model assumptions and the noise-amplitude samples "
+        "are retained in results.json."
+    )
     central_result = story[:]
     story.clear()
     title("Circuit and SQUID design")
@@ -386,18 +463,18 @@ def generate(folder, design_report=None):
         [
             [
                 name,
-                f"{d['ec_ghz'] * 1000:.2f}",
-                f"{d['lower_ghz']:.2f} - {d['upper_ghz']:.2f}",
-                f"{d['ej_large_ghz']:.2f}",
-                f"{d['ej_small_ghz']:.2f}",
-                f"{d['asymmetry']:.2f}",
+                f"{model.ec[model.names.index(name)] * 1000:.2f}",
+                f"{d['lower_ghz']:.2f} - {d['upper_ghz']:.2f}" if d else "not recorded",
+                f"{d['ej_large_ghz']:.2f}" if d else "not recorded",
+                f"{d['ej_small_ghz']:.2f}" if d else "not recorded",
+                f"{d['asymmetry']:.2f}" if d else "not recorded",
                 f"{operating_ej[name][0]:.2f} / {operating_ej[name][1]:.2f}",
             ]
             for name, d in all_designs.items()
         ],
     )
     txt(
-        "Asymmetric SQUIDs, negligible loop inductance: EJ,max = EJ,large + EJ,small; "
+        "SQUIDs with negligible loop inductance: EJ,max = EJ,large + EJ,small; "
         "EJ,min = EJ,large - EJ,small; d = EJ,min/EJ,max. Junction energies use the "
         "numerical full-cosine f01 at the specified loaded EC. A tunability is a "
         "hardware specification; the central CZ estimate includes A at idle and B at gate."
@@ -472,7 +549,7 @@ def generate(folder, design_report=None):
             "throughout this report. The alternative is 4.36-4.86 GHz (500 MHz total span), "
             "centered at the same 4.61 GHz idle setting. This comparison both "
             "narrows the range and recenters it. Loaded ECs, idle position, B design "
-            "and the 100 ns exponential gate model are unchanged. No coupler noise is added."
+            f"and the {duration} exponential gate model are unchanged. No coupler noise is added."
         )
         table(
             [
@@ -516,22 +593,22 @@ def generate(folder, design_report=None):
             ],
         )
         txt(
-            "Full B20-inclusive CZ with A-idle and B-gate noise: fidelities below "
-            "are percentages, corresponding to error 1-F in page 1 panel B."
+            "Full B20-inclusive CZ with A-idle and B-gate noise: the "
+            "coherence-limited infidelities 1-F below are reported as percentages."
         )
         table(
             [
                 "Noise / rates",
-                "Raw: 1 GHz",
-                "Raw: 500 MHz",
-                "Selected: 1 GHz",
-                "Selected: 500 MHz",
+                "Raw 1-F: 1 GHz",
+                "Raw 1-F: 500 MHz",
+                "Selected 1-F: 1 GHz",
+                "Selected 1-F: 500 MHz",
             ],
             [
                 [
                     f"{row['amplitude_microphi0']:g} / {kind}",
                     *[
-                        f"{100 * row[design]['gate'][kind][key]:.4f}%"
+                        f"{100 * (1 - row[design]['gate'][kind][key]):.4f}%"
                         for key in ("raw_fidelity", "postselected_fidelity")
                         for design in ("old", "500MHz")
                     ],
