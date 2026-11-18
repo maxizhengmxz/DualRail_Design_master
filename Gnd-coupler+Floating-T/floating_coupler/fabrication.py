@@ -38,7 +38,8 @@ def parameter_names(base):
     names += [edge_key(e['from'],e['to']) for e in ph['links']]
     for ro in base['readouts'].values():
         names += [edge_key(e['from'],e['to']) for e in ro['physical']['physical_links']]
-        names += ['resonator:'+ro['case']['resonator_node']]
+        if not base.get('resonator_frequency_study'):
+            names += ['resonator:'+ro['case']['resonator_node']]
     return sorted(set(names))
 
 
@@ -63,11 +64,26 @@ def readout_device(ro,errors):
     from readout_workflow.calculation import Device
     p=varied_parts(ro['physical'],errors)
     rn=ro['case']['resonator_node']
-    cr=p['resonator_self_capacitance_ff']*(1+errors.get('resonator:'+rn,0.))
+    cr,lr=resonator_components(ro,errors)
     circuit=build_pad_circuit(p['pad_pairs'],p['ground_capacitances_ff'],{rn:cr},p['physical_links'],p['pad_mutual_capacitances_ff'])
     gauge=np.diag([-1.,1.,1.]);cm=gauge@circuit.effective_modal_capacitance_ff@gauge
     c12,c1r,c2r=-cm[0,1],-cm[0,2],-cm[1,2]
-    return Device(cm[0,0]-c12-c1r,cm[1,1]-c12-c2r,c12,c1r,c2r,cm[2,2]-c1r-c2r,p['resonator_inductance_nh'])
+    return Device(cm[0,0]-c12-c1r,cm[1,1]-c12-c2r,c12,c1r,c2r,cm[2,2]-c1r-c2r,lr)
+
+
+def resonator_components(ro,errors):
+    """Optional frequency scenario varies bare LC at fixed impedance, not EC."""
+    physical=ro['physical'];rn=ro['case']['resonator_node']
+    scenario=ro.get('resonator_frequency_scenario')
+    if scenario is None:
+        return (physical['resonator_self_capacitance_ff']*(1+errors.get('resonator:'+rn,0.)),
+                physical['resonator_inductance_nh'])
+    if errors.get('resonator:'+rn,0.)!=0:
+        raise ValueError('Frequency variation replaces resonator capacitor error; do not combine both')
+    frequency=float(scenario['frequency_ghz']);impedance=float(scenario['impedance_ohm'])
+    if not np.isfinite(frequency+impedance) or frequency<=0 or impedance<=0:
+        raise ValueError('Positive finite resonator frequency and impedance required')
+    return 1e6/(2*np.pi*frequency*impedance),impedance/(2*np.pi*frequency)
 
 
 def readout_fit(ro,errors,representative=False):
@@ -198,7 +214,7 @@ def readout_handoff(result):
 
 def gate_fit(model,seed,off,representative=False):
     """Maximize postselected fidelity; raw/survival are reported, never cut."""
-    bounds=(7.0001,min(10.999,off.get('fc_ghz',11.)-.001));calibrators={};approximate=[]
+    bounds=(float(off.get('gate_on_lower_ghz',7.0001)),min(10.999,off.get('fc_ghz',11.)-.001));calibrators={};approximate=[]
     def cal(fc,basis=SEARCH,wide=False):
         key=(float(fc),tuple(basis.values()),wide)
         if key not in calibrators:
@@ -233,6 +249,18 @@ def gate_fit(model,seed,off,representative=False):
                     conditional_phase_rad=float(np.angle(np.exp(1j*(np.pi+best['phase_error_rad'])))),
                     converged=False,precision_warning=False,precision_status='Approximate candidate; basis precision not assessed')
     candidates=[]
+    # Preserve the supplied feasible control point before sampled phase-root
+    # searches, which can miss a narrow return branch between grid samples.
+    try:
+        seed_cal=cal(float(np.clip(seed['fc_ghz'],*bounds)))
+        seed_row=seed_cal.at(float(seed['fb_ghz']),float(seed['time_ns']))
+        if gate_valid(seed_row):
+            seed_row=correct_gate_phase(
+                lambda f:seed_cal.at(f,float(seed['time_ns'])),seed_row,max_evaluations=6)
+            if gate_valid(seed_row) and abs(seed_row['phase_error_rad'])<1e-7:
+                candidates.append(seed_row)
+    except ValueError:
+        pass
     for fc in np.unique(np.clip([seed['fc_ghz'],seed['fc_ghz']-.1,seed['fc_ghz']+.1],*bounds)):
         c=cal(float(fc))
         for t in np.unique(np.r_[90.,100.,110.,120.,seed['time_ns']]):
@@ -308,6 +336,7 @@ def sample(task):
         result['downstream_readout_accepted']=accepted
         model,physical=five_model(base,errors,shifts);result['five_physical_summary']=physical
         t=time.perf_counter();result['off']=find_off(model,base['off_ghz']);result['stages']['off_seconds']=time.perf_counter()-t
+        result['off']['gate_on_lower_ghz']=float(base.get('gate_on_lower_ghz',7.0001))
         seed=dict(base['gate_seed']);seed['fb_ghz']+=sum(shifts[n] for n in ['B1','B2'])/2
         t=time.perf_counter();result['gate']=gate_fit(model,seed,result['off'],task.get('representative',False));result['stages']['gate_seconds']=time.perf_counter()-t
         result['status']='evaluated'

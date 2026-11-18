@@ -52,6 +52,7 @@ def flat(r):
         pending=r.get("_origin") == "pending",
     )
     for pair in ["A", "B"]:
+        d[pair+'_resonator_frequency_GHz']=get(r,'resonator_frequencies_ghz.'+pair)
         ro = r.get("readout", {}).get(pair, {})
         p = ro.get("point") or ro.get("diagnostic_point") or {}
         d[pair + "_pass"] = bool(ro.get("passed"))
@@ -132,7 +133,8 @@ def generate(folder):
     with (out / "all-points.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(flatrows[0]))
         w.writeheader()
-        w.writerows(flatrows)
+        w.writerows({k:('NA' if isinstance(v,(float,np.floating)) and not np.isfinite(v) else v)
+                     for k,v in row.items()} for row in flatrows)
     done = [d for d in flatrows if not d["pending"]]
     pending = len(flatrows) - len(done)
     summary = dict(
@@ -251,7 +253,10 @@ def generate(folder):
         )
         story.append(Spacer(1, 7))
 
-    title("Capacitance robustness: summary report")
+    frequency_study=manifest.get('request',{}).get('input',{}).get('resonator_frequency_study')
+    title("Capacitor and resonator-frequency robustness" if frequency_study else "Capacitance robustness: summary report")
+    from collections import Counter
+    sample_kinds=dict(Counter(r['kind'] for r in rows))
     txt(
         "Updated "
         + datetime.datetime.now(datetime.timezone.utc)
@@ -263,8 +268,15 @@ def generate(folder):
     )
     table(["Measure", "Count"], [[k.replace("_", " "), v] for k, v in summary.items()])
     txt(
-        "All results are pooled into one robustness study. The sample set includes independent capacitor draws, deterministic sweeps and targeted failure rescues. It is intentionally failure-enriched and is not a manufacturing-yield estimate. The same physical component errors are shared across independently synthesized subsystem representations."
+        "All saved records are pooled into one robustness study. Sample kinds and counts: "+str(sample_kinds)+
+        ". Sampling and recovery censoring must be considered; this is not a manufacturing-yield estimate. The same fractional component errors are shared across independently synthesized subsystem representations."
     )
+    frequency_study=manifest.get('request',{}).get('input',{}).get('resonator_frequency_study')
+    if frequency_study:
+        txt('Resonator self-capacitance errors are REPLACED by independent uniform bare-frequency draws: '
+            +'; '.join(f"{p}: {frequency_study['ranges_ghz'][p][0]:.3f}-{frequency_study['ranges_ghz'][p][1]:.3f} GHz" for p in ('A','B'))
+            +'. Both L and C change together at fixed 50 Ohm impedance. Other physical capacitors retain their specified fabrication errors. '
+            +'No self-capacitance compensation restores loaded EC. Maximum capacitor deviation excludes the separate resonator-frequency coordinates.')
     page()
     title("Combined robustness results")
     run = load(folder / "status.json")
@@ -299,10 +311,10 @@ def generate(folder):
         ],
     )
     txt(
-        "The combined study contains independent random draws, deterministic sweeps, targeted retries and nearby failure-oriented settings. Repeated physical settings are retained as separate evaluation records. All outcomes and distributions are reported for the pooled dataset; rejection counts are NOT fabrication failure probabilities."
+        "The combined study contains the recorded sample kinds listed above. Repeated physical settings, if present, remain separate evaluation records. All outcomes and distributions are reported for the pooled dataset; pooled rejection counts are NOT fabrication failure probabilities."
     )
     txt(
-        "Max-stratified sampling, when requested, uses the bin width and per-bin target recorded in campaign.json and retains supplied archive records. Within each new draw, choose its maximum uniformly inside its assigned bin, a random signed limiting capacitor, and uniform deviations for all other capacitors inside that maximum. Such draws are not unrestricted independent +/-5% samples and are excluded from random-only correlation analyses. Rejected/failed attempts remain in the appendix."
+        "Max-stratified sampling, when requested, uses the bin width and per-bin target recorded in campaign.json and retains supplied archive records. Within each new draw, choose its maximum uniformly inside its assigned bin, a random signed limiting capacitor, and uniform deviations for all other capacitors inside that maximum. Such draws are not unrestricted independent +/-5% samples and are excluded from random-only correlation analyses. Rejected/failed attempts remain in the full data archive and CSV."
     )
     page()
     title("Combined fidelity and OFF summary")
@@ -601,7 +613,7 @@ def generate(folder):
     txt(
         "All "
         + str(density_meta[0]["n"])
-        + " finite raw and selected gate results contribute. Unavailable results remain NA in the CSV. Maximum deviation is the largest absolute fractional capacitor error relative to nominal, in percent. These empirical samples pool deterministic sweeps, independent draws, targeted rescues and max-stratified draws; conditional normalization does not make them a fabrication probability model."
+        + " finite raw and selected gate results contribute. Unavailable results remain NA in the CSV. Maximum deviation is the largest absolute fractional capacitor error relative to nominal, in percent. These empirical samples pool the recorded sample kinds; conditional normalization does not make them a fabrication probability model."
     )
     page()
     title("Logical residual couplings at coupler OFF")
@@ -836,10 +848,11 @@ def generate(folder):
             + fmt(vc["odds_ratio"], 3)
             + ", p="
             + f"{vc['fisher_p']:.3g}"
-            + ". This comparison excludes unavailable gates and includes finite diagnostics at rejected readout positions. The surrounding 22 capacitor dimensions remain varied; these profiles are conditional distributions, not isolated single-capacitor scans."
+            + ". This comparison excludes unavailable gates and includes finite diagnostics at rejected readout positions. The surrounding "
+            +str(len(features))+" capacitor dimensions remain varied; these profiles are conditional distributions, not isolated single-capacitor scans."
         )
         page()
-        title("B-readout: two-capacitor failure map")
+        title("B-readout: frequency/capacitance map" if frequency_study else "B-readout: two-capacitor failure map")
         story.extend(
             [
                 Image(
@@ -851,7 +864,9 @@ def generate(folder):
             ]
         )
         txt(
-            "Axes: resonator-r2 self-capacitance versus B1 self-capacitance, each relative to nominal. Bin edges are shown on the axes and saved in the map metadata. Color is the empirical rejection fraction, median fidelity, low-fidelity fraction or unavailable-gate fraction as labeled; it is NOT probability density. Every cell is annotated with its denominator n. Rejection/unavailable fractions use all records in that cell; fidelity statistics use only finite gate results. Gray means fewer than ten supported records, not failure."
+            ("Axes: B bare resonator frequency (GHz) versus B1 self-capacitance deviation (%). " if frequency_study else
+             "Axes: resonator-r2 self-capacitance versus B1 self-capacitance, each relative to nominal. ")+
+            "Bin edges are shown and saved. Colors show observed rejection fractions, median fidelity or unavailable-gate fractions, not probability density. Counts specify support; gray means fewer than ten records."
         )
         rp = vm["readout_pair"]
         high = rp["B_rejection_percent"][-1][0]
@@ -859,7 +874,8 @@ def generate(folder):
         nh = rp["total_count"][-1][0]
         nl = rp["total_count"][0][-1]
         txt(
-            "Opposite-corner comparison: larger B1 self-C with smaller resonator-r2 C gives "
+            ("Opposite-corner comparison: larger B1 self-C with lower B resonator frequency gives " if frequency_study else
+             "Opposite-corner comparison: larger B1 self-C with smaller resonator-r2 C gives ")
             + fmt(high, 1)
             + "% rejected readout (n="
             + str(nh)
@@ -867,7 +883,7 @@ def generate(folder):
             + fmt(low, 1)
             + "% (n="
             + str(nl)
-            + "). These are observed conditional outcomes, not guaranteed yields or proof of infeasibility. Higher B1 self-C can limit reachable frequency under the EJ ceiling; smaller resonator C raises resonator frequency, reducing readout-strength margin."
+            + "). These are observed conditional outcomes, not guaranteed yields or proof of infeasibility. Other varied capacitors, calibration controls and finite search remain confounders."
         )
 
         txt(
@@ -933,6 +949,33 @@ def generate(folder):
     txt(
         "Deliverables beside this PDF: all-points.csv (full diagnostics including mean/max chi, mismatch, H, dispersive ratio, phase error, acceptance and capacitor-error vector); correlations.csv (all tested individual and product associations); summary.json. The PDF omits the per-record listing. The CSV retains every saved point, with NA for unavailable values and explicit flags. Numerical records remain unchanged."
     )
+
+    if frequency_study:
+        page()
+        title('Resonator-frequency variation at fixed 50 Ohm')
+        txt('Each resonator frequency is sampled independently of the capacitor errors. '
+            'These plots show observed records, not a manufacturing-yield prediction. '
+            'All finite gates are included; rejected readouts and non-phase-pi diagnostics remain flagged. '
+            'The dashed 1e-4 line is the numerical accuracy target, not a physical error floor.')
+        fig,axes=plt.subplots(2,2,figsize=(8.1,7.0))
+        for col,pair in enumerate(('A','B')):
+            frequency=np.array([d[pair+'_resonator_frequency_GHz'] for d in done])
+            for row,key in enumerate(('raw','selected')):
+                ax=axes[row,col]
+                error=np.array([1-d[key] for d in done])
+                valid=np.isfinite(frequency)&np.isfinite(error)
+                accepted=np.array([d['A_pass'] and d['B_pass'] and d['gate_found'] for d in done])
+                for mask,color,label in [(accepted,'#176b8a','Readout and phase accepted'),
+                                         (~accepted,'#d28b35','Rejected/diagnostic')]:
+                    use=valid&mask
+                    ax.scatter(frequency[use],np.maximum(error[use],1e-7),s=9,alpha=.55,c=color,label=label)
+                ax.set_yscale('log');ax.set_ylim(1e-7,1.)
+                ax.set_xlim(*frequency_study['ranges_ghz'][pair]);ax.axhline(1e-4,color='gray',ls='--',lw=.8)
+                ax.set_xlabel(f'{pair} bare resonator frequency (GHz)')
+                ax.set_ylabel(('Raw' if key=='raw' else 'Postselected')+' CZ error')
+                ax.grid(alpha=.2)
+        axes[0,0].legend(fontsize=7)
+        plot(fig,'resonator-frequency-errors')
 
     def footer(c, d):
         c.setFont("Helvetica", 7)

@@ -41,8 +41,11 @@ def build(output):
     errors = [json.loads(r["errors_json"]) for r in rows]
     features = sorted(set(k for e in errors for k in e))
     X = 100 * np.array([[e.get(f, 0.0) for f in features] for e in errors])
-    raw = np.array([float(r["raw"]) for r in rows])
-    sel = np.array([float(r["selected"]) for r in rows])
+    def numeric(value):
+        try:return float(value)
+        except (ValueError,TypeError):return np.nan
+    raw = np.array([numeric(r["raw"]) for r in rows])
+    sel = np.array([numeric(r["selected"]) for r in rows])
     Bfail = np.array([r["B_pass"] == "False" for r in rows])
     available = np.isfinite(raw) & np.isfinite(sel)
     ys = [
@@ -123,11 +126,12 @@ def build(output):
     fig.savefig(OUT / "random-success-failure-profiles.svg")
     plt.close(fig)
 
-    def pairmap(xkey, ykey, stem, title):
-        xx = X[:, features.index(xkey)]
+    def pairmap(xkey, ykey, stem, title,frequency_values=None,frequency_range=None):
+        xx = X[:, features.index(xkey)] if frequency_values is None else frequency_values
         yy = X[:, features.index(ykey)]
         limit = max(0.25, float(np.ceil(np.max(np.abs(X)) * 4) / 4))
         edges = np.linspace(-limit, limit, 6)
+        xedges=edges if frequency_values is None else np.linspace(*frequency_range,6)
         shape = (5, 5)
         count = np.zeros(shape, int)
         BF = np.zeros(shape)
@@ -140,8 +144,8 @@ def build(output):
         for i in range(5):
             for j in range(5):
                 mask = (
-                    (xx >= edges[i])
-                    & (xx < (edges[i + 1] if i < 4 else edges[i + 1] + 1e-8))
+                    (xx >= xedges[i])
+                    & (xx < (xedges[i + 1] if i < 4 else xedges[i + 1] + 1e-8))
                     & (yy >= edges[j])
                     & (yy < (edges[j + 1] if j < 4 else edges[j + 1] + 1e-8))
                 )
@@ -178,17 +182,17 @@ def build(output):
                 vmin, vmax = 0.0, 100.0
                 cm = "magma_r"
             im = ax.pcolormesh(
-                edges, edges, masked, vmin=vmin, vmax=vmax, cmap=cm, shading="flat"
+                xedges, edges, masked, vmin=vmin, vmax=vmax, cmap=cm, shading="flat"
             )
             fig.colorbar(im, ax=ax, shrink=0.82, pad=0.02, label="%")
             ax.set(
                 title=tt,
-                xlabel=name(xkey) + " deviation (%)",
+                xlabel=name(xkey) + " deviation (%)" if frequency_values is None else 'B bare resonator frequency (GHz)',
                 ylabel=name(ykey) + " deviation (%)",
-                xlim=(edges[0], edges[-1]),
+                xlim=(xedges[0], xedges[-1]),
                 ylim=(edges[0], edges[-1]),
             )
-            ax.set_xticks(edges)
+            ax.set_xticks(xedges)
             ax.set_yticks(edges)
             ax.set_facecolor("#dddddd")
             for j in range(5):
@@ -202,7 +206,7 @@ def build(output):
                             else "black"
                         )
                         ax.text(
-                            (edges[i] + edges[i + 1]) / 2,
+                            (xedges[i] + xedges[i + 1]) / 2,
                             (edges[j] + edges[j + 1]) / 2,
                             text,
                             ha="center",
@@ -226,13 +230,18 @@ def build(output):
             selected_low_percent=SB.tolist(),
             gate_unavailable_percent=NA.tolist(),
             edges_percent=edges.tolist(),
+            x_edges=xedges.tolist(),x_units='percent' if frequency_values is None else 'GHz',
         )
 
+    campaign=json.loads((OUT.parent/'campaign.json').read_text())
+    frequency_study=campaign.get('request',{}).get('input',{}).get('resonator_frequency_study')
     readout = pairmap(
-        "resonator:r2",
+        "resonator:r2" if not frequency_study else 'B_resonator_frequency_GHz',
         "self:B1",
         "random-readout-capacitor-map",
-        "B-readout association: resonator capacitance versus B1 self-capacitance",
+        "B-readout association: resonator capacitance versus B1 self-capacitance" if not frequency_study else 'B resonator frequency versus B1 self-capacitance',
+        frequency_values=None if not frequency_study else np.array([numeric(r.get('B_resonator_frequency_GHz')) for r in rows]),
+        frequency_range=None if not frequency_study else frequency_study['ranges_ghz']['B'],
     )
     gate = pairmap(
         "link:A12:A21",

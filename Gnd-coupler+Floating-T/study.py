@@ -13,7 +13,7 @@ def parser():
     root = argparse.ArgumentParser(description=__doc__)
     commands = root.add_subparsers(dest="command", required=True)
     robust = commands.add_parser(
-        "robustness", help="Explicit capacitor-variation recovery study"
+        "robustness", help="Explicit capacitor/frequency-variation recovery study"
     )
     robust.add_argument(
         "--input", required=True, help="Self-contained nominal fabrication-input.json"
@@ -108,6 +108,10 @@ def main(argv=None):
             from floating_coupler.fabrication import parameter_names
 
             base = json.loads(Path(args.input).read_text())
+            from studies.robustness import draw_resonator_frequencies
+            draw_resonator_frequencies(base,args.seed,0)
+            from studies.robustness import draw_resonator_frequencies
+            draw_resonator_frequencies(base,args.seed,0)
             return dict(
                 command="robustness",
                 launched=False,
@@ -143,18 +147,14 @@ def main(argv=None):
 
     study = Path(args.study)
     if study.is_file():
+        from studies.archive import report_metadata
         if not args.output:
             raise ValueError("--output is required to report an archive")
         folder = Path(args.output)
         folder.mkdir(parents=True, exist_ok=True)
-        (folder / "campaign.json").write_text(
-            json.dumps(
-                dict(study="robustness", reuse_archive=str(study.resolve())), indent=2
-            )
-        )
-        (folder / "status.json").write_text(
-            json.dumps(dict(state="completed", calculation_errors=0), indent=2)
-        )
+        campaign,status=report_metadata(study)
+        (folder / "campaign.json").write_text(json.dumps(campaign,indent=2))
+        (folder / "status.json").write_text(json.dumps(status,indent=2))
         return generate(folder)
     return generate(study)
 

@@ -34,6 +34,18 @@ def read_json(path, member):
             return json.load(stream)
 
 
+def report_metadata(path):
+    """Retain study inputs and actual coverage state when reporting an archive."""
+    provenance=read_json(path,'provenance.json')
+    inputs=read_json(path,'input.json')
+    original=provenance.get('campaign_manifest',{})
+    campaign=dict(original,study='robustness',reuse_archive=str(Path(path).resolve()))
+    campaign.setdefault('request',dict(input=inputs))
+    campaign['request'].setdefault('input',inputs)
+    status=provenance.get('status',dict(state='archived_coverage_unspecified',calculation_errors=0))
+    return campaign,status
+
+
 def summarize(records):
     import math
 

@@ -188,15 +188,29 @@ For maximum-deviation strata, use `--sampling max-bins --bin-width-percent .25
 and credits their finite gate results toward each bin. A dry run validates the
 input without launching numerical work: add `--dry-run`.
 
-Twenty-four actual positive capacitors vary; no fabrication-time EC compensation
+Twenty-two physical capacitor errors plus two resonator frequencies vary in new runs; no fabrication-time EC compensation
 is made. The same signed fractional error is shared across the independently
 synthesized five-body/readout representations. Readout-derived individual bare
 frequency shifts transfer relative to each subsystem's nominal calibration.
-Only EJs and gate duration recover performance. Resonator L remains fixed.
+Only EJs and gate duration recover performance. Resonator Cr/Lr co-vary at
+50 Ohm under the frequency policy below.
+
+New runs of this same robustness workflow use frequency variation through
+`resonator_frequency_study` in the nominal study input, with independent
+`ranges_ghz.A/B` and `impedance_ohm: 50`. It REPLACES both resonator-self-capacitor
+errors; other capacitor errors and the recovery ladder remain unchanged.
+Each draw samples the two bare frequencies independently and uniformly, then
+sets physical Cr=1/(2*pi*f*Z), Lr=Z/(2*pi*f). No pad/shunt compensation is made.
+GHz coordinates are saved separately from fractional capacitor errors and do
+not enter maximum-capacitor-deviation bins or capacitor correlations.
+A/B ranges must be supplied before a new run, including dry-run planning;
+there is no inherited numerical interval. Historical fixed-L capacitor-only
+records remain readable and retain their original interpretation. This is a
+replacement of the resonator perturbation coordinate, not a separate workflow.
 
 Independent sampling draws every deviation uniformly in the requested interval.
 Max-stratified sampling draws the observed maximum uniformly within a bin, chooses
-a random signed limiting component, and draws the other 23 errors uniformly
+a random signed limiting component, and draws the other capacitor errors uniformly
 inside that maximum. These distributions differ. Structured/targeted/stratified
 records are excluded from independent-random correlation analyses.
 
@@ -216,6 +230,14 @@ channel and validity screens retained; 70-130 ns. No raw, return, survival or
 fidelity-magnitude cutoff defines failure. Extra bounded starts and closest-phase
 finite diagnostics are retained even when acceptance fails. No result is silently
 skipped. Loaded EC, basis checks and flags are saved per point.
+
+For the approved extended coupler recovery range, set `gate_on_lower_ghz: 6.5`
+in the study input. This permits ON recovery below the nominal 7 GHz design
+limit, with ON remaining below the recovered OFF bias. OFF rescue remains below
+11 GHz. All gate restart and diagnostic paths must use this same input bound.
+Historical inputs without this field retain their recorded 7.0001 GHz floor.
+Comparisons with extended-range recovery must explicitly identify which range
+was used; historical failures cannot certify failure over the wider range.
 
 Runs use 1-4 processes with BLAS=1, exact checkpoints/source signatures and bounded
 replacement attempts. `STOP` requests graceful shutdown. Resume with unchanged

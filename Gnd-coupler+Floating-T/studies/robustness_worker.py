@@ -37,9 +37,10 @@ def missing_gate_diagnostic(model, seed, off):
     from floating_coupler.calibrate_on import PhaseCalibration
 
     upper = min(10.999, off.get("fc_ghz", 11.0) - 0.001)
+    lower = float(off.get('gate_on_lower_ghz',7.0001))
     rows = []
     errors = []
-    if upper <= 7.0001:
+    if upper <= lower:
         return dict(
             found=False,
             approximate=False,
@@ -48,7 +49,7 @@ def missing_gate_diagnostic(model, seed, off):
     for fc in np.unique(
         np.clip(
             [seed["fc_ghz"], seed["fc_ghz"] + 0.15, seed["fc_ghz"] - 0.15],
-            7.0001,
+            lower,
             upper,
         )
     ):
@@ -111,6 +112,11 @@ def missing_gate_diagnostic(model, seed, off):
 
 def worker(task):
     started = time.perf_counter()
+    if task.get('resonator_frequencies_ghz'):
+        task=dict(task,base=copy.deepcopy(task['base']))
+        for pair,frequency in task['resonator_frequencies_ghz'].items():
+            task['base']['readouts'][pair]['resonator_frequency_scenario']=dict(
+                frequency_ghz=frequency,impedance_ohm=50.)
     base = task["base"]
     prior = task.pop("prior_result", None)
     kind = task["kind"]
@@ -168,7 +174,7 @@ def worker(task):
                 alt["fc_ghz"] = float(
                     np.clip(
                         alt["fc_ghz"] + offset,
-                        7.0001,
+                        float(result.get('off',{}).get('gate_on_lower_ghz',7.0001)),
                         min(10.999, result.get("off", {}).get("fc_ghz", 11) - 0.001),
                     )
                 )
@@ -214,4 +220,7 @@ def worker(task):
     )
     result["seconds"] = time.perf_counter() - started
     result["kind"] = kind
+    if task.get('resonator_frequencies_ghz'):
+        result['resonator_frequencies_ghz']=task['resonator_frequencies_ghz']
+        result['resonator_impedance_ohm']=50.
     return result

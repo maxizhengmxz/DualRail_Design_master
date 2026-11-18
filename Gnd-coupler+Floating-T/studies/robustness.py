@@ -1,4 +1,4 @@
-"""Optional capacitor-variation study. No work is launched on import."""
+"""Optional fabrication study: capacitor errors and fixed-50-ohm cavity frequencies."""
 
 from __future__ import annotations
 import json
@@ -18,7 +18,7 @@ from .robustness_worker import worker
 def usable(row):
     best = row.get("gate", {}).get("best", {})
     return all(
-        np.isfinite(best.get(k, np.nan))
+        isinstance(best.get(k),(int,float,np.number)) and np.isfinite(best[k])
         for k in ("raw_cz_fidelity", "postselected_cz_fidelity")
     )
 
@@ -37,6 +37,29 @@ def max_deviation(row):
     return max(map(abs, row.get("errors", {}).values()), default=0.0)
 
 
+def draw_resonator_frequencies(base,seed,index):
+    """Independent GHz draws kept separate from fractional capacitor errors."""
+    study=base.get('resonator_frequency_study')
+    if study is None:
+        raise ValueError('New robustness runs require resonator_frequency_study with A/B GHz ranges and 50 Ohm impedance')
+    if float(study.get('impedance_ohm',50.))!=50.:
+        raise ValueError('This frequency-study policy requires 50 Ohm')
+    rng=np.random.default_rng(np.random.SeedSequence([seed,index,9631]))
+    result={}
+    for pair in ('A','B'):
+        low,high=map(float,study['ranges_ghz'][pair])
+        if not np.isfinite(low+high) or not 0<low<high:
+            raise ValueError('Supply positive increasing A/B resonator GHz ranges')
+        result[pair]=float(rng.uniform(low,high))
+    return result
+
+
+def identity_offset(reused_ids):
+    """Keep retained and newly sampled record identities disjoint on reuse."""
+    maximum=max(reused_ids,default=-1)
+    return max(10_000_000,(maximum//1_000_000+1)*1_000_000)
+
+
 def report(folder):
     from .robustness_report import generate
 
@@ -47,6 +70,8 @@ def run(args):
     out = Path(args.output).resolve()
     out.mkdir(parents=True, exist_ok=True)
     base = json.loads(Path(args.input).read_text())
+    # Validate the standard frequency policy before scheduling or reusing data.
+    draw_resonator_frequencies(base,args.seed,0)
     bins = int(round(args.deviation_percent / args.bin_width_percent))
     if args.sampling == "max-bins" and not np.isclose(
         bins * args.bin_width_percent, args.deviation_percent
@@ -55,9 +80,11 @@ def run(args):
     edges = np.linspace(0.0, args.deviation_percent / 100, bins + 1)
     names = parameter_names(base)
     initial = np.zeros(bins, int)
+    reused_ids=[]
     if args.reuse:
+        reused=list(iter_records(args.reuse));reused_ids=[r['id'] for r in reused]
         initial[:] = np.histogram(
-            [max_deviation(r) for r in iter_records(args.reuse) if usable(r)],
+            [max_deviation(r) for r in reused if usable(r)],
             bins=edges,
         )[0]
     need = (
@@ -101,6 +128,7 @@ def run(args):
                 study="robustness",
                 request=immutable,
                 source_signature=signature,
+                sample_id_offset=identity_offset(reused_ids),
                 workers=args.workers,
                 started_utc=datetime.now(timezone.utc).isoformat(),
                 deadline_epoch=time.time() + args.hours * 3600,
@@ -155,6 +183,9 @@ def run(args):
                     error=repr(error),
                 )
             row["sampling"] = task["sampling"]
+            if task.get('resonator_frequencies_ghz'):
+                row['resonator_frequencies_ghz']=task['resonator_frequencies_ghz']
+                row['resonator_impedance_ohm']=50.
             row["completed_utc"] = datetime.now(timezone.utc).isoformat()
             _write(samples / f"{row['id']:08d}.json", row)
             i = task["sampling"]["bin_index"]
@@ -215,13 +246,14 @@ def run(args):
                         )
                         kind = "independent-all"
                     task = dict(
-                        id=10_000_000 + i * 100_000 + attempt,
+                        id=manifest.get('sample_id_offset',10_000_000) + i * 100_000 + attempt,
                         kind=kind,
                         errors=errors,
                         base=base,
                         sampling=dict(bin_index=i, attempt=attempt),
                         representative=attempt % 20 == 0,
                     )
+                    task['resonator_frequencies_ghz']=draw_resonator_frequencies(base,args.seed,task['id'])
                     pending[pool.submit(worker, task)] = task
                     reserved[i] += 1
                 if not pending:

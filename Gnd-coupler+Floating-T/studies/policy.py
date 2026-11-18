@@ -54,6 +54,7 @@ def retry_task(base, row):
         errors=row["errors"],
         base=local,
         representative=True,
+        resonator_frequencies_ghz=row.get('resonator_frequencies_ghz',{}),
         retained_readouts={
             p: r for p, r in row.get("readout", {}).items() if r.get("passed", False)
         },
