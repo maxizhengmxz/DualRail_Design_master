@@ -10,6 +10,27 @@ from floating_coupler.gate import gate_metrics
 
 
 class GateMetricTests(unittest.TestCase):
+    def test_b_detuning_preserves_saved_circuit_and_controls(self):
+        import json
+        from pathlib import Path
+        from studies.gate_sensitivity import gate_point,evaluator,PRODUCTION
+        from studies.b_gate_detuning import selected_point_record
+        from integrated_readout_range import frozen_model
+        path=Path(__file__).resolve().parents[1]/'configs/Design_V1_20261105.json'
+        cell=json.loads(path.read_text(encoding='utf-8'));base=frozen_model(cell['physical'])
+        point=gate_point(cell)
+        self.assertEqual(point['time_ns'],cell['operating_points']['static_gate_on']['duration_ns'])
+        custom=dict(fc_ghz=7.3,fb_ghz=4.8,time_ns=43.)
+        self.assertEqual(gate_point(cell,{'best':custom}),custom)
+        changed=evaluator(cell,PRODUCTION,b_detuning_ghz=.012)
+        np.testing.assert_array_equal(changed.base.ec,base.ec)
+        np.testing.assert_array_equal(changed.base.j,base.j)
+        self.assertEqual(changed.b_detuning_ghz,.012)
+        snapshot=selected_point_record(cell,point,path)
+        np.testing.assert_array_equal(snapshot['transmon_model']['charge_J_ghz'],base.j)
+        self.assertEqual(snapshot['selected_static_gate'],point)
+        self.assertNotIn('charge_override_applied',snapshot)
+
     def test_cz_local_z_and_leakage(self):
         phases = np.array([0.3, 0.7, -0.2, 0.7 - 0.2 - 0.3 + np.pi])
         ideal = np.diag(np.exp(1j * phases))

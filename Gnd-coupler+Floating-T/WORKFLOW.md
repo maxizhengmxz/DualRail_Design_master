@@ -404,3 +404,11 @@ The study and separately requested OFF checks use saved physical circuits.
 See [the allocation protocol](CAPACITANCE_ALLOCATION.md) for scope, commands, constraints and
 historical report helpers. It does not run during standard design or import.
 B-detuning is a separate optional study and is not a dependency.
+
+## Optional B differential-detuning sensitivity
+
+On explicit request, compare a B-detuning sweep with frozen gate controls
+against B-mean phase recovery. This uses saved explicit-circuit hardware and
+static gate references, not a pulse or noise calculation. See
+[the B-detuning specification](GATE_SENSITIVITY_STUDIES.md).
+It does not run during normal design, import or the allocation study.

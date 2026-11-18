@@ -305,3 +305,10 @@ retain nominal values. `studies/allocation_off.py` provides separately requested
 five-body physical OFF and logical/ZZ diagnostics of accepted matched circuits.
 No gate/readout optimization starts automatically. Historical report helpers
 read saved results only and do not launch calculations.
+
+### Optional B differential-detuning sensitivity
+
+See [GATE_SENSITIVITY_STUDIES.md](GATE_SENSITIVITY_STUDIES.md).
+`studies/b_gate_detuning.py` sweeps B detuning on saved physical hardware;
+its phase-recalibration companion changes B mean at fixed duration/coupler.
+This is independent of capacitance allocation and never runs automatically.

@@ -96,8 +96,14 @@ def gate_detail(system):
     return dict(reference_labels=labels,effective_hamiltonian_ghz=ham.tolist(),logical_local_energy_frame=local_energy_frame(ham[np.ix_(logical,logical)]),minimum_subspace_overlap=float(ss.min()**2),channel_selection=system.model.electrostatics.get('channel_selection'))
 
 class Gate:
-    def __init__(self,cell,basis,photons=3):
-        self.cell=cell;self.base=frozen_model(cell['physical']);self.basis=basis;self.photons=photons;self.calls=0
+    def __init__(self,cell,basis,photons=3,b_detuning_ghz=0.):
+        self.cell=cell;self.base=frozen_model(cell['physical'])
+        self.basis=basis;self.photons=photons;self.calls=0
+        # Optional static differential-frequency diagnostic. fb remains the
+        # arithmetic mean of the TWO B bare f01 values, not the mean EJ.
+        # Keep immutable per evaluator: spectrum caches are keyed by self.
+        self.b_detuning_ghz=float(b_detuning_ghz)
+        if not np.isfinite(self.b_detuning_ghz):raise ValueError('B detuning must be finite, in GHz')
         self.selection=require_selection(self.base.electrostatics.get('channel_selection'))
         if self.selection.moved_pair!='B':raise ValueError('This case-specific seven-mode runner supports moving B only; do not silently move the wrong rail')
     @lru_cache(maxsize=256)
@@ -107,7 +113,8 @@ class Gate:
         # integrated dressed-idle calibration when present in this cell.
         fixed=self.cell['request']['idle_bare_frequencies_ghz']
         for i,n in [(0,'A1'),(1,'A2')]:ej[i]=ej_for_frequency(fixed[n],self.base.ec[i],self.basis['ncut'])
-        for i in [3,4]:ej[i]=ej_for_frequency(float(fb),self.base.ec[i],self.basis['ncut'])
+        for i,sign in [(3,1.),(4,-1.)]:
+            ej[i]=ej_for_frequency(float(fb)+sign*self.b_detuning_ghz/2,self.base.ec[i],self.basis['ncut'])
         system=SevenReadout(replace(self.base,ej=ej),self.cell['physical'],float(fc),basis=self.basis,photons=self.photons)
         detail=gate_detail(system);ham=energy_axis_matter_hamiltonian(detail);en,v=eigh(ham);labels=detail['reference_labels'];ii=[labels.index(x) for x in LOGICAL_ORDER];aux=labels.index(self.selection.auxiliary);self.calls+=1
         if self.calls%10==0:print('GATE_EVAL',self.basis,self.calls,fc,fb,flush=True)
