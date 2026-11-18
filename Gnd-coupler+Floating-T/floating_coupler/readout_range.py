@@ -4,6 +4,9 @@ Capacitors are synthesized for the specified nominal loaded ECs, once per
 hardware candidate. Scenario evaluation changes physical resonator C/L and
 rail EJs only. No coupler, spectator rail, capacitor re-fit or 6 GHz assumption
 enters a scenario. The returned nominal record feeds existing seven-mode code.
+Default goal: minimize the actual intra-pair capacitor subject to audited
+range feasibility, preferring H>96% before the reported H>95% fallback. Chi
+maximization and readout-link minimization require an explicit objective.
 """
 
 import time
@@ -20,6 +23,43 @@ from readout_workflow.resonator_robust_design import frequency_grid
 from readout_workflow.validation import audit_point
 
 from .readout_optimization import H_SEARCH_MARGIN, maximize_chi
+
+
+DEFAULT_OBJECTIVE = "minimize_pair_capacitance"
+OBJECTIVE_NAMES = {
+    "minimize_pair_capacitance": "minimize_pair_capacitance_over_prescribed_range",
+    "minimize_readout_link": "minimize_readout_link_capacitance_over_prescribed_range",
+    "maximize_chi": "maximize_worst_absolute_signed_mean_chi_over_prescribed_range",
+}
+
+
+def readout_objective(case):
+    """Resolve one policy; reject typos rather than silently maximizing chi.
+
+    Long names in historical request templates remain explicit overrides, not
+    evidence that those results used the current default. Never rewrite saved
+    optimization records when changing the default for new synthesis.
+    """
+    value = case.get("readout_range_options", {}).get("objective", DEFAULT_OBJECTIVE)
+    aliases = {long: short for short, long in OBJECTIVE_NAMES.items()}
+    value = aliases.get(value, value)
+    if value not in OBJECTIVE_NAMES:
+        raise ValueError(f"Unknown readout objective {value!r}; choose {tuple(OBJECTIVE_NAMES)}")
+    return value
+
+
+def with_readout_defaults(case):
+    """Record the resolved synthesis objective without modifying caller inputs."""
+    discarded = {"bare_resonator_reference_ghz", "ground_series_fraction_bounds",
+                 "pair_capacitance_search_upper_ff"}.intersection(case)
+    if "constraint_margin" in case.get("readout_range_options", {}):
+        discarded.add("constraint_margin")
+    if discarded:
+        raise ValueError("Discarded V2 readout overrides require user review before reuse: "
+                         + ", ".join(sorted(discarded)))
+    result = deepcopy(case)
+    result.setdefault("readout_range_options", {})["objective"] = readout_objective(case)
+    return result
 
 
 def required_range(case):
@@ -63,10 +103,12 @@ def case_for_pair(request, pair):
                 raise ValueError(f"Conflicting {name} resonator range inputs")
             cases[name]["bare_resonator_frequency_range_ghz"] = bounds
         required_range(cases[name])
-        cases[name]["readout_range_options"] = dict(
-            settings.get("numerical_defaults", {}),
+        cases[name]["readout_range_options"] = {
+            "objective": settings.get("objective", DEFAULT_OBJECTIVE),
+            **settings.get("numerical_defaults", {}),
             **cases[name].get("readout_range_options", {}),
-        )
+        }
+        cases[name] = with_readout_defaults(cases[name])
     return cases[pair]
 
 
@@ -111,9 +153,11 @@ class PadRangeObjective:
         basis,
         extra_frequencies=(),
     ):
+        case = with_readout_defaults(case)
         self.case = case
         self.low, self.high = required_range(case)
         self.options = case.get("readout_range_options", {})
+        self.objective = readout_objective(case)
         self.step = float(self.options.get("frequency_step_ghz", 0.05))
         self.seed = np.asarray(seed, float)
         lower, upper = np.asarray(bounds, float).copy()
@@ -163,7 +207,10 @@ class PadRangeObjective:
         n = len(self.frequencies)
         self.bounds = (
             np.r_[lower, np.tile(self.bias_bounds[:, 0], n), c.abs_mean_chi_min_mhz],
-            np.r_[upper, np.tile(self.bias_bounds[:, 1], n), 100.0],
+            # Capacitance objectives need the original chi floor, not an
+            # arbitrary excess-chi epigraph value. Only chi maximization frees it.
+            np.r_[upper, np.tile(self.bias_bounds[:, 1], n),
+                  100.0 if self.objective == "maximize_chi" else c.abs_mean_chi_min_mhz],
         )
         sample = self.nominal_evaluate(self.seed)
         self.constraint_count = len(self.nominal_inequalities(self.seed)) + (
@@ -405,7 +452,11 @@ def _optimize_pad_range(
     basis,
 ):
     begun = time.monotonic()
+    case = with_readout_defaults(case)
     options = case.get("readout_range_options", {})
+    goal = readout_objective(case)
+    small_link = goal == "minimize_readout_link"
+    small_pair = goal == "minimize_pair_capacitance"
     maxiter = int(options.get("maxiter", 60))
     max_audits = int(options.get("max_audits", 2))
     refinement_rounds = int(options.get("refinement_rounds", 2))
@@ -447,8 +498,8 @@ def _optimize_pad_range(
                 lambda aggregate: aggregate["worst_mean_chi_mhz"],
                 maxiter=maxiter,
                 max_audits=max_audits,
-                objective=lambda x: -x[-1],
-                objective_name="maximize_worst_absolute_signed_mean_chi_over_prescribed_range",
+                objective=(lambda x: x[2]) if small_pair else ((lambda x: x[3]) if small_link else (lambda x: -x[-1])),
+                objective_name=OBJECTIVE_NAMES[goal],
                 scope="prescribed_range_validated",
                 h_floors=(floor,),
                 audit_with_floor=True,
@@ -467,7 +518,7 @@ def _optimize_pad_range(
                 break
             audited = result["tiers"][0]["audits"]
             if audited:
-                # Restart hardware refinement from the strongest screened layout
+                # Restart from the best layout under the requested objective
                 # rather than discarding its progress after an interior failure.
                 seed = np.asarray(audited[0]["x"][:7])
             # A failed interior sample becomes a constrained optimization scenario
@@ -480,6 +531,7 @@ def _optimize_pad_range(
     result["seconds"] = time.monotonic() - begun
     result.update(
         mode="prescribed_resonator_range",
+        objective_setting=goal,
         range_ghz=[model.low, model.high],
         scenario_basis=asdict(basis),
         frequency_step_ghz=model.step,
@@ -492,6 +544,11 @@ def _optimize_pad_range(
     )
     if result["selected"] is not None:
         result["coordinates"] = result["coordinates"][:7]
+        result["capacitor_summary_ff"] = dict(
+            intra_pair=float(result["coordinates"][2]),
+            readout_per_link=float(result["coordinates"][3]),
+            readout_link_count=2,
+        )
         result["range_validation"] = result["selected"]["range_validation"]
         if result["warning"]:
             result["warning"] += " The full requested resonator interval was retained."

@@ -9,8 +9,11 @@ The temporary physical OFF target is documented in OFF_POLICY.md.
 
 The standard standalone readout goal is prescribed-resonator-range optimization:
 when an actual design starts, ask for four independent GHz inputs (A minimum,
-A maximum, B minimum, B maximum), then maximize the worst absolute
-mean chi across it, preferring H>96% everywhere. If no audited solution is found,
+A maximum, B minimum, B maximum), then minimize each rail's physical intra-pair
+capacitor subject to all readout constraints across that interval (including
+the prescribed chi floor), preferring H>96% everywhere. Report the accompanying
+readout-link capacitance. Chi maximization and readout-link minimization require
+explicit objective selection. If no audited solution is found,
 retry H>95% over the same range and explicitly report the reduced margin. If both fail,
 integration rejects the result. Loaded ECs and existing calibration/physical
 constraints remain fixed. See WORKFLOW.md stage 5. This runs during design,

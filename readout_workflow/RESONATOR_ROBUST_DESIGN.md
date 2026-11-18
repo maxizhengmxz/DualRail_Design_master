@@ -49,16 +49,26 @@ allowance, in addition to the original 1 MHz floor and each requested H target.
 
 ### Explicit-pad coupler integration status
 
-The coupler-design workflow selects prescribed-range optimization by default,
+The coupler-design workflow selects prescribed-range validation by default,
 preferring H>96% throughout the range, with an explicitly reported H>95%
 fallback over the same unchanged interval. Its four A/B interval bounds remain
 independent inputs to request when an actual design starts; no example range,
 equal-center or equal-width constraint is imposed.
 
+The explicit-pad coupler adapter defaults to **minimum physical intra-pair
+capacitance**, on BOTH rails, subject to the full readout constraints and
+prescribed chi floor (normally 1 MHz). It reports each readout-link capacitor
+because the two capacitor sizes trade off. Explicit alternatives are
+`minimize_readout_link` and `maximize_chi`. This is a coupler synthesis policy;
+the independent three-node CLI's prescribed-mode chi objective and tolerance-
+mode range objective above remain separate. Historical records retain their
+original objective, including the selected A pair-minimization precursor and
+its B chi-maximization precursor; they are not relabelled as unified designs.
+
 This CLI implements the three-node 6 GHz-reference formulation above; its
 seed/reference checks remain intentional and active. The coupler's separate
 `Gnd-coupler+Floating-T/floating_coupler/readout_range.py` adapter now applies the
-same prescribed-range objective to actual pads, using `device_at_frequency`
+prescribed-range constraints and the selected synthesis objective to actual pads, using `device_at_frequency`
 from this workflow to reconstruct each scenario with fixed physical capacitors.
 It supports each rail's own nominal LC reference and range and returns the
 optimized nominal pad model plus audited range witnesses to seven-mode assembly.

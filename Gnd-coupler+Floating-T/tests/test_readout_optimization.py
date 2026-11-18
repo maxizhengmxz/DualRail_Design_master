@@ -1,4 +1,4 @@
-"""Readout chi objective, audited H fallback and integration rejection policy."""
+"""Range-constrained capacitor objectives, explicit chi mode and audited H tiers."""
 
 import unittest
 from copy import deepcopy
@@ -63,6 +63,13 @@ class ReadoutStrengthOptimizationTests(unittest.TestCase):
         result = self.run_search(reject_strong=True)
         self.assertEqual(result["status"], "validated_pass")
         self.assertEqual(result["coordinates"][0], 1.0)
+        # Preserve a good intermediate iterate when the endpoint fails audit.
+        def failed_endpoint(*args, callback, **kwargs):
+            callback(np.array([1.4, 0.]))
+            return SimpleNamespace(x=np.array([1.9, 0.]), success=False, message="failed endpoint")
+        with patch("floating_coupler.readout_optimization.minimize", side_effect=failed_endpoint):
+            retained = self.run_search(reject_strong=True)
+        self.assertAlmostEqual(retained["coordinates"][0], 1.4)
 
     def test_both_tiers_fail_without_accepted_handoff(self):
         result = self.run_search(screen_h=0.94)
@@ -152,6 +159,75 @@ class ReadoutStrengthOptimizationTests(unittest.TestCase):
 
 
 class PhysicalPadRangeTests(unittest.TestCase):
+    def test_new_defaults_and_explicit_overrides_do_not_relabel_inputs(self):
+        from floating_coupler.readout_range import case_for_pair, readout_objective, with_readout_defaults
+
+        request = dict(pairs={"A": {}, "B": {}}, standalone_readout_optimization=dict(
+            bare_resonator_frequency_range_ghz={"A": [6.0, 6.2], "B": [5.8, 6.0]}))
+        for rail in ("A", "B"):
+            self.assertEqual(case_for_pair(request, rail)["readout_range_options"]["objective"],
+                             "minimize_pair_capacitance")
+        self.assertEqual(request["pairs"]["A"], {})
+        request["standalone_readout_optimization"]["objective"] = "maximize_chi"
+        request["standalone_readout_optimization"]["numerical_defaults"] = {"maxiter": 20}
+        request["pairs"]["B"]["readout_range_options"] = {"objective": "minimize_readout_link"}
+        self.assertEqual(readout_objective(case_for_pair(request, "A")), "maximize_chi")
+        self.assertEqual(readout_objective(case_for_pair(request, "B")), "minimize_readout_link")
+        request["pairs"]["B"]["readout_range_options"]["maxiter"] = 30
+        self.assertEqual(case_for_pair(request, "B")["readout_range_options"]["maxiter"], 30)
+        historical = {"readout_range_options": {"objective": "maximize_worst_absolute_signed_mean_chi_over_prescribed_range"}}
+        self.assertEqual(with_readout_defaults(historical)["readout_range_options"]["objective"], "maximize_chi")
+        self.assertEqual(historical["readout_range_options"]["objective"],
+                         "maximize_worst_absolute_signed_mean_chi_over_prescribed_range")
+        for case in [{"bare_resonator_reference_ghz": 6.1},
+                     {"ground_series_fraction_bounds": [[.1, .8], [.1, .8]]},
+                     {"pair_capacitance_search_upper_ff": 25},
+                     {"readout_range_options": {"constraint_margin": 1}}]:
+            with self.subTest(discarded=case), self.assertRaisesRegex(ValueError, "Discarded V2"):
+                with_readout_defaults(case)
+        with self.assertRaisesRegex(ValueError, "Unknown readout objective"):
+            readout_objective({"readout_range_options": {"objective": "minimize_pair_typo"}})
+
+    def test_pair_and_link_objectives_retain_range_feasibility_and_H_fallback(self):
+        """An actual constrained solve distinguishes pair/link/chi tradeoffs."""
+        from floating_coupler.readout_range import optimize_pad_range, readout_objective
+        from core.transmon import Basis
+
+        class ToyRange:
+            def __init__(self, case, *args, **kwargs):
+                self.low, self.high, self.step = 5.8, 6.0, .2
+                self.frequencies = np.array([5.8, 6.0]);self.failed_frequencies = set()
+                self.hardware_builds = self.scenario_evaluations = 0
+                cap_objective = readout_objective(case) != "maximize_chi"
+                self.bounds = (np.array([4, 4, 1, 1, 5.8, .1, .1, 1.]),
+                               np.array([5, 5, 4, 4, 6., .8, .8, 1. if cap_objective else 4.]))
+            def start(self, x):return np.r_[x, 1.]
+            def evaluate(self, x):return dict(hybridization=.955, worst_mean_chi_mhz=min(x[2], x[3]))
+            def equalities(self, x):return np.array([x[2]+x[3]-5])
+            def inequalities(self, x, floor):return np.array([min(x[2], x[3])-x[-1], .955-floor-1e-4])
+            def audit(self, x, floor):
+                point = dict(self.evaluate(x), failures=[] if .955>floor else ["H"])
+                return dict(point=point, nominal=point, physical={"pair": x[2], "link": x[3]},
+                            range_validation=dict(passed=not point['failures'], range_ghz=[5.8, 6.0]))
+
+        seed = [4.6, 4.6, 2., 3., 5.9, .5, .5]
+        for options, expected in [({}, (1., 4.)),
+                                  ({"objective": "minimize_readout_link"}, (4., 1.)),
+                                  ({"objective": "maximize_chi"}, (2.5, 2.5))]:
+            with self.subTest(objective=options), patch("floating_coupler.readout_range.PadRangeObjective", ToyRange):
+                result = optimize_pad_range({"readout_range_options": options}, seed, [],
+                    None, None, None, None, None, None, None, Basis(15, 4, 3, 16))
+            np.testing.assert_allclose(result["coordinates"][2:4], expected, atol=1e-5)
+            self.assertTrue(result["range_validation"]["passed"])
+            self.assertTrue(result["fallback_used"])
+            self.assertEqual(result["selected_H_floor"], .95)
+            self.assertIn("H > 96%", result["warning"])
+            self.assertAlmostEqual(result["capacitor_summary_ff"]["intra_pair"], expected[0], places=5)
+            self.assertEqual(result["range_ghz"], [5.8, 6.0])
+            handed = readout_handoff({"A": {"readout_strength_optimization": result}})["A"]
+            self.assertEqual(handed["objective"], result["objective"])
+            self.assertEqual(handed["capacitor_summary_ff"], result["capacitor_summary_ff"])
+
     def test_independent_range_inputs_precede_any_design_work(self):
         from floating_coupler.readout_range import case_for_pair
         from standalone_pad_readout import design
@@ -223,6 +299,9 @@ class PhysicalPadRangeTests(unittest.TestCase):
         self.assertNotEqual(device.C1r_fF, device.C2r_fF)
         self.assertNotIn(6.0, model.frequencies)
         z = model.start(seed)
+        # The default pair-capacitance objective only enforces the source chi
+        # floor. Explicit chi maximization must keep its epigraph free instead.
+        self.assertEqual(model.bounds[0][-1], model.bounds[1][-1])
         result = model.evaluate(z)
         self.assertEqual(len(result["points"]), len(model.frequencies))
         constraints = model.inequalities(z, 0.96)

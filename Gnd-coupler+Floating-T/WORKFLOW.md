@@ -157,9 +157,13 @@ are expected, and equal interval widths may be convenient but are not enforced.
 Do not infer any bound from a nominal frequency, a previous design or an example
 range. A common width may be expanded into the four bounds only when explicitly
 supplied by the user. Record both intervals before optimization starts.
-The objective is **maximum worst-case absolute signed-mean chi**,
-`min_over_range(abs((chi_plus + chi_minus)/2))`, at **H > 0.96 throughout the
-range**. A nominal-frequency chi maximum alone does not complete this step.
+The default objective for BOTH rails is **minimum physical intra-pair
+capacitance**, subject to audited readout feasibility over the entire interval,
+including the prescribed chi-strength floor (normally 1 MHz) and **H > 0.96
+throughout the range**. Chi is a constraint, not an excess-strength objective.
+A nominal-frequency optimum alone does not complete this step. Record both the
+intra-pair capacitor and each physical readout link; minimizing one can increase
+the other, and no weighted combination of them is imposed by default.
 Use one fixed capacitor design across all resonator scenarios; EJs can
 recalibrate within the supplied allowed bias bounds. At each scenario change
 only the resonator C/L consistently with its impedance and the EJs; do not
@@ -209,15 +213,47 @@ allowed EJ-recalibration frequency range explicitly.
 
 Keep supplied loaded ECs, isolated-pair splitting, idle/readout calibration
 targets, physical parameter bounds and every existing readout constraint. Added
-loading is compensated by the existing self-capacitance reconstruction. The
-minimum-readout-link fit is only an initialization, not the final objective.
+loading is compensated by the existing self-capacitance reconstruction.
+Default `readout_range_options.objective` is `minimize_pair_capacitance`.
+The request-level `standalone_readout_optimization.objective` sets the common
+policy, with explicit per-pair options taking precedence. Independent calls to
+`standalone_pad_readout.design` resolve and save the same default. The explicit
+alternatives are `minimize_readout_link` and `maximize_chi` (maximum worst-case
+absolute signed-mean chi). Unknown objectives fail instead of falling back.
+For capacitance objectives the chi epigraph is fixed at the prescribed floor;
+only explicit chi maximization optimizes it. No physical acceptance limit is
+changed by selecting an objective.
+
+Verified provenance (2026-11-18): in the saved (154,208,216,252) MHz case,
+the initial chi-maximizing A precursor used Cpair=40.000 fF; readout-link
+minimization gave Cpair=31.460 fF. The retained pair-minimizing A precursor
+used Cpair=20.373454 fF at H>96%, then became 19.166422 fF after integrated
+synthesis compensation (`Selected_integrated_19p166422`). Its B precursor
+still used chi maximization. These historical values/labels are preserved;
+the unified pair-minimization default applies to NEW designs on both rails.
+
+Search multiple pad ground-capacitance distributions, including V1-like layouts,
+and progressively tighter capacitor bounds. A single local optimizer endpoint
+does not establish the smallest feasible capacitance. Choose starts and bounds
+from the supplied case; do not inherit a previous case's 20-25 fF search box.
+Preserve splitting windows and loaded ECs.
+
+Always retain the best feasible evaluated point. Never overwrite it with a
+failed or worse final optimizer iterate. If no feasible point exists, retain
+the best diagnostic separately with explicit failed constraints. Candidate
+ranking must use the requested optimization objective consistently.
+
+Prefer audited H>96% designs before integration, with the existing H>95%
+fallback explicitly reported. Perform a short joint integrated idle-readout
+calibration and physical OFF re-null before expensive gate refinement and
+report generation. Recheck both pairs at the same OFF bias.
 
 If the bounded search finds no audited design covering the requested interval
-at H > 0.96, rerun worst-case chi maximization over the **same interval** at
+at H > 0.96, rerun the selected objective over the **same interval** at
 the standard **H > 0.95**. Do not silently shrink the interval. Print a warning and retain
 `fallback_used`, the selected H floor, per-tier attempts/audits and the warning
 in the saved readout result and integrated-cell metadata. Report the fallback
-explicitly in chat and the design report. This is a best-found local maximum,
+explicitly in chat and the design report. This is a best-found constrained result,
 not a global optimum or proof that H > 0.96 is impossible. If neither tier
 passes, retain the diagnostic result as rejected and stop integration; do not
 silently accept the original seed. Audit selected candidates, including chi
