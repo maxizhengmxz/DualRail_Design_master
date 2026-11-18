@@ -6,6 +6,7 @@ Uses the same fixed hardware and constraints as resonator_operation_map. Seeds
 come from accepted map cells and the earlier one-dimensional validated sweep.
 Extrema are numerical witnesses; they do not certify global optimality or the
 absence of disconnected branches. Source data are never overwritten.
+Explicit --run is required; ordinary readout/design does not invoke this study.
 """
 
 import os
@@ -123,12 +124,16 @@ def extrema(ro, frequency, seeds):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--run", action="store_true")
     p.add_argument("--input", type=Path, required=True)
     p.add_argument("--map", type=Path, required=True)
     p.add_argument("--prior", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--frequencies", nargs="*", type=float)
     a = p.parse_args()
+    if not a.run:
+        print("Use --run explicitly; no calculation started.")
+        return
     ro = json.loads(a.input.read_text())
     policy(ro["case"])
     rows = json.loads(a.map.read_text())

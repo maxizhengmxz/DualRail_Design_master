@@ -537,6 +537,11 @@ def main():
         required=True,
         help="Original settings JSON with conditions",
     )
+    p.add_argument(
+        "--refine-from",
+        type=Path,
+        help="Completed coarse single-design output; write refined results to a different --output",
+    )
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--ec", type=float, nargs=2, required=True)
     p.add_argument("--mode", choices=["prescribed", "tolerance"], required=True)
@@ -621,9 +626,25 @@ def main():
         > 1e-6
     ):
         raise ValueError("Nominal seed must use 50 Ohm resonator impedance")
+    refinement_state = None
+    if a.refine_from:
+        if a.mode != "tolerance":
+            raise ValueError("--refine-from is for tolerance mode only")
+        if a.output.resolve() == a.refine_from.resolve():
+            raise ValueError("Refinement must use a separate output directory")
+        from .resonator_refinement import load_refinement
+
+        refinement_state = load_refinement(
+            a.refine_from,
+            a.ec,
+            a.frequency_step_ghz,
+            a.max_halfwidth_ghz,
+            a.boundary_resolution_ghz,
+        )
     a.output.mkdir(exist_ok=True, parents=True)
     files = [
         Path(__file__),
+        Path("readout_workflow/resonator_refinement.py"),
         Path("readout_workflow/ec_design_improvement.py"),
         Path("readout_workflow/direct_ec_feasibility.py"),
         Path("readout_workflow/ec_resonator_tolerance.py"),
@@ -641,6 +662,9 @@ def main():
     settings = dict(
         arguments={k: str(v) if isinstance(v, Path) else v for k, v in vars(a).items()},
         conditions=asdict(study.CONDITIONS),
+        refinement_provenance=refinement_state["provenance"]
+        if refinement_state
+        else None,
         source_hashes={str(f): sha256(f.read_bytes()).hexdigest() for f in files},
         input_sha256=sha256(a.input.read_bytes()).hexdigest(),
         condition_input_sha256=sha256(a.conditions.read_bytes()).hexdigest(),
@@ -666,16 +690,30 @@ def main():
     range_ = a.resonator_range_ghz
     boundary = None
     if a.mode == "tolerance" and a.quick_tolerance:
-        quick = quick_tolerance(
-            a.ec,
-            nominal,
-            a.output / "quick_range",
-            a.starts,
-            a.maxiter,
-            a.frequency_step_ghz,
-            a.boundary_resolution_ghz,
-            a.max_halfwidth_ghz,
-        )
+        if refinement_state:
+            from .resonator_refinement import refine_tolerance
+
+            quick = refine_tolerance(
+                refinement_state,
+                a.ec,
+                nominal,
+                a.output / "refinement",
+                a.starts,
+                a.maxiter,
+                a.frequency_step_ghz,
+                a.boundary_resolution_ghz,
+            )
+        else:
+            quick = quick_tolerance(
+                a.ec,
+                nominal,
+                a.output / "quick_range",
+                a.starts,
+                a.maxiter,
+                a.frequency_step_ghz,
+                a.boundary_resolution_ghz,
+                a.max_halfwidth_ghz,
+            )
         atomic_json(a.output / "quick_range_result.json", quick)
         if quick["status"] != "validated_sampled_range":
             atomic_json(

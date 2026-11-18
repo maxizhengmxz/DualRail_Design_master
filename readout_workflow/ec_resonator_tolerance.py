@@ -20,7 +20,7 @@ import json
 import time
 import traceback
 from concurrent.futures import FIRST_COMPLETED, ProcessPoolExecutor, wait
-from dataclasses import replace
+from dataclasses import asdict, replace
 from hashlib import sha256
 from pathlib import Path
 
@@ -66,7 +66,8 @@ def solve_frequency(nominal, frequency, mode, warm, settings, extra=()):
     started = time.monotonic()
     dev = at_frequency(nominal["device"], frequency)
     target = nominal["operating_frequency_ghz"] if mode == "fixed" else None
-    model = study.ReadoutModel(dev, INTERMEDIATE)
+    basis = type(INTERMEDIATE)(**settings.get("screening_basis", asdict(INTERMEDIATE)))
+    model = study.ReadoutModel(dev, basis)
     cache = {}
     attempts = []
     audits = []
@@ -76,7 +77,7 @@ def solve_frequency(nominal, frequency, mode, warm, settings, extra=()):
         if key not in cache:
             fs = [x[0] + x[1] * 0.0005, x[0] - x[1] * 0.0005]
             ej = [
-                study.inverse_frequency(float(f), float(ec), INTERMEDIATE)
+                study.inverse_frequency(float(f), float(ec), basis)
                 for f, ec in zip(fs, model.ec_ghz[:2], strict=True)
             ]
             cache[key] = study.annotate(model, *ej)
