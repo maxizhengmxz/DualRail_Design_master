@@ -129,6 +129,11 @@ def generate(folder):
     if not rows:
         raise ValueError("No completed evaluations to report yet")
     flatrows = [flat(r) for r in rows]
+    independent_only = (
+        not reuse
+        and manifest.get("request", {}).get("sampling") == "independent"
+        and all(r.get("kind") in ["random-all", "new-random-all", "independent-all"] for r in rows)
+    )
     with (out / "all-points.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=list(flatrows[0]))
         w.writeheader()
@@ -263,7 +268,8 @@ def generate(folder):
     )
     table(["Measure", "Count"], [[k.replace("_", " "), v] for k, v in summary.items()])
     txt(
-        "All results are pooled into one robustness study. The sample set includes independent capacitor draws, deterministic sweeps and targeted failure rescues. It is intentionally failure-enriched and is not a manufacturing-yield estimate. The same physical component errors are shared across independently synthesized subsystem representations."
+        ("This campaign contains only independent uniform capacitor draws; it does not include deterministic sweeps, targeted failure rescues or max-stratified samples. Its observed fractions describe this finite simulation under the stated independent-uniform error model, not measured manufacturing yield. " if independent_only else "All results are pooled into one robustness study. The sample set includes independent capacitor draws, deterministic sweeps and targeted failure rescues. It is intentionally failure-enriched and is not a manufacturing-yield estimate. ")
+        + "The same physical component errors are shared across independently synthesized subsystem representations."
     )
     page()
     title("Combined robustness results")
@@ -299,7 +305,9 @@ def generate(folder):
         ],
     )
     txt(
-        "The combined study contains independent random draws, deterministic sweeps, targeted retries and nearby failure-oriented settings. Repeated physical settings are retained as separate evaluation records. All outcomes and distributions are reported for the pooled dataset; rejection counts are NOT fabrication failure probabilities."
+        "This completed study contains 200 independent uniform random draws and no reused or targeted records. All outcomes are retained. Observed fractions are Monte Carlo estimates under this numerical sampling model, not fabrication measurements."
+        if independent_only
+        else "The combined study contains independent random draws, deterministic sweeps, targeted retries and nearby failure-oriented settings. Repeated physical settings are retained as separate evaluation records. All outcomes and distributions are reported for the pooled dataset; rejection counts are NOT fabrication failure probabilities."
     )
     txt(
         "Max-stratified sampling, when requested, uses the bin width and per-bin target recorded in campaign.json and retains supplied archive records. Within each new draw, choose its maximum uniformly inside its assigned bin, a random signed limiting capacitor, and uniform deviations for all other capacitors inside that maximum. Such draws are not unrestricted independent +/-5% samples and are excluded from random-only correlation analyses. Rejected/failed attempts remain in the appendix."
@@ -366,7 +374,8 @@ def generate(folder):
                 )
     table(
         ["Failed constraint set", "Count"],
-        sorted(failures.items(), key=lambda v: -v[1])[:12] or [["None", 0]],
+        sorted(failures.items(), key=lambda v: -v[1])[:12]
+        or [["No rejected readouts", len(done)]],
     )
     bad = [d for d in done if not d["B_pass"]]
     txt(
@@ -601,7 +610,8 @@ def generate(folder):
     txt(
         "All "
         + str(density_meta[0]["n"])
-        + " finite raw and selected gate results contribute. Unavailable results remain NA in the CSV. Maximum deviation is the largest absolute fractional capacitor error relative to nominal, in percent. These empirical samples pool deterministic sweeps, independent draws, targeted rescues and max-stratified draws; conditional normalization does not make them a fabrication probability model."
+        + " finite raw and selected gate results contribute. Unavailable results remain NA in the CSV. Maximum deviation is the largest absolute fractional capacitor error relative to nominal, in percent. "
+        + ("This campaign contains independent uniform draws only; conditional normalization does not turn the observed distribution into measured fabrication yield." if independent_only else "These empirical samples pool deterministic sweeps, independent draws, targeted rescues and max-stratified draws; conditional normalization does not make them a fabrication probability model.")
     )
     page()
     title("Logical residual couplings at coupler OFF")
@@ -747,7 +757,7 @@ def generate(folder):
         "OFF is still defined by physical 0100-0010 exchange below 1 Hz; the two LOGICAL couplings are residual diagnostics and need not vanish. Readout-rejected diagnostic positions are included and remain flagged in the CSV. All available OFF results are used, including records with no finite gate fidelity; per-panel n and count strips specify support."
     )
     txt(
-        "Same conditional-density convention as the gate-error figure: each supported deviation column integrates to one over log10(coupling magnitude). Coupling bins are uniformly log-spaced over the common observed range; hues distinguish density decades and shades distinguish values within them. Gray denotes zero observed density or unsupported columns. These are pooled empirical distributions, not manufacturing-yield probabilities. No new OFF searches were run."
+        "Same conditional-density convention as the gate-error figure: each supported deviation column integrates to one over log10(coupling magnitude). Coupling bins are uniformly log-spaced over the common observed range; hues distinguish density decades and shades distinguish values within them. Gray denotes zero observed density or unsupported columns. These are empirical simulation distributions, not measured manufacturing-yield probabilities. No new OFF searches were run."
     )
     table(
         ["Logical residual magnitude (Hz)", "Minimum", "Median", "Maximum"],
@@ -777,10 +787,10 @@ def generate(folder):
         )[:5]
         table(
             [target, "rho", "FDR q", "n"],
-            [
+            ([
                 [q["feature"], fmt(q["rho"], 3), f"{q['q_FDR']:.2g}", q["n"]]
                 for q in top
-            ],
+            ] or [["Not estimable: outcome is constant", "NA", "NA", len(random)]]),
             [W * 0.62, W * 0.12, W * 0.14, W * 0.12],
         )
     valid = [d for d in done if np.isfinite(d["selected"])]
@@ -795,12 +805,13 @@ def generate(folder):
         + str(odds)
         + ", p="
         + f"{pval:.3g}"
-        + ". This pooled comparison is descriptive; random-only capacitor correlations above are the controlled subset."
+        + ". This comparison is descriptive; the capacitor correlations above use the same independent-random subset."
     )
     if len(random) >= 20 and any(np.isfinite(d["selected"]) for _, d in random):
         from .correlation_views import build as build_correlation_views
 
         vm = build_correlation_views(out)
+        readout_resonator = vm["readout_pair"]["x"].split(":", 1)[-1]
         page()
         title("Failure and low-fidelity deviation profiles")
         story.extend(
@@ -851,7 +862,7 @@ def generate(folder):
             ]
         )
         txt(
-            "Axes: resonator-r2 self-capacitance versus B1 self-capacitance, each relative to nominal. Bin edges are shown on the axes and saved in the map metadata. Color is the empirical rejection fraction, median fidelity, low-fidelity fraction or unavailable-gate fraction as labeled; it is NOT probability density. Every cell is annotated with its denominator n. Rejection/unavailable fractions use all records in that cell; fidelity statistics use only finite gate results. Gray means fewer than ten supported records, not failure."
+            "Axes: resonator-" + readout_resonator + " self-capacitance versus B1 self-capacitance, each relative to nominal. Bin edges are shown on the axes and saved in the map metadata. Color is the empirical rejection fraction, median fidelity, low-fidelity fraction or unavailable-gate fraction as labeled; it is NOT probability density. Every cell is annotated with its denominator n. Rejection/unavailable fractions use all records in that cell; fidelity statistics use only finite gate results. Gray means fewer than ten supported records, not failure."
         )
         rp = vm["readout_pair"]
         high = rp["B_rejection_percent"][-1][0]
@@ -859,7 +870,7 @@ def generate(folder):
         nh = rp["total_count"][-1][0]
         nl = rp["total_count"][0][-1]
         txt(
-            "Opposite-corner comparison: larger B1 self-C with smaller resonator-r2 C gives "
+            "Opposite-corner comparison: larger B1 self-C with smaller resonator-" + readout_resonator + " C gives "
             + fmt(high, 1)
             + "% rejected readout (n="
             + str(nh)

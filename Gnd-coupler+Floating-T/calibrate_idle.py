@@ -24,6 +24,7 @@ from seven_readout import SevenReadout
 from floating_coupler.design import ej_for_frequency
 from floating_coupler.model import FULL, local_spectrum
 from floating_coupler.channel_policy import off_target_definition
+from floating_coupler.off_search import exchange_roots
 
 SEARCH = dict(local_levels=6, pair_states=10, coupler_levels=4, ncut=25)
 AUDIT = dict(local_levels=6, pair_states=12, coupler_levels=5, ncut=35)
@@ -39,6 +40,7 @@ def calibrate(cell, cases, output, cycles=3):
     fc = cell['off_ghz']
     frequencies = np.array([cell['physical']['bare_frequencies_ghz'][n] for n in FULL])
     history = []
+    off_compatibility_rescued = False
 
     def model_at(fs):
         return replace(base, ej=np.array([ej_for_frequency(float(f), float(e), 35)
@@ -76,7 +78,9 @@ def calibrate(cell, cases, output, cycles=3):
                 upper.append(float(local_spectrum(24.99999, base.ec[i], base.basis)[0][1]))
             start = np.clip(frequencies[idx], np.array(lower)+1e-6, np.array(upper)-1e-6)
             initial_rows, initial_constraints = at(tuple(map(float, start)))
-            if (max(r['ratio'] for r in initial_rows) < .01 and
+            if (off_compatibility_rescued and min(initial_constraints) >= 0):
+                fit = SimpleNamespace(x=start, success=True)
+            elif (max(r['ratio'] for r in initial_rows) < .01 and
                     abs(np.mean([r['operating_frequency_ghz'] for r in initial_rows])-target) < .001):
                 fit = SimpleNamespace(x=start, success=True)
             else:
@@ -117,7 +121,56 @@ def calibrate(cell, cases, output, cycles=3):
         request = cell.get('request', {})
         lower = max(request.get('on_lower_exclusive_ghz', 7.)+1e-5, fc-.15)
         upper = min(request.get('off_upper_exclusive_ghz', 10.)-1e-5, fc+.15)
-        fc = brentq(exchange, lower, upper, xtol=1e-9)
+        off_search_scope='local_plus_minus_0p15_ghz'
+        if exchange(lower)*exchange(upper)<0:
+            fc = brentq(exchange, lower, upper, xtol=1e-9)
+        else:
+            request_lower=request.get('on_lower_exclusive_ghz',7.)+1e-5
+            request_upper=request.get('off_upper_exclusive_ghz',10.)-1e-5
+            roots=exchange_roots(exchange,np.linspace(request_lower,request_upper,33))
+            if not roots:
+                # The exact dressed-mean calibration can move a near-boundary
+                # OFF root just above 10 GHz. Search the smallest common rail-EJ
+                # displacement that restores a sign change at the hard upper
+                # bound while retaining every integrated readout constraint.
+                rescued=None
+                for pair,idx in [('B',[3,4]),('A',[0,1])]:
+                    bounds=np.asarray(cases[pair]['readout_recalibration_bare_bounds_ghz'],float)
+                    base_pair=frequencies[idx].copy()
+                    allowed_low=max(bounds[:,0]-base_pair)
+                    for shift in np.linspace(0.,allowed_low,21)[1:]:
+                        trial=frequencies.copy();trial[idx]=base_pair+shift
+                        trial_model=model_at(trial)
+                        trial_system=SevenReadout(trial_model,cell['physical'],request_upper,basis=basis).solve()
+                        trial_slacks={name:float(min(constraint_values(
+                            trial_system.readout(name),trial_model,name,cases[name])))
+                            for name in ('A','B')}
+                        trial_exchange=trial_system.physical_off_detail()['physical_exchange']['g_mhz']
+                        if min(trial_slacks.values())>=0 and trial_exchange<0:
+                            rescued=(pair,idx,base_pair,shift,trial_slacks)
+                            break
+                    if rescued is not None:break
+                if rescued is None:
+                    raise ValueError('No physical OFF root after idle calibration in the full allowed interval or bounded common-rail EJ rescue')
+                pair,idx,base_pair,negative_shift,rescue_slacks=rescued
+                def shifted_upper_exchange(shift):
+                    trial=frequencies.copy();trial[idx]=base_pair+shift
+                    trial_model=model_at(trial)
+                    return SevenReadout(trial_model,cell['physical'],request_upper,
+                                        basis=basis,off_only=True).solve().physical_off_detail()['physical_exchange']['g_mhz']
+                shift=brentq(lambda value:shifted_upper_exchange(value)+.001,
+                             negative_shift,0.,xtol=1e-8)
+                frequencies[idx]=base_pair+shift;model=model_at(frequencies)
+                roots=exchange_roots(exchange,np.linspace(request_lower,request_upper,33))
+                if not roots:
+                    raise ValueError('Common-rail EJ rescue did not restore an allowed physical OFF root')
+                off_compatibility_rescued=True
+                off_search_scope=f'full_allowed_interval_common_{pair}_shift_rescue'
+                pair_results.setdefault(pair,{})['off_compatibility_common_shift_ghz']=float(shift)
+                pair_results[pair]['off_compatibility_screening_slacks']=rescue_slacks
+            fc=min(roots,key=lambda root:abs(root-fc))
+            if not off_compatibility_rescued:
+                off_search_scope='full_allowed_interval_rescue'
         system = SevenReadout(model, cell['physical'], fc, basis=basis).solve()
         checked = {pair: dict(rows=system.readout(pair),
                              minimum_constraint_slack=float(min(constraint_values(
@@ -125,6 +178,7 @@ def calibrate(cell, cases, output, cycles=3):
                    for pair in ['A', 'B']}
         history.append(dict(cycle=cycle, basis=basis, before_off_retune=pair_results,
                             off_ghz=fc, joint_readout=checked,
+                            off_search_scope=off_search_scope,
                             physical_exchange=system.physical_off_detail()['physical_exchange']))
         (folder/'progress.json').write_text(json.dumps(history, indent=2))
         print('JOINT', cycle, fc, {p: checked[p]['minimum_constraint_slack'] for p in checked}, flush=True)

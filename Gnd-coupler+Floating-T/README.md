@@ -24,8 +24,16 @@ It supports independent resonator references without a 6 GHz assumption.
 Nominal feasibility is only an initialization. Workflow updates require no EC
 tuple or numerical range. Request bounds only when a concrete design starts;
 different A/B centers and equal widths are allowed but never imposed.
+An explicitly selected `range_recalibrated` nominal-calibration policy lets the
+passing range witness at the fabricated LC reference serve as the nominal
+handoff instead of imposing a second nominal-coordinate acceptance gate. All
+per-scenario readout constraints remain unchanged; the default stays `strict`.
 Seven-mode handoff rejects newly generated nominal-only optimization records;
 historical files remain readable without being relabelled as range optimized.
+The optional per-rail `dressed_nominal_with_range` logical-splitting policy
+replaces the exact isolated-pair fit with a dressed target at one supplied bare
+cavity reference plus a dressed-splitting window over the complete prescribed
+range. Legacy/default behavior remains `isolated_pair_exact`.
 
 ## Optional studies
 

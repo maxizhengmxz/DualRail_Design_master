@@ -56,7 +56,7 @@ def maximize_chi(
     seeds = seeds[:max_starts]
     tiers = []
     for floor in h_floors:
-        candidates, attempts = [], []
+        candidates, seed_candidates, attempts = [], [], []
 
         def consider(x, candidates=candidates, floor=floor):
             x = np.asarray(x, dtype=float)
@@ -77,7 +77,21 @@ def maximize_chi(
 
         for seed in seeds:
             try:
+                before = len(candidates)
                 consider(seed)
+                if len(candidates) > before:
+                    seed_candidates.append(candidates[-1].copy())
+                constraints = [
+                    dict(
+                        type="ineq",
+                        fun=lambda x, floor=floor: inequalities(x, floor),
+                    )
+                ]
+                # Range-only certification intentionally has no separate
+                # nominal-coordinate equalities.  SLSQP does not reliably
+                # accept an equality callback returning an empty vector.
+                if np.asarray(equalities(seed)).size:
+                    constraints.insert(0, dict(type="eq", fun=equalities))
                 fit = minimize(
                     objective
                     if objective is not None
@@ -85,13 +99,7 @@ def maximize_chi(
                     seed,
                     method="SLSQP",
                     bounds=list(zip(lower, upper, strict=True)),
-                    constraints=[
-                        dict(type="eq", fun=equalities),
-                        dict(
-                            type="ineq",
-                            fun=lambda x, floor=floor: inequalities(x, floor),
-                        ),
-                    ],
+                    constraints=constraints,
                     # Keep feasible major iterates if the endpoint later fails.
                     callback=consider,
                     options=dict(maxiter=maxiter, ftol=1e-8, eps=1e-6),
@@ -109,7 +117,11 @@ def maximize_chi(
 
         audited, accepted = [], []
         candidates.sort(key=lambda x: -objective(x) if objective is not None else strength(evaluate(x)), reverse=True)
-        for x in candidates[:max_audits]:
+        audit_candidates = list(candidates[:max_audits])
+        for seed in seed_candidates:
+            if not any(np.linalg.norm(seed - old) < 1e-8 for old in audit_candidates):
+                audit_candidates.append(seed)
+        for x in audit_candidates:
             try:
                 result = audit(x, floor) if audit_with_floor else audit(x)
                 point = result["point"]

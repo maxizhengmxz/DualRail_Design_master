@@ -32,6 +32,59 @@ OBJECTIVE_NAMES = {
     "maximize_chi": "maximize_worst_absolute_signed_mean_chi_over_prescribed_range",
 }
 
+SPLITTING_POLICIES = ("isolated_pair_exact", "dressed_nominal_with_range")
+NOMINAL_CALIBRATION_POLICIES = ("strict", "range_recalibrated")
+
+
+def logical_splitting_policy(case):
+    """Validate the opt-in dressed-range hardware policy.
+
+    Historical cases retain the exact isolated-pair fit.  The range policy
+    instead fixes one dressed splitting at a supplied *bare resonator*
+    reference and uses ``dressed_split_window_ghz`` at every swept scenario.
+    """
+    policy = case.get("logical_splitting_policy", "isolated_pair_exact")
+    if policy not in SPLITTING_POLICIES:
+        raise ValueError(
+            f"Unknown logical_splitting_policy {policy!r}; choose {SPLITTING_POLICIES}"
+        )
+    if policy == "isolated_pair_exact":
+        return dict(policy=policy)
+    window = case.get("dressed_split_window_ghz")
+    if (
+        not isinstance(window, (list, tuple))
+        or len(window) != 2
+        or not all(np.isfinite(window))
+        or not 0 < float(window[0]) < float(window[1])
+    ):
+        raise ValueError(
+            "dressed_nominal_with_range requires a positive increasing "
+            "dressed_split_window_ghz"
+        )
+    target = case.get("nominal_dressed_split_mhz")
+    reference = case.get("nominal_bare_resonator_frequency_ghz")
+    tolerance = float(case.get("nominal_dressed_split_tolerance_mhz", 0.001))
+    if target is None or reference is None or not all(np.isfinite([target, reference])):
+        raise ValueError(
+            "dressed_nominal_with_range requires nominal_dressed_split_mhz and "
+            "nominal_bare_resonator_frequency_ghz"
+        )
+    target, reference = float(target), float(reference)
+    if not float(window[0]) * 1000 <= target <= float(window[1]) * 1000:
+        raise ValueError("Nominal dressed splitting must lie inside its allowed window")
+    low, high = required_range(case)
+    if not low <= reference <= high:
+        raise ValueError("Nominal bare resonator reference must lie inside the swept range")
+    if tolerance <= 0 or not np.isfinite(tolerance):
+        raise ValueError("Nominal dressed splitting tolerance must be positive")
+    return dict(
+        policy=policy,
+        target_mhz=target,
+        reference_ghz=reference,
+        tolerance_mhz=tolerance,
+        allowed_range_mhz=[float(window[0]) * 1000, float(window[1]) * 1000],
+    )
+
 
 def readout_objective(case):
     """Resolve one policy; reject typos rather than silently maximizing chi.
@@ -48,6 +101,19 @@ def readout_objective(case):
     return value
 
 
+def nominal_calibration_policy(case):
+    """Resolve whether a separate nominal coordinate is an acceptance gate."""
+    value = case.get("readout_range_options", {}).get(
+        "nominal_calibration_policy", "strict"
+    )
+    if value not in NOMINAL_CALIBRATION_POLICIES:
+        raise ValueError(
+            f"Unknown nominal_calibration_policy {value!r}; choose "
+            f"{NOMINAL_CALIBRATION_POLICIES}"
+        )
+    return value
+
+
 def with_readout_defaults(case):
     """Record the resolved synthesis objective without modifying caller inputs."""
     discarded = {"bare_resonator_reference_ghz", "ground_series_fraction_bounds",
@@ -59,6 +125,10 @@ def with_readout_defaults(case):
                          + ", ".join(sorted(discarded)))
     result = deepcopy(case)
     result.setdefault("readout_range_options", {})["objective"] = readout_objective(case)
+    result["readout_range_options"]["nominal_calibration_policy"] = (
+        nominal_calibration_policy(result)
+    )
+    logical_splitting_policy(result)
     return result
 
 
@@ -158,6 +228,11 @@ class PadRangeObjective:
         self.low, self.high = required_range(case)
         self.options = case.get("readout_range_options", {})
         self.objective = readout_objective(case)
+        self.nominal_calibration_policy = nominal_calibration_policy(case)
+        self.range_recalibrated = (
+            self.nominal_calibration_policy == "range_recalibrated"
+        )
+        self.splitting_policy = logical_splitting_policy(case)
         self.step = float(self.options.get("frequency_step_ghz", 0.05))
         self.seed = np.asarray(seed, float)
         lower, upper = np.asarray(bounds, float).copy()
@@ -168,6 +243,11 @@ class PadRangeObjective:
             )
         reference = float(np.clip(self.seed[4], lower[4], upper[4]))
         self.frequencies = frequency_grid(self.low, self.high, self.step, reference)
+        if self.splitting_policy["policy"] == "dressed_nominal_with_range":
+            extra_frequencies = (
+                *extra_frequencies,
+                self.splitting_policy["reference_ghz"],
+            )
         self.frequencies = np.array(
             sorted(set(self.frequencies.tolist() + list(extra_frequencies)))
         )
@@ -213,9 +293,12 @@ class PadRangeObjective:
                   100.0 if self.objective == "maximize_chi" else c.abs_mean_chi_min_mhz],
         )
         sample = self.nominal_evaluate(self.seed)
-        self.constraint_count = len(self.nominal_inequalities(self.seed)) + (
-            n + 1
-        ) * len(sample_slacks(sample, 0.96, c.abs_mean_chi_min_mhz))
+        nominal_count = 0 if self.range_recalibrated else 1
+        self.constraint_count = (
+            0 if self.range_recalibrated else len(self.nominal_inequalities(self.seed))
+        ) + (n + nominal_count) * len(
+            sample_slacks(sample, 0.96, c.abs_mean_chi_min_mhz)
+        )
 
     def hardware(self, coordinates):
         # Bare qubit frequencies do not enter physical capacitor synthesis.
@@ -261,15 +344,21 @@ class PadRangeObjective:
         return self.point_cache[key]
 
     def evaluate(self, x):
-        nominal = self.nominal_evaluate(x[:7])
+        range_recalibrated = getattr(self, "range_recalibrated", False)
+        nominal = None if range_recalibrated else self.nominal_evaluate(x[:7])
         points = [
             self.point(x[:7], float(f), x[7 + 2 * j : 9 + 2 * j])
             for j, f in enumerate(self.frequencies)
         ]
         return dict(
-            hybridization=min(p["hybridization"] for p in [nominal, *points]),
+            hybridization=min(
+                p["hybridization"] for p in ([*points] if nominal is None else [nominal, *points])
+            ),
             worst_mean_chi_mhz=min(
-                map(study.absolute_mean_chi_mhz, [nominal, *points])
+                map(
+                    study.absolute_mean_chi_mhz,
+                    [*points] if nominal is None else [nominal, *points],
+                )
             ),
             points=points,
             nominal=nominal,
@@ -277,19 +366,39 @@ class PadRangeObjective:
 
     def equalities(self, x):
         try:
-            return self.nominal_equalities(x[:7])
+            result = (
+                []
+                if getattr(self, "range_recalibrated", False)
+                else list(np.atleast_1d(self.nominal_equalities(x[:7])))
+            )
+            if self.splitting_policy["policy"] == "dressed_nominal_with_range":
+                reference = self.splitting_policy["reference_ghz"]
+                j = int(np.flatnonzero(np.isclose(self.frequencies, reference, atol=1e-10))[0])
+                point = self.point(x[:7], reference, x[7 + 2 * j : 9 + 2 * j])
+                result.append(
+                    (point["splitting_ghz"] * 1000 - self.splitting_policy["target_mhz"])
+                    / 100
+                )
+            return np.asarray(result)
         except (ValueError, FloatingPointError, np.linalg.LinAlgError):
             return np.full(3, 1e4)
 
     def inequalities(self, x, floor):
         try:
             result = self.evaluate(x)
+            points = result["points"]
+            if not getattr(self, "range_recalibrated", False):
+                points = [result["nominal"], *points]
             return np.concatenate(
                 [
-                    np.atleast_1d(self.nominal_inequalities(x[:7])),
+                    *(
+                        []
+                        if getattr(self, "range_recalibrated", False)
+                        else [np.atleast_1d(self.nominal_inequalities(x[:7]))]
+                    ),
                     *[
                         sample_slacks(p, floor, x[-1])
-                        for p in [result["nominal"], *result["points"]]
+                        for p in points
                     ],
                 ]
             )
@@ -347,6 +456,12 @@ class PadRangeObjective:
                         if min(sample_slacks(point, floor, chi_floor)) < -1e-7:
                             continue
                         audited = audit_point(point, representative=False)
+                        for key in (
+                            "isolated_pair_splitting_mhz",
+                            "logical_mean_readout_ghz",
+                        ):
+                            if key in point:
+                                audited[key] = point[key]
                         failed = checked_sample(audited, floor, chi_floor)
                         attempts.append(
                             dict(bare_f01_ghz=list(map(float, bare)), failures=failed)
@@ -368,13 +483,42 @@ class PadRangeObjective:
         )
 
     def audit(self, x, floor):
-        nominal = self.nominal_audit(x[:7])
+        range_recalibrated = getattr(self, "range_recalibrated", False)
+        nominal = None if range_recalibrated else self.nominal_audit(x[:7])
         # Same 1 kHz allowance as the readout range-design workflow. It is a
         # numerical validation allowance, not a relaxation of its 1 MHz floor.
         chi_floor = max(study.CONDITIONS.abs_mean_chi_min_mhz, float(x[-1]) - 0.001)
-        failed = checked_sample(nominal["point"], floor, chi_floor)
-        if np.max(abs(np.asarray(self.nominal_equalities(x[:7]))), initial=0.0) > 1e-6:
+        failed = [] if nominal is None else checked_sample(nominal["point"], floor, chi_floor)
+        if (
+            not range_recalibrated
+            and np.max(abs(np.asarray(self.nominal_equalities(x[:7]))), initial=0.0)
+            > 1e-6
+        ):
             failed.append("nominal_calibration_equalities")
+        splitting_witness = None
+        if self.splitting_policy["policy"] == "dressed_nominal_with_range":
+            reference = self.splitting_policy["reference_ghz"]
+            j = int(np.flatnonzero(np.isclose(self.frequencies, reference, atol=1e-10))[0])
+            bare = np.asarray(x[7:-1]).reshape(-1, 2)[j]
+            point = audit_point(self.point(x[:7], reference, bare), representative=False)
+            error = point["splitting_ghz"] * 1000 - self.splitting_policy["target_mhz"]
+            witness_failures = checked_sample(point, floor, chi_floor)
+            if abs(error) > self.splitting_policy["tolerance_mhz"]:
+                witness_failures.append("nominal_dressed_split_target")
+                failed.append("nominal_dressed_split_target")
+            failed.extend(
+                f"nominal_dressed_split:{name}" for name in witness_failures
+                if name != "nominal_dressed_split_target"
+            )
+            splitting_witness = dict(
+                bare_resonator_frequency_ghz=reference,
+                bare_f01_ghz=list(map(float, bare)),
+                target_mhz=self.splitting_policy["target_mhz"],
+                achieved_mhz=float(point["splitting_ghz"] * 1000),
+                error_mhz=float(error),
+                tolerance_mhz=self.splitting_policy["tolerance_mhz"],
+                failures=witness_failures,
+            )
         # Include endpoints, nominal reference, half steps and optimized-sample midpoints.
         grid = sorted(
             set(
@@ -400,10 +544,22 @@ class PadRangeObjective:
             if row["failures"]:
                 failed.append(f"range_validation:{frequency:.10f}")
                 self.failed_frequencies.add(float(frequency))
-        points = [
-            nominal["point"],
-            *[r["point"] for r in witnesses if r["point"] is not None],
-        ]
+        calibrated_coordinates = None
+        if range_recalibrated:
+            reference_rows = [
+                row for row in witnesses if np.isclose(row["frequency_ghz"], x[4], atol=1e-10)
+            ]
+            if not reference_rows or reference_rows[0]["point"] is None:
+                failed.append("range_recalibrated_reference")
+            else:
+                reference = reference_rows[0]
+                _, physical = self.hardware(x[:7])
+                nominal = dict(point=reference["point"], physical=physical)
+                calibrated_coordinates = np.asarray(x[:7], float)
+                calibrated_coordinates[:2] = reference["attempts"][-1]["bare_f01_ghz"]
+        points = [r["point"] for r in witnesses if r["point"] is not None]
+        if not range_recalibrated:
+            points.insert(0, nominal["point"])
         aggregate = dict(
             hybridization=min(p["hybridization"] for p in points),
             worst_mean_chi_mhz=min(map(study.absolute_mean_chi_mhz, points)),
@@ -413,6 +569,11 @@ class PadRangeObjective:
             point=aggregate,
             nominal=nominal["point"],
             physical=nominal["physical"],
+            nominal_coordinates=(
+                calibrated_coordinates.tolist()
+                if calibrated_coordinates is not None
+                else list(map(float, x[:7]))
+            ),
             range_validation=dict(
                 passed=not failed,
                 range_ghz=[self.low, self.high],
@@ -428,6 +589,11 @@ class PadRangeObjective:
                 nominal_loaded_ec_ghz=list(self.case["loaded_ec_ghz"]),
                 capacitor_policy="one fixed nominal physical pad layout; no scenario EC compensation",
                 finite_grid_only=True,
+                nominal_calibration_policy=getattr(
+                    self, "nominal_calibration_policy", "strict"
+                ),
+                logical_splitting_policy=self.splitting_policy,
+                nominal_dressed_split_witness=splitting_witness,
             ),
         )
 
@@ -543,7 +709,9 @@ def _optimize_pad_range(
         scenario_evaluations=total_evaluations,
     )
     if result["selected"] is not None:
-        result["coordinates"] = result["coordinates"][:7]
+        result["coordinates"] = result["selected"].get(
+            "nominal_coordinates", result["coordinates"][:7]
+        )
         result["capacitor_summary_ff"] = dict(
             intra_pair=float(result["coordinates"][2]),
             readout_per_link=float(result["coordinates"][3]),

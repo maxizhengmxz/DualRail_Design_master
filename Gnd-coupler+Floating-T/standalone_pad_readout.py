@@ -20,6 +20,7 @@ from floating_coupler.pad_electrostatics import fit_pad_mutual_capacitances
 from floating_coupler.pairs import pair_spectrum
 from floating_coupler.readout_range import (
     case_for_pair,
+    logical_splitting_policy,
     optimize_pad_range,
     required_range,
     with_readout_defaults,
@@ -134,6 +135,7 @@ def evaluate(case, x, basis=FAST, device=None, model=None):
 def design(case, output):
     required_range(case)  # Fail before any feasibility calculation if unspecified.
     case = with_readout_defaults(case)
+    splitting_policy = logical_splitting_policy(case)
     policy(case)
     guide = case["bare_frequency_guide_ghz"]
     fR = case["readout_target_ghz"]
@@ -247,6 +249,15 @@ def design(case, output):
             (p["operating_frequency_ghz"] - guide),
         ]
 
+    def range_equalities(x):
+        result = equalities(x)
+        if splitting_policy["policy"] == "isolated_pair_exact":
+            return result
+        # Keep the isolated target in seed polishing only. Final certification
+        # replaces it with the dressed target at the supplied cavity reference.
+        result = result[1:]
+        return result
+
     def inequalities(x):
         p, _ = ev(x, MEDIUM)
         mean = abs((p["chi_p_ghz"] + p["chi_m_ghz"]) / 2) * 1000
@@ -298,13 +309,21 @@ def design(case, output):
         point["logical_mean_readout_ghz"] = pairpoint["logical_mean_readout_ghz"]
         return dict(point=point, physical=physical)
 
+    range_starts = [row["x"] for row in sorted(starts, key=lambda row: row["cost"])]
+    for start in case.get("readout_range_hardware_starts", []):
+        if len(start) != 7 or not np.isfinite(start).all():
+            raise ValueError(
+                "Each readout_range_hardware_starts entry must contain seven "
+                "finite [f1,f2,Cpair,Cread,fLC,eta1,eta2] coordinates"
+            )
+        range_starts.append(list(map(float, start)))
     optimization = optimize_pad_range(
         case,
         fit.x,
-        [row["x"] for row in sorted(starts, key=lambda row: row["cost"])],
+        range_starts,
         bounds,
         lambda x: ev(x, MEDIUM)[0],
-        equalities,
+        range_equalities,
         inequalities,
         audited,
         build_device,
@@ -352,6 +371,7 @@ def design(case, output):
         "nominal": audit,
         "workflow_failures": workflow_failures,
         "isolated_split_error_mhz": audit["isolated_pair_splitting_mhz"] - target,
+        "logical_splitting_policy": splitting_policy,
         "nominal_readout_error_ghz": audit["logical_mean_readout_ghz"] - fR,
         "attempts": starts,
         "residual": residual(x, MEDIUM).tolist(),

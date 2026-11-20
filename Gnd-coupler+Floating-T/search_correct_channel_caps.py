@@ -120,7 +120,7 @@ def _run_start(task):
     try:
         result=optimize(DesignEvaluator(circuit,selection,task['basis']),task['start'],
                         task['mode'],task['progress'],off_upper_ghz=task['off_upper'],
-                        ec_lower_ghz=task['ec_lower'])
+                        ec_lower_ghz=task['ec_lower'],maxiter=task.get('maxiter',70))
         json.dumps(result,allow_nan=False)
         return result
     except (ValueError,np.linalg.LinAlgError) as error:
@@ -129,7 +129,7 @@ def _run_start(task):
 
 
 
-def run(request,selection,output,stage='coarse',mode='cancel',off_upper_ghz=10.,ec_lower_ghz=.15,workers=4):
+def run(request,selection,output,stage='coarse',mode='cancel',off_upper_ghz=10.,ec_lower_ghz=.15,workers=4,maxiter=70):
     if mode=='zz-diagnostic':mode='zz'
     request_data,selected,circuit=prepare(request,selection)
     folder=Path(output);folder.mkdir(parents=True,exist_ok=True)
@@ -140,6 +140,9 @@ def run(request,selection,output,stage='coarse',mode='cancel',off_upper_ghz=10.,
     starts=[[*base[:4],7.65,9.9,gate_seed],
             [base[0]*.8,base[1]*.8,base[2]*.64,base[3],7.08,9.95,gate_seed],
             [base[0]*.8*.8,base[1]*.8/ .8,base[2]*.64,.35,7.08,9.95,gate_seed]]
+    starts.extend(request_data.get('additional_refinement_starts',[]))
+    if any(len(start)!=7 or not np.isfinite(start).all() for start in starts):
+        raise ValueError('Every capacitor refinement start must contain seven finite coordinates')
     provenance=dict(source_signature=source_signature(),off_definition=off_target_definition('five'),seed=request_data['seed_grounded_three_body'],selection=selected,
                     off_upper_ghz=off_upper_ghz,ec_lower_ghz=ec_lower_ghz,
                     request=request_data,basis=COARSE if stage=='coarse' else FINE,
@@ -162,6 +165,7 @@ def run(request,selection,output,stage='coarse',mode='cancel',off_upper_ghz=10.,
                         selection_sha256=hashlib.sha256(Path(selection).read_bytes()).hexdigest(),
                         basis=COARSE,start=start,mode='cancel' if key=='cancel' else 'zz_zero',
                         off_upper=off_upper_ghz,ec_lower=ec_lower_ghz,
+                        maxiter=maxiter,
                         progress=str((folder/f'{key}-start-{i}-progress.json').resolve()))
                    for i,start in enumerate(starts)]
             attempts=run_tasks(_run_start,tasks,folder/f'{key}-checkpoints',workers=workers)
@@ -185,7 +189,7 @@ def run(request,selection,output,stage='coarse',mode='cancel',off_upper_ghz=10.,
             if not path.exists():continue
             previous=json.loads(path.read_text());require_off_definition(previous.get('off_definition'));start=previous['result']['x']
             evaluator=DesignEvaluator(circuit,selected,FINE)
-            fit=optimize(evaluator,start,'cancel' if key=='cancel' else 'zz_zero',folder/f'{key}-fine-progress.json',maxiter=40,off_upper_ghz=off_upper_ghz,ec_lower_ghz=ec_lower_ghz)
+            fit=optimize(evaluator,start,'cancel' if key=='cancel' else 'zz_zero',folder/f'{key}-fine-progress.json',maxiter=maxiter,off_upper_ghz=off_upper_ghz,ec_lower_ghz=ec_lower_ghz)
             (folder/f'{key}-fine.json').write_text(json.dumps(fit,indent=2))
             print('FINE_RESULT',key,fit['feasible'],fit['result']['x'],fit['result']['metrics'],flush=True)
 
@@ -196,4 +200,5 @@ if __name__=='__main__':
     p.add_argument('--stage',choices=['coarse','fine'],default='coarse');p.add_argument('--mode',choices=['cancel','zz-diagnostic'],default='cancel')
     p.add_argument('--off-upper',type=float,default=10.);p.add_argument('--ec-lower',type=float,default=.15)
     p.add_argument('--workers',type=int,default=4)
-    a=p.parse_args();run(a.request,a.selection,a.output,a.stage,a.mode,a.off_upper,a.ec_lower,a.workers)
+    p.add_argument('--maxiter',type=int,default=70)
+    a=p.parse_args();run(a.request,a.selection,a.output,a.stage,a.mode,a.off_upper,a.ec_lower,a.workers,a.maxiter)

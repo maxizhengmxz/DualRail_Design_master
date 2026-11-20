@@ -196,8 +196,15 @@ def main():
         for point, value in zip(common, delta):
             data[ys.index(point[1]), xs.index(point[0])] = value
         limit = float(max(abs(delta.min()), abs(delta.max()))) or 1.0
-        image = axes[row_index, 2].imshow(data, origin="lower", interpolation="nearest", extent=extent,
-                                         aspect="equal", cmap="coolwarm", norm=TwoSlopeNorm(0, -limit, limit))
+        image = axes[row_index, 2].imshow(
+            data,
+            origin="lower",
+            interpolation="nearest",
+            extent=extent,
+            aspect="equal",
+            cmap="coolwarm",
+            norm=TwoSlopeNorm(vcenter=0, vmin=-limit, vmax=limit),
+        )
         contour(axes[row_index, 2], xs, ys, readout_valid)
         axes[row_index, 2].set_title("10 MHz minus 5 MHz\n" + label)
         fig.colorbar(image, ax=axes[row_index, 2], shrink=.76)

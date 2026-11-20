@@ -228,8 +228,15 @@ def build(output):
             edges_percent=edges.tolist(),
         )
 
+    resonator_features = [key for key in features if key.startswith("resonator:")]
+    b_resonator = next(
+        (key for key in resonator_features if key.lower().endswith(("rb", "r2"))),
+        resonator_features[-1] if resonator_features else None,
+    )
+    if b_resonator is None:
+        raise ValueError("No varied resonator capacitance is available for the readout map")
     readout = pairmap(
-        "resonator:r2",
+        b_resonator,
         "self:B1",
         "random-readout-capacitor-map",
         "B-readout association: resonator capacitance versus B1 self-capacitance",

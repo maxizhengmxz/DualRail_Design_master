@@ -340,3 +340,136 @@ Artifacts:
 This is now the preferred toy-model tuple.  The collaborator-owned
 resonator-inclusive full-network validation, updated S1/dispersiveness checks,
 finite ramps and decoherence remain outside this campaign.
+
+## How the current tuple was selected
+
+This section records the selection sequence that was previously only visible in
+the analysis figures and chat discussion.  The current tuple was not selected by
+one scalar optimization over a collapsed 2D projection.
+
+### 1. Radius-first candidate was rejected as unnecessarily slow
+
+After removing the requirements for one stored anchor and one CZ source across
+the neighborhood, the calibration-adaptive 4D ranking first selected
+
+\[
+(234,160,240,170)\ \mathrm{MHz}.
+\]
+
+It has a 12 MHz saved-data robustness radius, but its neighborhood-median
+`J_req/h` is 5.876 MHz.  Radius was being prioritized ahead of interaction
+strength, so this result was treated as a useful robustness reference rather
+than the final device choice.
+
+### 2. Three candidates were compared in both rail planes
+
+Three complete tuples were then compared with orthogonal cross-sections.  For
+each tuple, one panel fixes rail A and displays the complete rail-B grid; another
+fixes rail B and displays the complete rail-A grid.  This makes the selected CZ
+source and `J_req` continuity visible without allowing hidden EC coordinates to
+change from pixel to pixel.
+
+| Candidate | EC tuple (MHz) | Center CZ source | Center `J_req/h` |
+|---|---|---|---:|
+| Earlier strict reference | `(154,208,216,252)` | `10 -> B20` | 5.556 MHz |
+| Radius-first optimum | `(234,160,240,170)` | `11 -> B20` | 5.875 MHz |
+| Upper-left low-J candidate | `(158,240,158,226)` | `10 -> B20` | 4.367 MHz |
+
+![[relaxed_adaptive_4d_best_case_2026-11-17/three_tuple_orthogonal_cross_sections/three_tuple_best_case_A_and_B_cross_sections.png]]
+
+The upper-left search required at least a 10 MHz saved-data robustness radius,
+relative neighborhood `J_req` spread no larger than 15%, `EC_A1 <= 170 MHz`,
+and `EC_A2 >= 235 MHz`.  Among the 36 centers surviving those conditions,
+`(158,240,158,226)` had the lowest neighborhood-median `J_req/h`:
+
+- minimum / median / maximum `J_req/h = 4.261 / 4.365 / 4.454 MHz`;
+- relative spread 4.42%;
+- minimum signed idle clearance 394.2 MHz;
+- minimum raw / post-selected fidelity 99.277% / 99.9942%;
+- one `10 -> B20` channel in the retained historical neighborhood.
+
+The choice deliberately accepts a smaller saved-data radius than the
+radius-first point in exchange for materially lower required hardware coupling
+and therefore a faster gate at common `J_hardware`.  It was promoted only after
+the fresh corrected-cavity 233-point neighborhood rerun reproduced the smooth
+low-J region and passed every stored gate and reconciliation check.
+
+Data supporting this decision:
+
+| Artifact | Location |
+|---|---|
+| Relaxed 4D ranking | `relaxed_adaptive_4d_best_case_2026-11-17/summary.json` |
+| Upper-left low-J shortlist | `relaxed_adaptive_4d_best_case_2026-11-17/upper_left_low_jreq_candidates.json` |
+| Three-candidate values | `relaxed_adaptive_4d_best_case_2026-11-17/three_tuple_orthogonal_cross_sections/summary.json` |
+| Corrected promoted neighborhood | `corrected_cavity_full_neighborhood_A158_240_B158_226_2026-11-17/` |
+
+## Matched target-coupling study: g/h = 5 versus 10 MHz
+
+The fixed rail-A pair `(158,240)` MHz was rerun over the same 4,498 ordered
+rail-B EC points with corrected cavity provenance (rail A 6.05 GHz, rail B
+5.95 GHz).  The only intended gate-setting change was `g/h`, from 5 to
+10 MHz.  Independent readout data and the five rail-A anchors were unchanged.
+
+![[g5_vs_g10_A158_240_comparison_2026-11-17/feasibility_and_cz_source_comparison.png]]
+
+Gate-feasibility counts:
+
+- 2,669 points pass at both couplings;
+- 1,817 pass only at 5 MHz;
+- no point passes only at 10 MHz;
+- 12 pass at neither coupling.
+
+After the current fixed-hardware reconciliation:
+
+- 978 pass at both couplings;
+- 415 pass only at 5 MHz;
+- 2 pass only at 10 MHz;
+- 3,103 pass at neither coupling.
+
+On the 2,669 common gate-passing points, the median changes are:
+
+| Quantity | g/h = 5 MHz | g/h = 10 MHz | Change |
+|---|---:|---:|---:|
+| Calibrated gate time | 99.319 ns | 51.156 ns | -48.259 ns |
+| Required `J_req/h` | 4.997 MHz | 9.990 MHz | +4.991 MHz |
+| Raw CZ fidelity | 99.535% | 98.263% | -1.250 percentage points |
+| Post-selected fidelity | 99.9950% | 99.9339% | -0.0610 percentage points |
+| Aggregate S1 | 0.00283 | 0.01131 | approximately 4x |
+| Maximum logical `|g/Delta|` | 0.05975 | 0.11966 | approximately 2x |
+| Rail-B gate frequency | 4.8763 GHz | 4.8786 GHz | +0.652 MHz median |
+
+![[g5_vs_g10_A158_240_comparison_2026-11-17/pointwise_metric_comparison.png]]
+
+Thus doubling the intended coupling approximately halves the gate time, as
+expected, but it does not leave the remaining physics unchanged.  It requires
+approximately twice the physical inter-rail coupling, increases spectator
+mixing, lowers both fidelity measures, removes a large fraction of the 5 MHz
+gate-feasible/reconciled region, and collapses most selected channels onto
+`10 -> B20`.  The rail-B collision frequency itself usually changes only
+slightly; large outliers coincide with channel or anchor changes.  This study
+therefore supports treating 10 MHz as a speed-versus-mixing tradeoff rather than
+a drop-in rescaling of the 5 MHz solution.
+
+Artifacts:
+
+| Artifact | Location |
+|---|---|
+| Matched comparison summary | `g5_vs_g10_A158_240_comparison_2026-11-17/summary.json` |
+| Feasibility/source figure | `g5_vs_g10_A158_240_comparison_2026-11-17/feasibility_and_cz_source_comparison.png` |
+| Pointwise metric figure | `g5_vs_g10_A158_240_comparison_2026-11-17/pointwise_metric_comparison.png` |
+| Corrected 5 MHz campaign | `g5_corrected_cavity_A158_240_2026-11-17/` |
+| Corrected 10 MHz campaign | `g10_corrected_cavity_A158_240_2026-11-17/` |
+
+## Rail-B gate-detuning sensitivity of the promoted center
+
+A diagnostic sweep kept the promoted tuple, the selected 4.600 GHz rail-A
+anchor and fixed rail-B coupling hardware, then introduced differential bare
+detuning `Delta_B = f01_B1 - f01_B2`.  The collision frequency and phase-pi
+calibration were recomputed at each detuning.  All tested points from -10 to
++10 MHz passed the two fidelity thresholds.  However, the symmetric center is
+at the exact 80 MHz lower logical-frequency limit: +1 and +2 MHz detunings gave
+79.9918 and 79.9961 MHz and therefore fail that strict band check despite raw
+fidelities above 99.5%.  The tuple is gate-tolerant but has essentially no
+margin to the rail-B logical-frequency lower bound.  A future robustness-aware
+design should place the nominal rail-B splitting inside the 80-100 MHz band
+rather than exactly at 80 MHz.

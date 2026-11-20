@@ -474,6 +474,23 @@ presenting them as the current selected design.
 
 ## 13. Current promoted corrected-cavity reference (2026-11-17)
 
+The independent readout package has an opt-in anchored cavity-tolerance study
+in `readout_workflow/anchored_resonator_tolerance.py`. Unlike the older
+existential maximum-range optimizer, it pins the exact promoted EC-tuple bare
+frequencies at each rail's own nominal cavity, constrains subsequent bare
+frequencies to explicit per-transmon budgets, and certifies one connected
+outward continuation branch. Frozen-witness audit and capacitor redesign are
+separate results. This study does not change the production anchor campaign or
+retroactively certify historical tolerance ranges.
+
+The grounded-coupler explicit-pad adapter has a separate opt-in
+`dressed_nominal_with_range` policy. It preserves one capacitor layout while
+requiring a dressed logical-splitting window across a prescribed bare-cavity
+interval and an exact dressed target at one supplied bare-cavity reference.
+This does not alter the independent EC-tuple maps or their existential-witness
+semantics, and those maps must not be relabelled as certificates for the
+explicit-pad hardware.
+
 The current preferred toy-model tuple is
 `EC=(158,240,158,226) MHz`.  It supersedes `(154,208,216,252) MHz` as the
 design recommendation because the selection objective now includes absolute

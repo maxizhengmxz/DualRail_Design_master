@@ -268,7 +268,7 @@ def off_audit(cell,folder):
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--cell',required=True);p.add_argument('--output',required=True);p.add_argument('--stage',choices=['off','A','B','readout','gate','final-gate','gate-off','diagnose-gate','off-audit'],required=True);p.add_argument('--previous-gate');p.add_argument('--readout-A');p.add_argument('--readout-B');p.add_argument('--workers',type=int,default=2);a=p.parse_args();cell=json.loads(Path(a.cell).read_text());folder=Path(a.output);folder.mkdir(parents=True,exist_ok=True)
+    p=argparse.ArgumentParser();p.add_argument('--cell',required=True);p.add_argument('--output',required=True);p.add_argument('--stage',choices=['off','A','B','readout','gate','final-gate','gate-off','diagnose-gate','off-audit'],required=True);p.add_argument('--previous-gate');p.add_argument('--readout-A');p.add_argument('--readout-B');p.add_argument('--workers',type=int,default=2);a=p.parse_args();cell_record=json.loads(Path(a.cell).read_text());cell=cell_record.get('calibrated_cell',cell_record);folder=Path(a.output);folder.mkdir(parents=True,exist_ok=True)
     request=cell if cell.get('channel_selection') else cell.get('request',{})
     if request.get('channel_selection') or request.get('gate_target',{}).get('channel_selection'):
         cell['physical']['channel_selection']=selection_from_request(request).to_dict()

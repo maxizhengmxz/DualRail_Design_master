@@ -77,6 +77,13 @@ compensation occurs. New nominal-only optimization records remain rejected as
 range certification. Do not replace physical pad capacitors with effective
 modal capacitors, silently assume 6 GHz, or relabel historical results.
 
+The explicit-pad adapter also supports an opt-in
+`dressed_nominal_with_range` splitting policy. It pins the dressed logical
+splitting at a supplied bare-resonator reference and enforces the supplied
+dressed-splitting interval at every range scenario. The default remains the
+exact isolated-pair fit; this option does not change the independent three-node
+CLI or any readout acceptance threshold.
+
 ## Common constraints and validation
 
 Supply the conditions JSON belonging to the rail. Do not infer another
@@ -142,6 +149,23 @@ conditions file, not hardcoded by the campaign.
 The default range-search halfwidth ceiling is 1 GHz and is explicitly censored
 if reached. These numerical budgets are configurable; the physical acceptance
 limits come from the supplied conditions file.
+
+## EC-tuple-anchored cavity tolerance
+
+`anchored_resonator_tolerance.py` is the separate operating-point-preserving
+study. It must not be confused with the existential `--mode tolerance` search
+above. It requires each rail's own nominal bare cavity frequency, exact nominal
+bare transmon frequencies, loaded EC tuple and selected fixed readout witness.
+At the nominal cavity it reuses those transmon frequencies exactly. Away from
+nominal it walks outward on one connected branch, constraining each bare
+frequency to its independently centered tuning budget. It reports the frozen
+witness and capacitor redesign separately, checks the requested asymmetric
+interval, and brackets the maximum symmetric finite-grid interval. A result
+that reaches the configured cavity ceiling is censored, not an exact maximum.
+Widening a bare-frequency budget may reuse a complete ceiling-censored
+certificate from a smaller budget because the identical witness remains
+feasible. Existing unanchored tolerance campaigns and their records are not
+relabelled.
 
 ## Coarse-to-fine refinement
 

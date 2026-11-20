@@ -310,6 +310,16 @@
     "equal_width_required": false,
     "range_defaults": "none; do_not_inherit_nominal_design_or_example_values",
     "nominal_reference_policy": "use_supplied_case_reference; do_not_silently_assume_6_GHz",
+    "logical_splitting_policy_per_rail": {
+      "policy": "isolated_pair_exact_or_explicit_dressed_nominal_with_range",
+      "dressed_nominal_with_range_required_fields": [
+        "dressed_split_window_ghz",
+        "nominal_dressed_split_mhz",
+        "nominal_bare_resonator_frequency_ghz"
+      ],
+      "nominal_dressed_split_tolerance_mhz_default": 0.001,
+      "isolated_split_role_when_enabled": "initialization_and_diagnostic_only"
+    },
     "shared_hardware_policy": "fixed_capacitors_across_range; EJ_recalibration_only_at_each_scenario",
     "loaded_EC_policy": "preserve_nominal_reference_EC; report_uncompensated_loading_changes_at_swept_resonator_frequencies",
     "preferred_H_strict_min": 0.96,

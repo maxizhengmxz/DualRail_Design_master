@@ -159,6 +159,46 @@ class ReadoutStrengthOptimizationTests(unittest.TestCase):
 
 
 class PhysicalPadRangeTests(unittest.TestCase):
+    def test_dressed_nominal_range_policy_is_explicit_and_validated(self):
+        from floating_coupler.readout_range import logical_splitting_policy
+
+        self.assertEqual(logical_splitting_policy({})["policy"], "isolated_pair_exact")
+        case = dict(
+            logical_splitting_policy="dressed_nominal_with_range",
+            dressed_split_window_ghz=[0.08, 0.10],
+            nominal_dressed_split_mhz=84.65556,
+            nominal_bare_resonator_frequency_ghz=5.95,
+            bare_resonator_frequency_range_ghz=[5.8, 6.0],
+        )
+        policy = logical_splitting_policy(case)
+        self.assertEqual(policy["allowed_range_mhz"], [80.0, 100.0])
+        self.assertEqual(policy["reference_ghz"], 5.95)
+        for change, message in [
+            ({"nominal_dressed_split_mhz": 101}, "inside its allowed window"),
+            ({"nominal_bare_resonator_frequency_ghz": 6.1}, "inside the swept range"),
+        ]:
+            invalid = dict(case, **change)
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, message):
+                logical_splitting_policy(invalid)
+
+    def test_range_equalities_pin_dressed_split_at_bare_cavity_reference(self):
+        from floating_coupler.readout_range import PadRangeObjective
+
+        model = PadRangeObjective.__new__(PadRangeObjective)
+        model.nominal_equalities = lambda x: np.array([x[0] - 4.6, x[1] - 4.6])
+        model.splitting_policy = dict(
+            policy="dressed_nominal_with_range", target_mhz=85.0, reference_ghz=5.95
+        )
+        model.frequencies = np.array([5.8, 5.95, 6.0])
+        model.point = lambda hardware, frequency, bare: {
+            "splitting_ghz": 0.085 + (bare[0] - 5.0) / 100
+        }
+        x = np.r_[[4.6, 4.6, 8.0, 5.0, 5.95, 0.3, 0.7],
+                  [4.9, 4.9], [5.0, 5.0], [5.1, 5.1], 1.0]
+        np.testing.assert_allclose(model.equalities(x), 0.0, atol=1e-12)
+        x[9] += 0.01
+        self.assertNotEqual(model.equalities(x)[-1], 0.0)
+
     def test_new_defaults_and_explicit_overrides_do_not_relabel_inputs(self):
         from floating_coupler.readout_range import case_for_pair, readout_objective, with_readout_defaults
 
@@ -406,6 +446,7 @@ class PhysicalPadRangeTests(unittest.TestCase):
         model.frequencies = np.array([5.7, 5.9])
         model.failed_frequencies = set()
         model.case = {"loaded_ec_ghz": [0.165, 0.25]}
+        model.splitting_policy = {"policy": "isolated_pair_exact"}
 
         def validate(hardware, frequency, *args):
             failed = abs(frequency - 5.8) < 1e-8

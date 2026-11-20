@@ -210,10 +210,33 @@ Scenario bare-frequency coordinates default to the readout operation search
 box with 0.2 GHz numerical padding; actual operation/EJ constraints still apply.
 Supply `readout_recalibration_bare_bounds_ghz` to restrict either transmon's
 allowed EJ-recalibration frequency range explicitly.
+Previously evaluated seven-coordinate hardware basins may be retained through
+`readout_range_hardware_starts`; these are optimizer starts only and receive the
+same complete range audit as every other candidate.
+
+The default `readout_range_options.nominal_calibration_policy = "strict"`
+retains the separate nominal equalities and nominal readout acceptance checks.
+When explicitly approved, `"range_recalibrated"` removes that additional veto:
+the fixed capacitor layout must still pass every optimized and audited resonator
+scenario, including its fabricated LC reference, using only the authorized EJ
+recalibration. The passing witness at that LC reference becomes the nominal
+handoff. Nominal seed targets remain reported diagnostics; this option does not
+relax any per-scenario chi, chi-matching, sign-stability, H, dispersive,
+assignment, dressed-splitting-window, EC or EJ constraint.
 
 Keep supplied loaded ECs, isolated-pair splitting, idle/readout calibration
 targets, physical parameter bounds and every existing readout constraint. Added
 loading is compensated by the existing self-capacitance reconstruction.
+By default, new and historical cases retain the exact supplied isolated-pair
+splitting. An explicit per-rail `logical_splitting_policy` value of
+`dressed_nominal_with_range` instead makes the isolated splitting an
+initialization/diagnostic: require `nominal_dressed_split_mhz` at the supplied
+`nominal_bare_resonator_frequency_ghz`, and require the dressed splitting to
+remain inside `dressed_split_window_ghz` at every optimized and audited
+resonator scenario. The nominal reference must lie inside the prescribed
+resonator interval. This policy uses one fixed physical capacitor layout;
+only the already-authorized rail EJs recalibrate across scenarios. It does not
+relax H, chi, dispersiveness, assignment, EC or fabrication constraints.
 Default `readout_range_options.objective` is `minimize_pair_capacitance`.
 The request-level `standalone_readout_optimization.objective` sets the common
 policy, with explicit per-pair options taking precedence. Independent calls to
